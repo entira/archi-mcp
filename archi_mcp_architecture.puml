@@ -1,0 +1,88 @@
+@startuml
+!include <archimate/Archimate>
+
+title ArchiMate MCP Server Architecture
+
+!define DIRECTION top to bottom direction
+
+' Motivation Layer
+Motivation_Stakeholder(developer, "AI Developer") #Motivation
+Motivation_Stakeholder(architect, "Enterprise Architect") #Motivation
+Motivation_Goal(automation_goal, "Automate Architecture Modeling") #Motivation
+Motivation_Requirement(compliance_requirement, "ArchiMate 3.2 Compliance") #Motivation
+Motivation_Principle(usability_principle, "Ease of Use") #Motivation
+
+' Business Layer
+Business_Business_Service(diagram_generation, "ArchiMate Diagram Generation") #Business
+Business_Business_Service(model_validation, "Model Validation") #Business
+Business_Business_Service(template_provision, "Template Provision") #Business
+Business_Business_Process(diagram_creation_process, "Diagram Creation Process") #Business
+
+' Application Layer
+Application_Application_Component(mcp_server, "ArchiMate MCP Server") #Application
+Application_Application_Component(archimate_engine, "ArchiMate Engine") #Application
+Application_Application_Component(plantuml_generator, "PlantUML Generator") #Application
+Application_Application_Component(validator_component, "Model Validator") #Application
+Application_Application_Component(template_engine, "Template Engine") #Application
+Application_Application_Service(mcp_api, "MCP API") #Application
+Application_Application_Interface(claude_interface, "Claude Integration") #Application
+Application_Data_Object(element_registry, "Element Registry") #Application
+Application_Data_Object(relationship_matrix, "Relationship Matrix") #Application
+Application_Data_Object(template_library, "Template Library") #Application
+
+' Technology Layer
+Technology_System_Software(python_runtime, "Python 3.11+ Runtime") #Technology
+Technology_System_Software(uv_package_manager, "uv Package Manager") #Technology
+Technology_Technology_Service(mcp_protocol, "MCP Protocol") #Technology
+Technology_Artifact(source_code, "Source Code") #Technology
+Technology_Artifact(dependencies, "Dependencies") #Technology
+
+' Implementation Layer
+Implementation_Work_Package(development_project, "ArchiMate MCP Development") #Implementation
+Implementation_Deliverable(server_package, "MCP Server Package") #Implementation
+
+
+' Relationships
+Rel_Association(developer, automation_goal, )
+Rel_Association(architect, compliance_requirement, )
+Rel_Influence(automation_goal, compliance_requirement, )
+Rel_Influence(usability_principle, compliance_requirement, )
+Rel_Realization(compliance_requirement, diagram_generation, )
+Rel_Realization(compliance_requirement, model_validation, )
+Rel_Realization(usability_principle, template_provision, )
+Rel_Triggering(diagram_creation_process, diagram_generation, )
+Rel_Triggering(diagram_creation_process, model_validation, )
+Rel_Triggering(diagram_creation_process, template_provision, )
+Rel_Realization(mcp_api, diagram_generation, )
+Rel_Realization(mcp_api, model_validation, )
+Rel_Realization(mcp_api, template_provision, )
+Rel_Assignment(mcp_server, mcp_api, )
+Rel_Composition(mcp_server, archimate_engine, )
+Rel_Composition(mcp_server, plantuml_generator, )
+Rel_Composition(mcp_server, validator_component, )
+Rel_Composition(mcp_server, template_engine, )
+Rel_Access(archimate_engine, element_registry, )
+Rel_Access(archimate_engine, relationship_matrix, )
+Rel_Access(validator_component, relationship_matrix, )
+Rel_Access(template_engine, template_library, )
+Rel_Serving(claude_interface, mcp_api, )
+Rel_Assignment(mcp_server, claude_interface, )
+Rel_Assignment(python_runtime, mcp_server, )
+Rel_Assignment(python_runtime, dependencies, )
+Rel_Assignment(uv_package_manager, dependencies, )
+Rel_Realization(mcp_protocol, mcp_api, )
+Rel_Realization(source_code, mcp_server, )
+Rel_Flow(development_project, server_package, )
+Rel_Aggregation(server_package, source_code, )
+Rel_Aggregation(server_package, dependencies, )
+
+' Legend
+legend
+  Application Layer
+  Business Layer
+  Implementation Layer
+  Motivation Layer
+  Technology Layer
+end legend
+
+@enduml
