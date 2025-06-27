@@ -1,0 +1,34 @@
+@startuml
+!include <archimate/Archimate>
+
+title ArchiMate MCP Server - Application Layer
+
+' Description: Application components and services for MCP server
+
+top to bottom direction
+
+' Elements
+Application_Application_Component(mcp_server, "ArchiMate MCP Server")
+Application_Application_Component(archimate_engine, "ArchiMate Engine")
+Application_Application_Component(plantuml_generator, "PlantUML Generator")
+Application_Application_Component(validator, "Model Validator")
+Application_Application_Service(mcp_api, "MCP API")
+Application_Application_Interface(claude_interface, "Claude Desktop Interface")
+Application_Data_Object(element_registry, "Element Registry")
+
+' Relationships
+Rel_Assignment(mcp_server, mcp_api, "assignment")
+Rel_Serving(mcp_api, claude_interface, "serving")
+Rel_Composition(mcp_server, archimate_engine, "composition")
+Rel_Composition(mcp_server, plantuml_generator, "composition")
+Rel_Composition(mcp_server, validator, "composition")
+Rel_Association(archimate_engine, element_registry, "association")
+Rel_Flow(plantuml_generator, archimate_engine, "flow")
+Rel_Association(validator, element_registry, "association")
+
+' Legend
+legend right
+  Application Layer
+end legend
+
+@enduml

@@ -3,16 +3,16 @@
 
 title ArchiMate MCP Server - Motivation View
 
-' Description: Stakeholders, drivers, goals and requirements driving the ArchiMate MCP Server development
+' Description: Stakeholders, drivers, goals and requirements for the ArchiMate MCP Server
 
 top to bottom direction
 
 ' Elements
-Motivation_Stakeholder(ai_developers, "AI Developers")
-Motivation_Stakeholder(enterprise_architects, "Enterprise Architects")
-Motivation_Stakeholder(claude_users, "Claude Desktop Users")
+Motivation_Stakeholder(ai_developer, "AI Developer")
+Motivation_Stakeholder(enterprise_architect, "Enterprise Architect")
+Motivation_Stakeholder(claude_user, "Claude Desktop User")
 Motivation_Driver(automation_need, "Architecture Automation Need")
-Motivation_Driver(archimate_compliance, "ArchiMate 3.2 Compliance")
+Motivation_Driver(compliance_need, "ArchiMate Compliance")
 Motivation_Goal(automated_modeling, "Enable Automated ArchiMate Modeling")
 Motivation_Goal(claude_integration, "Seamless Claude Desktop Integration")
 Motivation_Requirement(archimate_support, "Complete ArchiMate 3.2 Support")
@@ -21,16 +21,16 @@ Motivation_Requirement(mcp_compliance, "MCP Protocol Compliance")
 Motivation_Principle(ease_of_use, "Ease of Use")
 
 ' Relationships
-Rel_Association(ai_developers, automation_need, "drives")
-Rel_Association(enterprise_architects, archimate_compliance, "requires")
-Rel_Influence(automation_need, automated_modeling, "motivates")
-Rel_Influence(archimate_compliance, automated_modeling, "constrains")
-Rel_Influence(claude_users, claude_integration, "demands")
-Rel_Realization(automated_modeling, archimate_support, "requires")
-Rel_Realization(automated_modeling, plantuml_generation, "requires")
-Rel_Realization(claude_integration, mcp_compliance, "requires")
-Rel_Influence(ease_of_use, automated_modeling, "guides")
-Rel_Influence(ease_of_use, claude_integration, "guides")
+Rel_Association(ai_developer, automation_need, "association")
+Rel_Association(enterprise_architect, compliance_need, "association")
+Rel_Influence(automation_need, automated_modeling, "influence")
+Rel_Influence(compliance_need, automated_modeling, "influence")
+Rel_Influence(claude_user, claude_integration, "influence")
+Rel_Realization(automated_modeling, archimate_support, "realization")
+Rel_Realization(automated_modeling, plantuml_generation, "realization")
+Rel_Realization(claude_integration, mcp_compliance, "realization")
+Rel_Influence(ease_of_use, automated_modeling, "influence")
+Rel_Influence(ease_of_use, claude_integration, "influence")
 
 ' Legend
 legend right

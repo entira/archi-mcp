@@ -1,0 +1,49 @@
+@startuml
+!include <archimate/Archimate>
+
+title Layered Architecture View
+
+' Description: Business, application and technology layers for ArchiMate MCP Server - Enterprise architecture modeling tool with Claude Desktop integration
+
+top to bottom direction
+
+' Elements
+Business_Business_Actor(primary_user, "End User")
+Business_Business_Service(core_business_service, "Core Business Service")
+Business_Business_Process(core_business_process, "Business Process")
+Business_Business_Object(business_data, "Business Data")
+Application_Application_Component(user_interface, "User Interface")
+Application_Application_Component(api_gateway, "API Gateway")
+Application_Application_Component(core_application, "Core Application")
+Application_Application_Component(data_service, "Data Service")
+Application_Data_Object(application_database, "Application Database")
+Technology_Node(web_server, "Web Server")
+Technology_Node(app_server, "Application Server")
+Technology_Node(database_server, "Database Server")
+Technology_Device(load_balancer, "Load Balancer")
+
+' Relationships
+Rel_Serving(primary_user, core_business_service, "serving")
+Rel_Realization(core_business_service, core_business_process, "realization")
+Rel_Association(core_business_process, business_data, "association")
+Rel_Realization(user_interface, core_business_service, "realization")
+Rel_Flow(user_interface, api_gateway, "flow")
+Rel_Flow(api_gateway, core_application, "flow")
+Rel_Flow(core_application, data_service, "flow")
+Rel_Association(data_service, application_database, "association")
+Rel_Realization(application_database, business_data, "realization")
+Rel_Assignment(web_server, user_interface, "assignment")
+Rel_Assignment(app_server, api_gateway, "assignment")
+Rel_Assignment(app_server, core_application, "assignment")
+Rel_Assignment(app_server, data_service, "assignment")
+Rel_Assignment(database_server, application_database, "assignment")
+Rel_Serving(load_balancer, web_server, "serving")
+
+' Legend
+legend right
+  Application Layer
+  Business Layer
+  Technology Layer
+end legend
+
+@enduml

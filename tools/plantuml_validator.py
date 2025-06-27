@@ -46,11 +46,12 @@ class PlantUMLValidator:
                 f.write(puml_content)
                 temp_file = f.name
             
-            # Try to compile the PlantUML file
+            # Try to compile the PlantUML file - run headless to avoid window focus issues
             result = subprocess.run([
-                'java', '-jar', self.plantuml_jar, 
+                'java', '-Djava.awt.headless=true', '-jar', self.plantuml_jar, 
                 '-checkonly', temp_file
-            ], capture_output=True, text=True, timeout=30)
+            ], capture_output=True, text=True, timeout=30, 
+               creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0)
             
             # Clean up
             os.unlink(temp_file)
@@ -75,11 +76,42 @@ class PlantUMLValidator:
             if output_path is None:
                 output_path = temp_file.replace('.puml', '.svg')
             
-            # Render to SVG
+            # Render to SVG - run headless
             result = subprocess.run([
-                'java', '-jar', self.plantuml_jar,
+                'java', '-Djava.awt.headless=true', '-jar', self.plantuml_jar,
                 '-tsvg', temp_file, '-o', str(Path(output_path).parent)
-            ], capture_output=True, text=True, timeout=60)
+            ], capture_output=True, text=True, timeout=60,
+               creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0)
+            
+            # Clean up temp file
+            os.unlink(temp_file)
+            
+            if result.returncode == 0:
+                return True, f"Successfully rendered to {output_path}"
+            else:
+                return False, f"Rendering failed: {result.stderr or result.stdout}"
+                
+        except subprocess.TimeoutExpired:
+            return False, "PlantUML rendering timeout"
+        except Exception as e:
+            return False, f"PlantUML rendering failed: {str(e)}"
+    
+    def render_to_png(self, puml_content: str, output_path: str = None) -> Tuple[bool, str]:
+        """Render PlantUML to PNG format."""
+        try:
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.puml', delete=False) as f:
+                f.write(puml_content)
+                temp_file = f.name
+            
+            if output_path is None:
+                output_path = temp_file.replace('.puml', '.png')
+            
+            # Render to PNG - run headless
+            result = subprocess.run([
+                'java', '-Djava.awt.headless=true', '-jar', self.plantuml_jar,
+                '-tpng', temp_file, '-o', str(Path(output_path).parent)
+            ], capture_output=True, text=True, timeout=60,
+               creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0)
             
             # Clean up temp file
             os.unlink(temp_file)

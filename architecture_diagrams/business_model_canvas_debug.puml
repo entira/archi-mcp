@@ -1,0 +1,30 @@
+@startuml
+!include <archimate/Archimate>
+
+title Business Model Canvas
+
+' Description: Business model overview for ArchiMate MCP Server - Enterprise architecture modeling tool with Claude Desktop integration
+
+left to right direction
+
+' Elements
+Business_Business_Actor(key_partner, "Strategic Partner")
+Business_Business_Service(value_proposition, "Business Value Service")
+Business_Business_Actor(customer_segment, "Target Customers")
+Business_Business_Interface(digital_channel, "Digital Channel")
+Business_Business_Object(revenue_stream, "Revenue")
+Business_Business_Object(operational_cost, "Operational Costs")
+
+' Relationships
+Rel_Serving(key_partner, value_proposition, "serving")
+Rel_Serving(value_proposition, customer_segment, "serving")
+Rel_Serving(digital_channel, customer_segment, "serving")
+Rel_Flow(customer_segment, revenue_stream, "flow")
+Rel_Association(value_proposition, operational_cost, "association")
+
+' Legend
+legend right
+  Business Layer
+end legend
+
+@enduml

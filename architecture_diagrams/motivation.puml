@@ -1,0 +1,37 @@
+@startuml
+!include <archimate/Archimate>
+
+title Motivation View
+
+' Description: Stakeholders, drivers, goals and requirements for ArchiMate MCP Server - Enterprise architecture modeling tool with Claude Desktop integration
+
+top to bottom direction
+
+' Elements
+Motivation_Stakeholder(business_stakeholder, "Business Stakeholder")
+Motivation_Stakeholder(customer_stakeholder, "Customer")
+Motivation_Stakeholder(it_stakeholder, "IT Department")
+Motivation_Driver(business_driver, "Business Growth")
+Motivation_Driver(efficiency_driver, "Operational Efficiency")
+Motivation_Goal(primary_goal, "Deliver ArchiMate MCP Server - Enterprise architecture modeling tool with Claude Desktop integration")
+Motivation_Goal(user_satisfaction_goal, "Improve User Satisfaction")
+Motivation_Requirement(functional_requirement, "Functional Requirements")
+Motivation_Requirement(performance_requirement, "Performance Requirements")
+Motivation_Requirement(security_requirement, "Security Requirements")
+Motivation_Principle(architecture_principle, "Architecture Principles")
+
+' Relationships
+Rel_Association(business_stakeholder, business_driver, "association")
+Rel_Influence(customer_stakeholder, user_satisfaction_goal, "influence")
+Rel_Influence(business_driver, primary_goal, "influence")
+Rel_Influence(efficiency_driver, primary_goal, "influence")
+Rel_Realization(primary_goal, functional_requirement, "realization")
+Rel_Realization(user_satisfaction_goal, performance_requirement, "realization")
+Rel_Influence(architecture_principle, security_requirement, "influence")
+
+' Legend
+legend right
+  Motivation Layer
+end legend
+
+@enduml

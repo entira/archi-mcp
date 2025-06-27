@@ -1,0 +1,34 @@
+@startuml
+!include <archimate/Archimate>
+
+title Technology Structure View
+
+' Description: Detailed technology infrastructure for ArchiMate MCP Server - Enterprise architecture modeling tool with Claude Desktop integration
+
+left to right direction
+
+' Elements
+Technology_Node(web_cluster, "Web Server Cluster")
+Technology_Node(app_cluster, "Application Server Cluster")
+Technology_Node(database_cluster, "Database Cluster")
+Technology_Communication_Network(cdn_network, "Content Delivery Network")
+Technology_Communication_Network(internal_network, "Internal Network")
+Technology_System_Software(container_platform, "Container Platform")
+Technology_System_Software(monitoring_system, "Monitoring System")
+
+' Relationships
+Rel_Serving(cdn_network, web_cluster, "serving")
+Rel_Flow(web_cluster, app_cluster, "flow")
+Rel_Flow(app_cluster, database_cluster, "flow")
+Rel_Association(internal_network, app_cluster, "association")
+Rel_Association(internal_network, database_cluster, "association")
+Rel_Assignment(container_platform, app_cluster, "assignment")
+Rel_Serving(monitoring_system, web_cluster, "serving")
+Rel_Serving(monitoring_system, app_cluster, "serving")
+
+' Legend
+legend right
+  Technology Layer
+end legend
+
+@enduml

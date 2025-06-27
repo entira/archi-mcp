@@ -1,0 +1,33 @@
+@startuml
+!include <archimate/Archimate>
+
+title Interaction View
+
+' Description: Actor and process interactions for ArchiMate MCP Server - Enterprise architecture modeling tool with Claude Desktop integration
+
+left to right direction
+
+' Elements
+Business_Business_Actor(system_user, "System User")
+Business_Business_Actor(system_admin, "System Administrator")
+Business_Business_Process(user_interaction_process, "User Interaction Process")
+Business_Business_Process(admin_process, "Administration Process")
+Application_Application_Component(frontend_interaction, "Frontend Application")
+Application_Application_Component(backend_interaction, "Backend Service")
+Application_Application_Component(admin_panel, "Admin Panel")
+
+' Relationships
+Rel_Assignment(system_user, user_interaction_process, "assignment")
+Rel_Assignment(system_admin, admin_process, "assignment")
+Rel_Triggering(user_interaction_process, frontend_interaction, "triggering")
+Rel_Flow(frontend_interaction, backend_interaction, "flow")
+Rel_Triggering(admin_process, admin_panel, "triggering")
+Rel_Flow(admin_panel, backend_interaction, "flow")
+
+' Legend
+legend right
+  Application Layer
+  Business Layer
+end legend
+
+@enduml

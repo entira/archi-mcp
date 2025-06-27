@@ -1,0 +1,28 @@
+@startuml
+!include <archimate/Archimate>
+
+title Value Stream View
+
+' Description: Value creation flow for ArchiMate MCP Server - Enterprise architecture modeling tool with Claude Desktop integration
+
+left to right direction
+
+' Elements
+Strategy_Value_Stream(primary_value_stream, "Primary Value Stream")
+Strategy_Capability(capability_1, "Customer Acquisition")
+Strategy_Capability(capability_2, "Service Delivery")
+Strategy_Capability(capability_3, "Customer Support")
+
+' Relationships
+Rel_Aggregation(primary_value_stream, capability_1, "aggregation")
+Rel_Aggregation(primary_value_stream, capability_2, "aggregation")
+Rel_Aggregation(primary_value_stream, capability_3, "aggregation")
+Rel_Flow(capability_1, capability_2, "flow")
+Rel_Flow(capability_2, capability_3, "flow")
+
+' Legend
+legend right
+  Strategy Layer
+end legend
+
+@enduml
