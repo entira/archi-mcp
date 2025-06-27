@@ -51,7 +51,11 @@ class ArchiMateElement(BaseModel):
             stereotype_str = f" <<{self.stereotype}>>"
         
         # Generate PlantUML archimate element
-        plantuml_code = f'{self.layer.value}_{self.element_type}({self.id}, "{self.name}"{stereotype_str})'
+        # Handle element types that already contain layer prefix
+        if self.element_type.startswith(f'{self.layer.value}_'):
+            plantuml_code = f'{self.element_type}({self.id}, "{self.name}"{stereotype_str})'
+        else:
+            plantuml_code = f'{self.layer.value}_{self.element_type}({self.id}, "{self.name}"{stereotype_str})'
         
         return plantuml_code
     
