@@ -78,6 +78,7 @@ class ArchiMCPServer:
                 tools=[
                     Tool(
                         name="create_archimate_diagram",
+                        title="Create ArchiMate Diagram",
                         description="Generate complete ArchiMate diagrams from structured input with elements and relationships",
                         inputSchema={
                             "type": "object",
@@ -132,6 +133,7 @@ class ArchiMCPServer:
                     ),
                     Tool(
                         name="add_archimate_element",
+                        title="Add ArchiMate Element",
                         description="Add single ArchiMate element to existing diagram",
                         inputSchema={
                             "type": "object",
@@ -149,6 +151,7 @@ class ArchiMCPServer:
                     ),
                     Tool(
                         name="add_archimate_relationship",
+                        title="Add ArchiMate Relationship",
                         description="Add relationship between ArchiMate elements",
                         inputSchema={
                             "type": "object",
@@ -166,6 +169,7 @@ class ArchiMCPServer:
                     ),
                     Tool(
                         name="validate_archimate_model",
+                        title="Validate ArchiMate Model",
                         description="Validate ArchiMate model against ArchiMate 3.2 specification",
                         inputSchema={
                             "type": "object",
@@ -176,6 +180,7 @@ class ArchiMCPServer:
                     ),
                     Tool(
                         name="generate_archimate_template",
+                        title="Generate ArchiMate Template",
                         description="Generate ArchiMate diagram from predefined templates",
                         inputSchema={
                             "type": "object",
@@ -193,6 +198,7 @@ class ArchiMCPServer:
                     ),
                     Tool(
                         name="export_archimate_diagram",
+                        title="Export ArchiMate Diagram",
                         description="Export ArchiMate diagram to PlantUML format and optionally save to file",
                         inputSchema={
                             "type": "object",
@@ -206,6 +212,7 @@ class ArchiMCPServer:
                     ),
                     Tool(
                         name="generate_full_architecture",
+                        title="Generate Full Architecture",
                         description="Generate a complete layered enterprise architecture following ArchiMate methodology with multiple coordinated views (Motivation, Business Model Canvas, Value Stream, Strategy & Capability, Layered Views, Interaction Views, Application & Technology Structure, Implementation Roadmap)",
                         inputSchema={
                             "type": "object",
