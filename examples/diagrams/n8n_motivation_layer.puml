@@ -1,0 +1,58 @@
+@startuml
+!include <archimate/Archimate>
+
+title n8n Platform - Motivačná vrstva
+
+' Description: Kompletná motivačná vrstva pre n8n workflow automation platformu
+
+
+' Elements
+Motivation_stakeholder(dev_team, "Vývojári")
+Motivation_stakeholder(business_users, "Business užívatelia")
+Motivation_stakeholder(it_admin, "IT administrátori")
+Motivation_stakeholder(management, "Manažment")
+Motivation_driver(reduce_costs, "Znižovanie nákladov")
+Motivation_driver(efficiency, "Zvyšovanie efektivity")
+Motivation_driver(digital_transformation, "Digitálna transformácia")
+Motivation_goal(automate_workflows, "Automatizovať pracovné procesy")
+Motivation_goal(integrate_systems, "Integrovať systémy")
+Motivation_goal(reduce_errors, "Znížiť chyby")
+Motivation_goal(faster_deployment, "Rýchlejšie nasadenie")
+Motivation_requirement(visual_workflow, "Vizuálne workflow editovanie")
+Motivation_requirement(no_code_approach, "No-code/Low-code prístup")
+Motivation_requirement(open_source, "Open-source riešenie")
+Motivation_requirement(api_integrations, "Široké API integrácie")
+Motivation_requirement(scalability, "Škálovateľnosť")
+Motivation_outcome(cost_savings, "Úspora nákladov")
+Motivation_outcome(time_savings, "Úspora času")
+Motivation_outcome(improved_accuracy, "Zvýšená presnosť")
+Motivation_principle(flexibility_principle, "Flexibilita a prispôsobivosť")
+Motivation_principle(simplicity_principle, "Jednoduchosť použitia")
+Motivation_constraint(security_constraint, "Bezpečnostné požiadavky")
+Motivation_constraint(budget_constraint, "Rozpočtové obmedzenia")
+
+' Relationships
+Rel_Association(management, reduce_costs, "association")
+Rel_Association(business_users, efficiency, "association")
+Rel_Association(dev_team, digital_transformation, "association")
+Rel_Influence(reduce_costs, automate_workflows, "influence")
+Rel_Influence(efficiency, integrate_systems, "influence")
+Rel_Influence(digital_transformation, faster_deployment, "influence")
+Rel_Realization(automate_workflows, visual_workflow, "realization")
+Rel_Realization(integrate_systems, api_integrations, "realization")
+Rel_Realization(reduce_errors, no_code_approach, "realization")
+Rel_Realization(faster_deployment, scalability, "realization")
+Rel_Realization(visual_workflow, time_savings, "realization")
+Rel_Realization(api_integrations, cost_savings, "realization")
+Rel_Realization(no_code_approach, improved_accuracy, "realization")
+Rel_Realization(open_source, flexibility_principle, "realization")
+Rel_Realization(visual_workflow, simplicity_principle, "realization")
+Rel_Association(it_admin, security_constraint, "association")
+Rel_Association(management, budget_constraint, "association")
+
+' Legend
+legend right
+  Motivation Layer
+end legend
+
+@enduml

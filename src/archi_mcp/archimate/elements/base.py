@@ -50,12 +50,15 @@ class ArchiMateElement(BaseModel):
         if self.stereotype:
             stereotype_str = f" <<{self.stereotype}>>"
         
+        # Normalize element type for PlantUML (replace hyphens with underscores, capitalize)
+        normalized_type = self._normalize_element_type(self.element_type)
+        
         # Generate PlantUML archimate element
         # Handle element types that already contain layer prefix
-        if self.element_type.startswith(f'{self.layer.value}_'):
-            plantuml_code = f'{self.element_type}({self.id}, "{self.name}"{stereotype_str})'
+        if normalized_type.startswith(f'{self.layer.value}_'):
+            plantuml_code = f'{normalized_type}({self.id}, "{self.name}"{stereotype_str})'
         else:
-            plantuml_code = f'{self.layer.value}_{self.element_type}({self.id}, "{self.name}"{stereotype_str})'
+            plantuml_code = f'{self.layer.value}_{normalized_type}({self.id}, "{self.name}"{stereotype_str})'
         
         return plantuml_code
     
@@ -75,6 +78,63 @@ class ArchiMateElement(BaseModel):
             ArchiMateLayer.IMPLEMENTATION: "Implementation",
         }
         return layer_colors.get(self.layer, "Technology")
+    
+    def _normalize_element_type(self, element_type: str) -> str:
+        """Normalize element type for PlantUML compatibility.
+        
+        Args:
+            element_type: Raw element type string
+            
+        Returns:
+            Normalized element type for PlantUML
+        """
+        # Replace hyphens with underscores and ensure proper capitalization
+        normalized = element_type.replace('-', '_')
+        
+        # Handle common element type patterns
+        type_mappings = {
+            'business_actor': 'Business_Actor',
+            'business_role': 'Business_Role', 
+            'business_collaboration': 'Business_Collaboration',
+            'business_interface': 'Business_Interface',
+            'business_process': 'Business_Process',
+            'business_function': 'Business_Function',
+            'business_interaction': 'Business_Interaction',
+            'business_event': 'Business_Event',
+            'business_service': 'Business_Service',
+            'business_object': 'Business_Object',
+            'business_contract': 'Business_Contract',
+            'business_representation': 'Business_Representation',
+            'application_component': 'Application_Component',
+            'application_collaboration': 'Application_Collaboration',
+            'application_interface': 'Application_Interface',
+            'application_function': 'Application_Function',
+            'application_interaction': 'Application_Interaction',
+            'application_process': 'Application_Process',
+            'application_event': 'Application_Event',
+            'application_service': 'Application_Service',
+            'data_object': 'DataObject',
+            'technology_interface': 'Technology_Interface',
+            'technology_function': 'Technology_Function',
+            'technology_process': 'Technology_Process',
+            'technology_interaction': 'Technology_Interaction',
+            'technology_event': 'Technology_Event',
+            'technology_service': 'Technology_Service',
+            'system_software': 'SystemSoftware',
+            'technology_collaboration': 'Technology_Collaboration',
+            'communication_network': 'Communication_Network',
+            'distribution_network': 'Distribution_Network',
+            'work_package': 'Work_Package'
+        }
+        
+        # Convert to lowercase for lookup
+        lookup_key = normalized.lower()
+        if lookup_key in type_mappings:
+            return type_mappings[lookup_key]
+        
+        # Default: capitalize each word separated by underscore
+        parts = normalized.split('_')
+        return '_'.join(word.capitalize() for word in parts)
     
     def validate_element(self) -> List[str]:
         """Validate the element according to ArchiMate specification.

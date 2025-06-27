@@ -3,6 +3,11 @@
 import json
 import sys
 import asyncio
+import subprocess
+import os
+import tempfile
+import base64
+import zlib
 from typing import Any, Dict, List, Optional
 from pathlib import Path
 
@@ -98,20 +103,33 @@ class FullArchitectureInput(BaseModel):
 
 # Utility functions
 def _create_element_from_data(data: ElementInput) -> ArchiMateElement:
-    """Create ArchiMateElement from input data."""
+    """Create ArchiMateElement from input data with normalization."""
+    from .element_normalizer import normalize_element_type, validate_element_id, validate_element_name
+    
+    # Normalize element type
+    normalized_element_type = normalize_element_type(data.element_type)
+    
+    # Validate and normalize element ID
+    normalized_id = validate_element_id(data.id)
+    
+    # Validate and normalize element name  
+    normalized_name = validate_element_name(data.name)
+    # Remove quotes for internal storage
+    clean_name = normalized_name.strip('"') if normalized_name.startswith('"') else normalized_name
+    
     # Map layer string to enum
     try:
         layer = ArchiMateLayer(data.layer)
     except ValueError:
         raise ArchiMateValidationError(f"Invalid layer: {data.layer}")
     
-    # Determine aspect from element type
-    aspect = _get_aspect_for_element_type(data.element_type)
+    # Determine aspect from normalized element type
+    aspect = _get_aspect_for_element_type(normalized_element_type)
     
     return ArchiMateElement(
-        id=data.id,
-        name=data.name,
-        element_type=data.element_type,
+        id=normalized_id,
+        name=clean_name,
+        element_type=normalized_element_type,
         layer=layer,
         aspect=aspect,
         description=data.description,
@@ -158,6 +176,17 @@ def _get_aspect_for_element_type(element_type: str) -> ArchiMateAspect:
     else:
         return ArchiMateAspect.BEHAVIOR
 
+# Enhanced validation function with comprehensive logging
+def _validate_plantuml_renders(plantuml_code: str, tool_name: str = "unknown", context: dict = None) -> tuple[bool, str]:
+    """
+    Enhanced PlantUML validation with comprehensive error logging.
+    Returns (success: bool, error_message: str)
+    """
+    from .validation_logger import validation_logger
+    
+    # Use comprehensive validation with logging
+    return validation_logger.validate_plantuml_comprehensive(plantuml_code, tool_name, context)
+
 # MCP Tools using FastMCP decorators
 @mcp.tool()
 def create_archimate_diagram(diagram: DiagramInput) -> str:
@@ -189,6 +218,17 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
         # Generate PlantUML code
         plantuml_code = generator.generate_plantuml(title=diagram.title, description=diagram.description)
         
+        # MANDATORY: Validate that diagram actually renders
+        context = {
+            "elements_count": len(diagram.elements),
+            "relationships_count": len(diagram.relationships) if diagram.relationships else 0,
+            "title": diagram.title,
+            "has_layout": diagram.layout is not None
+        }
+        renders_ok, error_msg = _validate_plantuml_renders(plantuml_code, "create_archimate_diagram", context)
+        if not renders_ok:
+            raise ArchiMateGenerationError(f"Generated diagram failed validation - {error_msg}")
+        
         # Get diagram statistics
         stats = {
             "elements": generator.get_element_count(),
@@ -196,7 +236,14 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
             "layers": generator.get_layers_used()
         }
         
-        return f"ArchiMate diagram created successfully!\n\nStatistics:\n- Elements: {stats['elements']}\n- Relationships: {stats['relationships']}\n- Layers: {', '.join(stats['layers'])}\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
+        # Generate comprehensive image display for Claude Desktop
+        from .image_display import generate_claude_desktop_image
+        image_success, image_result = generate_claude_desktop_image(plantuml_code, diagram.title)
+        
+        if image_success:
+            return f"✅ ArchiMate diagram created and validated successfully!\n\nStatistics:\n- Elements: {stats['elements']}\n- Relationships: {stats['relationships']}\n- Layers: {', '.join(stats['layers'])}\n- Render Status: VERIFIED ✅\n\n{image_result}\n\n### 📄 PlantUML Source Code\n```plantuml\n{plantuml_code}\n```"
+        else:
+            return f"✅ ArchiMate diagram created and validated successfully!\n\nStatistics:\n- Elements: {stats['elements']}\n- Relationships: {stats['relationships']}\n- Layers: {', '.join(stats['layers'])}\n- Render Status: VERIFIED ✅\n\n⚠️ Image generation warning: {image_result}\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
         
     except Exception as e:
         raise ArchiMateGenerationError(f"Failed to create diagram: {str(e)}")
@@ -345,7 +392,12 @@ def generate_archimate_template(template: TemplateInput) -> str:
             description=template_obj.description
         )
         
-        return f"ArchiMate diagram generated from {template.template_type} template '{template.template_name}'!\n\nTemplate: {template_obj.name}\nDescription: {template_obj.description}\n\nElements: {generator.get_element_count()}\nRelationships: {generator.get_relationship_count()}\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
+        # MANDATORY: Validate that diagram actually renders
+        renders_ok, error_msg = _validate_plantuml_renders(plantuml_code)
+        if not renders_ok:
+            raise ArchiMateGenerationError(f"Generated template diagram failed validation - {error_msg}")
+        
+        return f"✅ ArchiMate diagram generated from {template.template_type} template '{template.template_name}' and validated!\n\nTemplate: {template_obj.name}\nDescription: {template_obj.description}\n\nElements: {generator.get_element_count()}\nRelationships: {generator.get_relationship_count()}\nRender Status: VERIFIED ✅\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
         
     except Exception as e:
         raise ArchiMateTemplateError(f"Failed to generate template: {str(e)}")
@@ -362,7 +414,12 @@ def export_archimate_diagram(
         # Generate PlantUML code
         plantuml_code = generator.generate_plantuml(title=title, description=description)
         
-        result_text = "ArchiMate diagram exported successfully!\n\n"
+        # MANDATORY: Validate that diagram actually renders
+        renders_ok, error_msg = _validate_plantuml_renders(plantuml_code)
+        if not renders_ok:
+            raise ArchiMateGenerationError(f"Generated diagram failed validation - {error_msg}")
+        
+        result_text = "✅ ArchiMate diagram exported and validated successfully!\n\n"
         
         # Save to file if path provided
         if output_path:
@@ -379,7 +436,8 @@ def export_archimate_diagram(
         
         result_text += f"Elements: {generator.get_element_count()}\n"
         result_text += f"Relationships: {generator.get_relationship_count()}\n"
-        result_text += f"Layers: {', '.join(generator.get_layers_used())}\n\n"
+        result_text += f"Layers: {', '.join(generator.get_layers_used())}\n"
+        result_text += f"Render Status: VERIFIED ✅\n\n"
         result_text += f"PlantUML Code:\n```plantuml\n{plantuml_code}\n```"
         
         # Clear diagram if requested
@@ -426,12 +484,21 @@ def generate_full_architecture(architecture: FullArchitectureInput) -> str:
             "implementation_roadmap": "Represents phased evolution and delivery timeline"
         }
         
+        # MANDATORY: Validate all views before returning
+        validation_results = {}
+        for view_name, plantuml_code in architecture_views.items():
+            renders_ok, error_msg = _validate_plantuml_renders(plantuml_code)
+            validation_results[view_name] = (renders_ok, error_msg)
+            if not renders_ok:
+                raise ArchiMateGenerationError(f"Generated view '{view_name}' failed validation - {error_msg}")
+        
         for view_name, plantuml_code in architecture_views.items():
             view_title = view_name.replace("_", " ").title()
             description = view_descriptions.get(view_name, "ArchiMate view")
             
-            result_text += f"## {view_title}\n\n"
+            result_text += f"## {view_title} ✅\n\n"
             result_text += f"*{description}*\n\n"
+            result_text += f"**Render Status:** VERIFIED ✅\n\n"
             result_text += f"```plantuml\n{plantuml_code}\n```\n\n"
             result_text += "---\n\n"
         
@@ -450,7 +517,7 @@ def generate_full_architecture(architecture: FullArchitectureInput) -> str:
         result_text += "4. **Align** implementation phases with business priorities\n"
         result_text += "5. **Monitor** architecture evolution against original goals\n\n"
         
-        result_text += f"✅ **Architecture Generation Complete**\n"
+        result_text += f"✅ **Architecture Generation Complete - All Views Validated**\n"
         result_text += f"Generated {len(architecture_views)} coordinated ArchiMate views following enterprise architecture best practices.\n\n"
         
         # Additional metadata
@@ -461,11 +528,347 @@ def generate_full_architecture(architecture: FullArchitectureInput) -> str:
         result_text += f"- Views: {len(architecture_views)}\n"
         result_text += f"- Estimated Elements: ~{total_elements}\n"
         result_text += f"- Estimated Relationships: ~{total_relationships}\n"
+        result_text += f"- Validation Status: ALL VIEWS VERIFIED ✅\n"
         
         return result_text
         
     except Exception as e:
         raise ArchiMateGenerationError(f"Failed to generate full architecture: {str(e)}")
+
+@mcp.tool()
+def generate_diagram_image(
+    title: Optional[str] = None,
+    description: Optional[str] = None,
+    output_path: Optional[str] = None,
+    format: str = "png"
+) -> str:
+    """Generate ArchiMate diagram and convert to image file using PlantUML."""
+    try:
+        # Generate PlantUML code
+        plantuml_code = generator.generate_plantuml(title=title, description=description)
+        
+        # Set default output path
+        if not output_path:
+            output_path = f"/tmp/archimate_diagram_{hash(plantuml_code) % 10000}.{format}"
+        
+        # Ensure output directory exists
+        output_file = Path(output_path)
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Create temporary PlantUML file
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.puml', delete=False) as f:
+            f.write(plantuml_code)
+            temp_puml = f.name
+        
+        try:
+            # Find PlantUML jar
+            plantuml_jar = None
+            possible_locations = [
+                "/Users/patrik/Projects/archi-mcp/plantuml.jar",
+                "./plantuml.jar",
+                "/usr/local/bin/plantuml.jar",
+                "/opt/homebrew/bin/plantuml.jar"
+            ]
+            
+            for jar_path in possible_locations:
+                if os.path.exists(jar_path):
+                    plantuml_jar = jar_path
+                    break
+            
+            if not plantuml_jar:
+                return f"❌ PlantUML jar not found. Please ensure plantuml.jar is available.\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
+            
+            # Generate image using PlantUML
+            cmd = [
+                "java", "-jar", plantuml_jar,
+                "-t" + format,  # output format
+                "-o", str(output_file.parent),  # output directory
+                temp_puml
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            
+            if result.returncode != 0:
+                return f"❌ PlantUML generation failed:\n{result.stderr}\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
+            
+            # Check if output file was created
+            expected_output = output_file.parent / f"{Path(temp_puml).stem}.{format}"
+            if expected_output.exists():
+                # Move to desired location if different
+                if expected_output != output_file:
+                    expected_output.rename(output_file)
+                
+                file_size = output_file.stat().st_size
+                return f"✅ ArchiMate diagram image generated successfully!\n\n📁 **File:** {output_path}\n📊 **Size:** {file_size} bytes\n🖼️ **Format:** {format.upper()}\n\n**Statistics:**\n- Elements: {generator.get_element_count()}\n- Relationships: {generator.get_relationship_count()}\n- Layers: {', '.join(generator.get_layers_used())}\n\n**PlantUML Code:**\n```plantuml\n{plantuml_code}\n```"
+            else:
+                return f"❌ Output file not created: {expected_output}\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
+                
+        finally:
+            # Clean up temporary file
+            if os.path.exists(temp_puml):
+                os.unlink(temp_puml)
+                
+    except subprocess.TimeoutExpired:
+        raise ArchiMateGenerationError("PlantUML generation timed out after 30 seconds")
+    except Exception as e:
+        raise ArchiMateGenerationError(f"Failed to generate diagram image: {str(e)}")
+
+@mcp.tool()
+def get_diagram_as_base64(
+    title: Optional[str] = None,
+    description: Optional[str] = None,
+    format: str = "png"
+) -> str:
+    """Generate ArchiMate diagram and return as base64 encoded image."""
+    try:
+        # Generate PlantUML code
+        plantuml_code = generator.generate_plantuml(title=title, description=description)
+        
+        # Create temporary files
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.puml', delete=False) as f:
+            f.write(plantuml_code)
+            temp_puml = f.name
+        
+        try:
+            # Find PlantUML jar
+            plantuml_jar = None
+            possible_locations = [
+                "/Users/patrik/Projects/archi-mcp/plantuml.jar",
+                "./plantuml.jar",
+                "/usr/local/bin/plantuml.jar",
+                "/opt/homebrew/bin/plantuml.jar"
+            ]
+            
+            for jar_path in possible_locations:
+                if os.path.exists(jar_path):
+                    plantuml_jar = jar_path
+                    break
+            
+            if not plantuml_jar:
+                return f"❌ PlantUML jar not found. Cannot generate base64 image.\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
+            
+            # Generate image using PlantUML
+            cmd = [
+                "java", "-jar", plantuml_jar,
+                "-t" + format,
+                temp_puml
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            
+            if result.returncode != 0:
+                return f"❌ PlantUML generation failed:\n{result.stderr}\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
+            
+            # Find generated image file
+            generated_image = Path(temp_puml).parent / f"{Path(temp_puml).stem}.{format}"
+            
+            if generated_image.exists():
+                # Read image and encode as base64
+                with open(generated_image, 'rb') as img_file:
+                    image_data = img_file.read()
+                    base64_data = base64.b64encode(image_data).decode('utf-8')
+                
+                file_size = len(image_data)
+                data_url = f"data:image/{format};base64,{base64_data}"
+                
+                # Clean up generated image
+                generated_image.unlink()
+                
+                return f"✅ ArchiMate diagram generated as base64!\n\n📊 **Format:** {format.upper()}\n📏 **Size:** {file_size} bytes\n🔗 **Base64 Length:** {len(base64_data)} characters\n\n**Statistics:**\n- Elements: {generator.get_element_count()}\n- Relationships: {generator.get_relationship_count()}\n- Layers: {', '.join(generator.get_layers_used())}\n\n**Data URL (copy to browser):**\n```\n{data_url[:200]}...\n```\n\n**Full Base64 Data:**\n```\n{base64_data}\n```\n\n**PlantUML Code:**\n```plantuml\n{plantuml_code}\n```"
+            else:
+                return f"❌ Generated image not found: {generated_image}\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
+                
+        finally:
+            # Clean up temporary files
+            if os.path.exists(temp_puml):
+                os.unlink(temp_puml)
+                    
+    except subprocess.TimeoutExpired:
+        raise ArchiMateGenerationError("PlantUML generation timed out after 30 seconds")
+    except Exception as e:
+        raise ArchiMateGenerationError(f"Failed to generate base64 image: {str(e)}")
+
+@mcp.tool()
+def validate_plantuml_syntax(
+    title: Optional[str] = None,
+    description: Optional[str] = None
+) -> str:
+    """Validate PlantUML syntax and test renderability using PlantUML jar."""
+    try:
+        # Generate PlantUML code
+        plantuml_code = generator.generate_plantuml(title=title, description=description)
+        
+        # Create temporary PlantUML file
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.puml', delete=False) as f:
+            f.write(plantuml_code)
+            temp_puml = f.name
+        
+        try:
+            # Find PlantUML jar
+            plantuml_jar = None
+            possible_locations = [
+                "/Users/patrik/Projects/archi-mcp/plantuml.jar",
+                "./plantuml.jar",
+                "/usr/local/bin/plantuml.jar",
+                "/opt/homebrew/bin/plantuml.jar"
+            ]
+            
+            for jar_path in possible_locations:
+                if os.path.exists(jar_path):
+                    plantuml_jar = jar_path
+                    break
+            
+            if not plantuml_jar:
+                return f"❌ PlantUML jar not found. Cannot validate syntax.\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
+            
+            # Test syntax validation
+            check_cmd = [
+                "java", "-jar", plantuml_jar,
+                "-checkonly",
+                temp_puml
+            ]
+            
+            check_result = subprocess.run(check_cmd, capture_output=True, text=True, timeout=15)
+            
+            # Test image generation
+            gen_cmd = [
+                "java", "-jar", plantuml_jar,
+                "-tpng",
+                temp_puml
+            ]
+            
+            gen_result = subprocess.run(gen_cmd, capture_output=True, text=True, timeout=30)
+            
+            # Analyze results - PlantUML may return non-zero even for successful generation
+            syntax_valid = check_result.returncode == 0 or "parsing ok" in check_result.stderr.lower()
+            render_successful = gen_result.returncode == 0 or gen_result.returncode == 200
+            
+            # Check if image was actually generated
+            generated_image = Path(temp_puml).parent / f"{Path(temp_puml).stem}.png"
+            image_created = generated_image.exists()
+            
+            # Get image size if created
+            image_size = 0
+            if image_created:
+                image_size = generated_image.stat().st_size
+                # Clean up generated image
+                generated_image.unlink()
+            
+            # Format validation report
+            status = "✅ VALID" if syntax_valid and render_successful and image_created else "❌ INVALID"
+            
+            report = f"{status} - PlantUML Validation Report\n\n"
+            report += f"**Syntax Check:** {'✅ PASSED' if syntax_valid else '❌ FAILED'}\n"
+            report += f"**Render Test:** {'✅ PASSED' if render_successful else '❌ FAILED'}\n"
+            report += f"**Image Generated:** {'✅ YES' if image_created else '❌ NO'}\n"
+            
+            if image_created:
+                report += f"**Image Size:** {image_size} bytes\n"
+            
+            report += f"\n**Diagram Statistics:**\n"
+            report += f"- Elements: {generator.get_element_count()}\n"
+            report += f"- Relationships: {generator.get_relationship_count()}\n"
+            report += f"- Layers: {', '.join(generator.get_layers_used())}\n"
+            
+            # Add error details if any
+            if not syntax_valid:
+                report += f"\n**Syntax Errors:**\n```\n{check_result.stderr}\n```\n"
+            
+            if not render_successful:
+                report += f"\n**Render Errors:**\n```\n{gen_result.stderr}\n```\n"
+            
+            report += f"\n**PlantUML Code:**\n```plantuml\n{plantuml_code}\n```"
+            
+            return report
+                
+        finally:
+            # Clean up temporary file
+            if os.path.exists(temp_puml):
+                os.unlink(temp_puml)
+                
+    except subprocess.TimeoutExpired:
+        raise ArchiMateGenerationError("PlantUML validation timed out")
+    except Exception as e:
+        raise ArchiMateGenerationError(f"Failed to validate PlantUML syntax: {str(e)}")
+
+def _plantuml_encode(plantuml_text: str) -> str:
+    """Encode PlantUML text for online viewer URL."""
+    # PlantUML encoding algorithm
+    compressed = zlib.compress(plantuml_text.encode('utf-8'))
+    
+    # Custom base64 encoding for PlantUML
+    def encode6bit(b):
+        if b < 10:
+            return chr(48 + b)  # 0-9
+        b -= 10
+        if b < 26:
+            return chr(65 + b)  # A-Z
+        b -= 26
+        if b < 26:
+            return chr(97 + b)  # a-z
+        b -= 26
+        if b == 0:
+            return '-'
+        if b == 1:
+            return '_'
+        return '?'
+    
+    result = ""
+    for i in range(0, len(compressed), 3):
+        b1 = compressed[i] if i < len(compressed) else 0
+        b2 = compressed[i + 1] if i + 1 < len(compressed) else 0
+        b3 = compressed[i + 2] if i + 2 < len(compressed) else 0
+        
+        result += encode6bit(b1 >> 2)
+        result += encode6bit(((b1 & 0x3) << 4) | (b2 >> 4))
+        result += encode6bit(((b2 & 0xF) << 2) | (b3 >> 6))
+        result += encode6bit(b3 & 0x3F)
+    
+    return result
+
+@mcp.tool()
+def get_plantuml_online_url(
+    title: Optional[str] = None,
+    description: Optional[str] = None,
+    format: str = "svg"
+) -> str:
+    """Generate PlantUML online viewer URL for immediate preview."""
+    try:
+        # Generate PlantUML code
+        plantuml_code = generator.generate_plantuml(title=title, description=description)
+        
+        # Encode for PlantUML server
+        try:
+            encoded = _plantuml_encode(plantuml_code)
+            
+            # Generate URLs for different servers
+            servers = {
+                "Official": f"http://www.plantuml.com/plantuml/{format}/{encoded}",
+                "Alternative": f"https://plantuml-server.kkeisuke.app/{format}/{encoded}",
+                "GitHub": f"https://kroki.io/plantuml/{format}/{base64.urlsafe_b64encode(plantuml_code.encode()).decode()}"
+            }
+            
+            result = f"🌐 **PlantUML Online Preview URLs**\n\n"
+            result += f"**Format:** {format.upper()}\n\n"
+            
+            for server_name, url in servers.items():
+                result += f"**{server_name} Server:**\n{url}\n\n"
+            
+            result += f"**Statistics:**\n"
+            result += f"- Elements: {generator.get_element_count()}\n"
+            result += f"- Relationships: {generator.get_relationship_count()}\n"
+            result += f"- Layers: {', '.join(generator.get_layers_used())}\n\n"
+            
+            result += f"**PlantUML Code:**\n```plantuml\n{plantuml_code}\n```\n\n"
+            result += f"💡 **Tip:** Copy any URL above and paste it in your browser to view the diagram!"
+            
+            return result
+            
+        except Exception as encode_error:
+            return f"❌ Failed to encode PlantUML for online viewing: {str(encode_error)}\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
+            
+    except Exception as e:
+        raise ArchiMateGenerationError(f"Failed to generate online URL: {str(e)}")
 
 def main() -> None:
     """Main entry point for the ArchiMate MCP server."""

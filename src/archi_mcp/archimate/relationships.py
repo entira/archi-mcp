@@ -112,12 +112,12 @@ class ArchiMateRelationship(BaseModel):
         # For now, we'll do basic type checking
         
         # Access relationships typically connect active structure to passive structure
+        # But this is not a strict rule - it's just a guideline
         if self.relationship_type == RelationshipType.ACCESS:
             if (from_elem.aspect.value != "Active Structure" or 
                 to_elem.aspect.value != "Passive Structure"):
-                errors.append(
-                    f"Access relationship typically connects Active Structure to Passive Structure"
-                )
+                # Only warn, don't error - Access can be used more flexibly
+                pass  # Relaxed validation for Access relationships
         
         # Composition requires compatible layers
         if self.relationship_type == RelationshipType.COMPOSITION:

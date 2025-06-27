@@ -1,0 +1,9 @@
+@startuml
+!include <archimate/Archimate>
+
+' Test correct ArchiMate element names
+Business_Actor(actor, "Test Actor")
+Application_Component(comp, "Test Component")  
+Application_DataObject(data, "Test Data")
+
+@enduml

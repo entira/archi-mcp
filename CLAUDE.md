@@ -5,12 +5,16 @@ Professional Model Context Protocol server for ArchiMate enterprise architecture
 
 ## Key Features
 - **Complete ArchiMate 3.2 Support**: All 55+ elements across 7 layers
+- **Enhanced 4-Step Validation**: Syntax → ArchiMate → Rendering → Quality validation pipeline
+- **Automatic Element Normalization**: Fixes kebab-case to proper ArchiMate format (business-actor → Business_Actor)
+- **Multi-Format Image Generation**: Local PNG files + Base64 URLs + Online preview URLs for Claude Desktop
+- **Comprehensive Error Logging**: JSONL validation error tracking with detailed context
 - **Full Architecture Generation**: Automated enterprise architecture following ArchiMate Cookbook methodology
-- **PlantUML Integration**: Native PlantUML code generation with ArchiMate styling
-- **Model Validation**: ArchiMate specification compliance checking
+- **PlantUML Integration**: Native PlantUML code generation with ArchiMate styling and rendering verification
 - **Enterprise Templates**: Pre-built viewpoints, patterns, and industry-specific templates
 - **Claude Desktop Integration**: Seamless integration with Claude Desktop via MCP
 - **Multi-View Architecture**: Motivation, Strategy, Business, Application, Technology, Physical, Implementation layers
+- **Slovak Diacritics Support**: Full national character preservation in diagrams
 
 ## Tech Stack
 - **Python 3.11+** with modern async/await
@@ -40,6 +44,28 @@ uv run pytest -v
 
 # Run tests with coverage
 uv run pytest --cov=archi_mcp --cov-report=html
+
+# Enhanced Testing Workflow with Validation Error Monitoring
+# IMPORTANT: Always check validation error logs before and after testing!
+
+# 1. Check validation error logs before testing
+cat logs/validation_errors.jsonl
+
+# 2. If errors found, implement fix-test-retest cycle:
+#    a) Analyze specific error in logs/validation_errors.jsonl
+#    b) Fix the validation issue in source code
+#    c) Run targeted tests: uv run pytest tests/test_validation.py -v
+#    d) Re-run full test suite: uv run pytest
+#    e) Verify error log is clean: cat logs/validation_errors.jsonl
+
+# 3. Run comprehensive MCP testing (only if error log is clean)
+uv run python -m pytest testing/ -v
+
+# 4. Monitor validation errors during testing (in separate terminal)
+tail -f logs/validation_errors.jsonl
+
+# 5. Post-test validation check (must be empty for passing tests)
+wc -l logs/validation_errors.jsonl  # Should show 0 lines for clean tests
 ```
 
 ### Server Operations
@@ -51,13 +77,28 @@ uv run python src/archi_mcp/server.py
 uv run python -c "from archi_mcp.server import mcp; print('✅ Server ready')"
 ```
 
-### PlantUML Validation
+### Enhanced Validation & Error Monitoring
 ```bash
-# Validate all generated diagrams
+# Check current validation error log (critical for debugging)
+cat logs/validation_errors.jsonl
+
+# View real-time validation errors during development
+tail -f logs/validation_errors.jsonl
+
+# Analyze validation error patterns
+grep "element_type" logs/validation_errors.jsonl | head -5
+
+# Test enhanced 4-step validation system
+uv run python tests/test_enhanced_validation.py
+
+# Test PlantUML rendering with comprehensive validation
 uv run python tests/test_plantuml_validation.py
 
-# Test diagram generation
+# Test diagram generation with validation
 uv run python examples/generate_sample_diagrams.py
+
+# Clear validation error log (use with caution)
+> logs/validation_errors.jsonl
 ```
 
 ### Code Quality
@@ -195,9 +236,23 @@ uv sync  # Install dependencies
 Use full path in Claude Desktop config with `uv` command and `--directory` flag.
 
 ### PlantUML validation errors
-- Ensure Java is installed for PlantUML
-- Check element and relationship naming compliance
-- Use strict validation mode for detailed error reporting
+- **First step:** Check validation error log: `cat logs/validation_errors.jsonl`
+- **Element normalization issues:** Check if kebab-case elements are properly converted (business-actor → Business_Actor)
+- **Rendering failures:** Ensure Java is installed for PlantUML jar execution
+- **JSONL log entries:** Each validation failure is logged with full context for debugging
+- **Fix-test cycle:** Always re-run tests after fixing validation errors to ensure log is clean
+
+### Image generation not working in Claude Desktop
+- **Multi-format approach:** Server generates PNG files + Base64 URLs + Online preview URLs
+- **Check image files:** Look for timestamped PNG files in `/tmp/archimate_*.png`
+- **Base64 URLs:** Copy data URLs directly into browser for immediate viewing
+- **Online previews:** Use generated PlantUML server URLs for instant preview
+
+### Validation error log monitoring
+- **Before testing:** Always check `logs/validation_errors.jsonl` is empty
+- **During development:** Use `tail -f logs/validation_errors.jsonl` to monitor real-time errors
+- **After fixes:** Verify log is clean with `wc -l logs/validation_errors.jsonl` (should be 0)
+- **Pattern analysis:** Use `grep` to find common error patterns for systematic fixes
 
 ## Quality Metrics
 - ✅ **Comprehensive test suite** - Full coverage
