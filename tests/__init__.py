@@ -1,1 +1,1 @@
-"""Test suite for ArchiMate MCP server."""
+"""Tests for ArchiMate MCP Server."""

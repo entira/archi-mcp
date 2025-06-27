@@ -10,7 +10,7 @@ from archi_mcp.archimate.elements.base import ArchiMateElement, ArchiMateLayer, 
 from archi_mcp.archimate.relationships import ArchiMateRelationship, RelationshipType
 from archi_mcp.archimate.generator import ArchiMateGenerator
 from archi_mcp.archimate.validator import ArchiMateValidator
-from archi_mcp.server import ArchiMCPServer
+from archi_mcp.server import mcp
 
 
 @pytest.fixture
@@ -119,7 +119,7 @@ def strict_validator():
 @pytest.fixture
 def archi_server():
     """Create an ArchiMate MCP server instance."""
-    return ArchiMCPServer()
+    return mcp
 
 
 @pytest.fixture

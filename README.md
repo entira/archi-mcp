@@ -487,18 +487,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/pskovajsa/archi-mcp/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/pskovajsa/archi-mcp/discussions)
-- **Documentation**: [Project Wiki](https://github.com/pskovajsa/archi-mcp/wiki)
+- **Issues**: [GitHub Issues](https://github.com/entira/archi-mcp/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/entira/archi-mcp/discussions)
+- **Documentation**: [Project Wiki](https://github.com/entira/archi-mcp/wiki)
 
 ## 🗺️ Roadmap
 
 - [ ] Export to ArchiMate Open Exchange Format
-- [ ] Interactive diagram editing capabilities
-- [ ] Integration with enterprise architecture tools
 - [ ] Advanced model analysis and metrics
 - [ ] Collaborative modeling features
-- [ ] Web-based diagram viewer
 
 ---
 
