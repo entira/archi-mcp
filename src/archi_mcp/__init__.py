@@ -17,6 +17,6 @@ __author__ = "Mgr. Patrik Skovajsa, Claude Code Assistant"
 __email__ = ""
 __license__ = "MIT"
 
-from .server import ArchiMCPServer
+from .server import mcp
 
-__all__ = ["ArchiMCPServer"]
+__all__ = ["mcp"]

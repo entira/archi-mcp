@@ -34,7 +34,7 @@ keywords = [
 ]
 
 dependencies = [
-    "mcp>=1.0.0",
+    "fastmcp>=2.8.0",
     "pydantic>=2.0.0",
     "loguru>=0.7.0",
     "typing-extensions>=4.0.0",
