@@ -6,7 +6,7 @@ import asyncio
 from typing import Any, Dict, List, Optional, Sequence
 from pathlib import Path
 
-from mcp.server import Server
+from mcp.server import Server, NotificationOptions
 from mcp.server.models import InitializationOptions
 from mcp.server.stdio import stdio_server
 from mcp.types import (
@@ -677,8 +677,8 @@ class ArchiMCPServer:
                     server_name="archi-mcp",
                     server_version="1.0.0",
                     capabilities=self.server.get_capabilities(
-                        notification_options=None,
-                        experimental_capabilities=None,
+                        notification_options=NotificationOptions(),
+                        experimental_capabilities={},
                     ),
                 ),
             )
@@ -694,6 +694,8 @@ def main() -> None:
         logger.info("Server shutdown requested")
     except Exception as e:
         logger.error(f"Server error: {str(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         sys.exit(1)
 
 
