@@ -54,6 +54,62 @@ ARCHITECTURE_PATTERNS = {
             {
                 "id": "database",
                 "name": "Database",
+                "element_type": "Technology_Node",
+                "layer": "Technology",
+                "description": "Data storage system"
+            }
+        ],
+        relationships=[
+            {
+                "id": "presentation_to_business",
+                "from_element": "presentation_layer",
+                "to_element": "business_logic_layer",
+                "relationship_type": "Flow"
+            },
+            {
+                "id": "business_to_data",
+                "from_element": "business_logic_layer",
+                "to_element": "data_access_layer",
+                "relationship_type": "Flow"
+            },
+            {
+                "id": "data_to_database",
+                "from_element": "data_access_layer",
+                "to_element": "database",
+                "relationship_type": "Access"
+            }
+        ],
+        layout={"direction": "vertical", "group_by_layer": True}
+    ),
+    
+    "three_tier_architecture": PatternTemplate(
+        name="Three-Tier Architecture",
+        description="Classic three-tier architecture pattern with presentation, business logic, and data layers",
+        elements=[
+            {
+                "id": "presentation_layer",
+                "name": "Presentation Layer",
+                "element_type": "Application_Component",
+                "layer": "Application",
+                "description": "User interface components"
+            },
+            {
+                "id": "business_logic_layer",
+                "name": "Business Logic Layer",
+                "element_type": "Application_Component", 
+                "layer": "Application",
+                "description": "Business rules and processing"
+            },
+            {
+                "id": "data_access_layer",
+                "name": "Data Access Layer",
+                "element_type": "Application_Component",
+                "layer": "Application",
+                "description": "Data persistence and access"
+            },
+            {
+                "id": "database",
+                "name": "Database",
                 "element_type": "Data_Object",
                 "layer": "Application",
                 "description": "Persistent data storage"

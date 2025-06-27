@@ -34,12 +34,14 @@ def normalize_element_type(element_type: str) -> str:
         'application_process': 'Application_Process',
         'application_event': 'Application_Event',
         'data_object': 'Application_DataObject',
+        'application_dataobject': 'Application_DataObject',
         'artifact': 'Application_Artifact',
         
         # Technology layer  
         'node': 'Technology_Node',
         'device': 'Technology_Device',
         'system_software': 'Technology_SystemSoftware',
+        'technology_systemsoftware': 'Technology_SystemSoftware',
         'technology_collaboration': 'Technology_Collaboration',
         'technology_interface': 'Technology_Interface',
         'technology_service': 'Technology_Service',

@@ -65,6 +65,46 @@ ARCHIMATE_VIEWPOINTS = {
         layout={"direction": "vertical", "group_by_layer": True}
     ),
     
+    "layered_view": ViewpointTemplate(
+        name="Layered View",
+        description="Shows the layers and their relationships in enterprise architecture",
+        elements=[
+            {
+                "id": "business_service",
+                "name": "Business Service",
+                "element_type": "Business_Service",
+                "layer": "Business"
+            },
+            {
+                "id": "application_service", 
+                "name": "Application Service",
+                "element_type": "Application_Service",
+                "layer": "Application"
+            },
+            {
+                "id": "technology_service",
+                "name": "Technology Service", 
+                "element_type": "Technology_Service",
+                "layer": "Technology"
+            }
+        ],
+        relationships=[
+            {
+                "id": "app_realizes_business",
+                "from_element": "application_service",
+                "to_element": "business_service",
+                "relationship_type": "Realization"
+            },
+            {
+                "id": "tech_realizes_app",
+                "from_element": "technology_service",
+                "to_element": "application_service", 
+                "relationship_type": "Realization"
+            }
+        ],
+        layout={"direction": "vertical", "group_by_layer": True}
+    ),
+    
     "service_realization": ViewpointTemplate(
         name="Service Realization Viewpoint",
         description="Shows how services are realized by underlying components",

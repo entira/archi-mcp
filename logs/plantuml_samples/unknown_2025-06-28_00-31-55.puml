@@ -1,0 +1,32 @@
+@startuml
+!include <archimate/Archimate>
+
+title Element Normalization with Relationships
+
+' Description: Model s elementmi a vztahmi
+
+
+' Elements
+Business_Businessactor(actor1, "Business Actor")
+Business_Businessprocess(process1, "Business Process")
+Application_Applicationcomponent(app1, "Application")
+Business_Businessactor(test_actor, "Test Actor")
+Business_Process(strategicke_plu00e1novanie, "Strategick\u00e9 pl\u00e1novanie")
+Application_Component(erp_system, "ERP Syst\u00e9m")
+Application_Dataobject(zakaznicke_data, "Z\u00e1kazn\u00edcke \u00fadaje")
+Technology_Systemsoftware(oracle_db, "Oracle Database")
+Technology_Service(data_storage, "Ukladanie d\u00e1t")
+
+' Relationships
+Rel_Serving(oracle_db, erp_system, "serves")
+Rel_Access(erp_system, zakaznicke_data, "accesses")
+Rel_Assignment(test_actor, strategicke_plu00e1novanie, "assigned to")
+
+' Legend
+legend right
+  Application Layer
+  Business Layer
+  Technology Layer
+end legend
+
+@enduml

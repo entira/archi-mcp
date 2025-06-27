@@ -26,6 +26,76 @@ class IndustryTemplate:
 
 # Industry-specific templates
 INDUSTRY_TEMPLATES = {
+    "banking": IndustryTemplate(
+        name="Core Banking System",
+        description="Core banking system architecture for financial institutions",
+        industry="banking",
+        elements=[
+            {
+                "id": "customer",
+                "name": "Customer",
+                "element_type": "Business_Actor",
+                "layer": "Business",
+                "description": "Bank customer"
+            },
+            {
+                "id": "teller",
+                "name": "Bank Teller", 
+                "element_type": "Business_Actor",
+                "layer": "Business",
+                "description": "Bank employee"
+            },
+            {
+                "id": "account_service",
+                "name": "Account Management",
+                "element_type": "Business_Service",
+                "layer": "Business",
+                "description": "Account management services"
+            },
+            {
+                "id": "core_banking_app",
+                "name": "Core Banking System",
+                "element_type": "Application_Component",
+                "layer": "Application",
+                "description": "Main banking application"
+            },
+            {
+                "id": "customer_database",
+                "name": "Customer Database",
+                "element_type": "Technology_Node",
+                "layer": "Technology",
+                "description": "Customer data storage"
+            }
+        ],
+        relationships=[
+            {
+                "id": "customer_uses_service",
+                "from_element": "customer",
+                "to_element": "account_service",
+                "relationship_type": "Serving"
+            },
+            {
+                "id": "teller_provides_service",
+                "from_element": "teller",
+                "to_element": "account_service",
+                "relationship_type": "Assignment"
+            },
+            {
+                "id": "app_realizes_service",
+                "from_element": "core_banking_app",
+                "to_element": "account_service",
+                "relationship_type": "Realization"
+            },
+            {
+                "id": "app_accesses_db",
+                "from_element": "core_banking_app",
+                "to_element": "customer_database",
+                "relationship_type": "Access"
+            }
+        ],
+        layout={"direction": "vertical", "group_by_layer": True}
+    ),
+    
     "banking_core": IndustryTemplate(
         name="Core Banking System",
         description="Core banking system architecture for financial institutions",

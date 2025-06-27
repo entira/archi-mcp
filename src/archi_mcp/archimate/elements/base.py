@@ -50,15 +50,15 @@ class ArchiMateElement(BaseModel):
         if self.stereotype:
             stereotype_str = f" <<{self.stereotype}>>"
         
-        # Normalize element type for PlantUML (replace hyphens with underscores, capitalize)
-        normalized_type = self._normalize_element_type(self.element_type)
+        # Use element_type directly - it should already be normalized by element_normalizer
+        # DO NOT normalize again to avoid double normalization bug
+        element_type = self.element_type
         
         # Generate PlantUML archimate element
-        # Handle element types that already contain layer prefix
-        if normalized_type.startswith(f'{self.layer.value}_'):
-            plantuml_code = f'{normalized_type}({self.id}, "{self.name}"{stereotype_str})'
-        else:
-            plantuml_code = f'{self.layer.value}_{normalized_type}({self.id}, "{self.name}"{stereotype_str})'
+        # Element type from normalizer already includes layer prefix (e.g., "Business_Actor")
+        # Ensure proper UTF-8 encoding for names with diacritics
+        safe_name = self.name.encode('utf-8').decode('utf-8')
+        plantuml_code = f'{element_type}({self.id}, "{safe_name}"{stereotype_str})'
         
         return plantuml_code
     
