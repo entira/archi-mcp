@@ -68,8 +68,9 @@ dmypy.json
 .env.local
 config.local.json
 
-# Generated diagrams
+# Generated diagrams (but keep docs/diagrams for documentation)
 *.svg
+!docs/diagrams/*.svg
 *.png
 *.pdf
 diagrams/output/
