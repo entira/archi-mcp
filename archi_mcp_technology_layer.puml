@@ -1,0 +1,48 @@
+@startuml
+!include <archimate/Archimate>
+
+title ArchiMate MCP Server - Technology Layer
+
+' Description: Technology infrastructure and platform services
+
+top to bottom direction
+
+' Elements
+Technology_SystemSoftware(python_interpreter, "Python Interpreter")
+Technology_SystemSoftware(java_runtime, "Java Runtime")
+Technology_SystemSoftware(operating_system, "Operating System")
+Technology_Node(development_node, "Development Environment")
+Technology_Node(production_node, "Production Environment")
+Technology_Node(claude_node, "Claude Desktop Environment")
+Technology_Service(mcp_protocol_service, "MCP Protocol Service")
+Technology_Service(plantuml_service, "PlantUML Service")
+Technology_Service(python_runtime_service, "Python Runtime Service")
+Technology_Artifact(plantuml_jar, "plantuml.jar")
+Technology_Artifact(mcp_server_package, "ArchiMate MCP Package")
+Technology_Artifact(archimate_library, "ArchiMate Library")
+Technology_Interface(stdio_interface, "STDIO Interface")
+Technology_Interface(rest_api, "REST API")
+
+' Relationships
+Rel_Assignment(development_node, python_interpreter, "assignment")
+Rel_Assignment(development_node, java_runtime, "assignment")
+Rel_Assignment(production_node, python_interpreter, "assignment")
+Rel_Assignment(production_node, java_runtime, "assignment")
+Rel_Assignment(claude_node, operating_system, "assignment")
+Rel_Realization(python_interpreter, python_runtime_service, "realization")
+Rel_Realization(java_runtime, plantuml_service, "realization")
+Rel_Realization(python_interpreter, mcp_protocol_service, "realization")
+Rel_Realization(java_runtime, plantuml_jar, "realization")
+Rel_Realization(python_interpreter, mcp_server_package, "realization")
+Rel_Realization(python_interpreter, archimate_library, "realization")
+Rel_Assignment(mcp_protocol_service, stdio_interface, "assignment")
+Rel_Assignment(plantuml_service, rest_api, "assignment")
+Rel_Serving(mcp_protocol_service, plantuml_service, "serving")
+Rel_Serving(mcp_protocol_service, python_runtime_service, "serving")
+
+' Legend
+legend right
+  Technology Layer
+end legend
+
+@enduml

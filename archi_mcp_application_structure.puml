@@ -1,0 +1,48 @@
+@startuml
+!include <archimate/Archimate>
+
+title ArchiMate MCP Server - Application Structure
+
+' Description: Detailed application components and data flow
+
+left to right direction
+
+' Elements
+Application_Component(server_main, "MCP Server Main")
+Application_Component(tool_registry, "Tool Registry")
+Application_Component(request_handler, "Request Handler")
+Application_Component(element_factory, "Element Factory")
+Application_Component(relationship_manager, "Relationship Manager")
+Application_Component(diagram_generator, "Diagram Generator")
+Application_Component(template_engine, "Template Engine")
+Application_Component(syntax_validator, "Syntax Validator")
+Application_Component(plantuml_renderer, "PlantUML Renderer")
+Application_DataObject(element_model, "Element Model")
+Application_DataObject(relationship_model, "Relationship Model")
+Application_DataObject(plantuml_code, "PlantUML Code")
+Application_Service(modeling_service, "Modeling Service")
+Application_Service(validation_service, "Validation Service")
+Application_Service(generation_service, "Generation Service")
+
+' Relationships
+Rel_Composition(server_main, tool_registry, "composition")
+Rel_Composition(server_main, request_handler, "composition")
+Rel_Triggering(request_handler, element_factory, "triggering")
+Rel_Triggering(request_handler, relationship_manager, "triggering")
+Rel_Triggering(request_handler, diagram_generator, "triggering")
+Rel_Access(element_factory, element_model, "access")
+Rel_Access(relationship_manager, relationship_model, "access")
+Rel_Triggering(diagram_generator, template_engine, "triggering")
+Rel_Triggering(diagram_generator, syntax_validator, "triggering")
+Rel_Triggering(diagram_generator, plantuml_renderer, "triggering")
+Rel_Access(plantuml_renderer, plantuml_code, "access")
+Rel_Assignment(element_factory, modeling_service, "assignment")
+Rel_Assignment(syntax_validator, validation_service, "assignment")
+Rel_Assignment(plantuml_renderer, generation_service, "assignment")
+
+' Legend
+legend right
+  Application Layer
+end legend
+
+@enduml

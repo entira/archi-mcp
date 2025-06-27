@@ -20,7 +20,7 @@ class ApplicationElement(ArchiMateElement):
         return cls(
             id=id,
             name=name,
-            element_type="Application_Component",
+            element_type="Component",
             layer=ArchiMateLayer.APPLICATION,
             aspect=ArchiMateAspect.ACTIVE_STRUCTURE,
             description=description,
@@ -39,7 +39,7 @@ class ApplicationElement(ArchiMateElement):
         return cls(
             id=id,
             name=name,
-            element_type="Application_Collaboration",
+            element_type="Collaboration",
             layer=ArchiMateLayer.APPLICATION,
             aspect=ArchiMateAspect.ACTIVE_STRUCTURE,
             description=description,
@@ -58,7 +58,7 @@ class ApplicationElement(ArchiMateElement):
         return cls(
             id=id,
             name=name,
-            element_type="Application_Interface",
+            element_type="Interface",
             layer=ArchiMateLayer.APPLICATION,
             aspect=ArchiMateAspect.ACTIVE_STRUCTURE,
             description=description,
@@ -77,7 +77,7 @@ class ApplicationElement(ArchiMateElement):
         return cls(
             id=id,
             name=name,
-            element_type="Application_Function",
+            element_type="Function",
             layer=ArchiMateLayer.APPLICATION,
             aspect=ArchiMateAspect.BEHAVIOR,
             description=description,
@@ -96,7 +96,7 @@ class ApplicationElement(ArchiMateElement):
         return cls(
             id=id,
             name=name,
-            element_type="Application_Interaction",
+            element_type="Interaction",
             layer=ArchiMateLayer.APPLICATION,
             aspect=ArchiMateAspect.BEHAVIOR,
             description=description,
@@ -115,7 +115,7 @@ class ApplicationElement(ArchiMateElement):
         return cls(
             id=id,
             name=name,
-            element_type="Application_Process",
+            element_type="Process",
             layer=ArchiMateLayer.APPLICATION,
             aspect=ArchiMateAspect.BEHAVIOR,
             description=description,
@@ -134,7 +134,7 @@ class ApplicationElement(ArchiMateElement):
         return cls(
             id=id,
             name=name,
-            element_type="Application_Event",
+            element_type="Event",
             layer=ArchiMateLayer.APPLICATION,
             aspect=ArchiMateAspect.BEHAVIOR,
             description=description,
@@ -153,7 +153,7 @@ class ApplicationElement(ArchiMateElement):
         return cls(
             id=id,
             name=name,
-            element_type="Application_Service",
+            element_type="Service",
             layer=ArchiMateLayer.APPLICATION,
             aspect=ArchiMateAspect.BEHAVIOR,
             description=description,
@@ -172,7 +172,7 @@ class ApplicationElement(ArchiMateElement):
         return cls(
             id=id,
             name=name,
-            element_type="Data_Object",
+            element_type="DataObject",
             layer=ArchiMateLayer.APPLICATION,
             aspect=ArchiMateAspect.PASSIVE_STRUCTURE,
             description=description,

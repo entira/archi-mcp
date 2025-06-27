@@ -21,7 +21,7 @@ class BusinessElement(ArchiMateElement):
         return cls(
             id=id,
             name=name,
-            element_type="Business_Actor",
+            element_type="Actor",
             layer=ArchiMateLayer.BUSINESS,
             aspect=ArchiMateAspect.ACTIVE_STRUCTURE,
             description=description,
@@ -40,7 +40,7 @@ class BusinessElement(ArchiMateElement):
         return cls(
             id=id,
             name=name,
-            element_type="Business_Role",
+            element_type="Role",
             layer=ArchiMateLayer.BUSINESS,
             aspect=ArchiMateAspect.ACTIVE_STRUCTURE,
             description=description,
@@ -59,7 +59,7 @@ class BusinessElement(ArchiMateElement):
         return cls(
             id=id,
             name=name,
-            element_type="Business_Collaboration",
+            element_type="Collaboration",
             layer=ArchiMateLayer.BUSINESS,
             aspect=ArchiMateAspect.ACTIVE_STRUCTURE,
             description=description,
@@ -78,7 +78,7 @@ class BusinessElement(ArchiMateElement):
         return cls(
             id=id,
             name=name,
-            element_type="Business_Interface",
+            element_type="Interface",
             layer=ArchiMateLayer.BUSINESS,
             aspect=ArchiMateAspect.ACTIVE_STRUCTURE,
             description=description,
@@ -97,7 +97,7 @@ class BusinessElement(ArchiMateElement):
         return cls(
             id=id,
             name=name,
-            element_type="Business_Function",
+            element_type="Function",
             layer=ArchiMateLayer.BUSINESS,
             aspect=ArchiMateAspect.BEHAVIOR,
             description=description,
@@ -116,7 +116,7 @@ class BusinessElement(ArchiMateElement):
         return cls(
             id=id,
             name=name,
-            element_type="Business_Process",
+            element_type="Process",
             layer=ArchiMateLayer.BUSINESS,
             aspect=ArchiMateAspect.BEHAVIOR,
             description=description,
@@ -135,7 +135,7 @@ class BusinessElement(ArchiMateElement):
         return cls(
             id=id,
             name=name,
-            element_type="Business_Event",
+            element_type="Event",
             layer=ArchiMateLayer.BUSINESS,
             aspect=ArchiMateAspect.BEHAVIOR,
             description=description,
@@ -154,7 +154,7 @@ class BusinessElement(ArchiMateElement):
         return cls(
             id=id,
             name=name,
-            element_type="Business_Service",
+            element_type="Service",
             layer=ArchiMateLayer.BUSINESS,
             aspect=ArchiMateAspect.BEHAVIOR,
             description=description,
@@ -173,7 +173,7 @@ class BusinessElement(ArchiMateElement):
         return cls(
             id=id,
             name=name,
-            element_type="Business_Object",
+            element_type="Object",
             layer=ArchiMateLayer.BUSINESS,
             aspect=ArchiMateAspect.PASSIVE_STRUCTURE,
             description=description,
@@ -192,7 +192,7 @@ class BusinessElement(ArchiMateElement):
         return cls(
             id=id,
             name=name,
-            element_type="Business_Contract",
+            element_type="Contract",
             layer=ArchiMateLayer.BUSINESS,
             aspect=ArchiMateAspect.PASSIVE_STRUCTURE,
             description=description,
@@ -211,7 +211,7 @@ class BusinessElement(ArchiMateElement):
         return cls(
             id=id,
             name=name,
-            element_type="Business_Representation",
+            element_type="Representation",
             layer=ArchiMateLayer.BUSINESS,
             aspect=ArchiMateAspect.PASSIVE_STRUCTURE,
             description=description,

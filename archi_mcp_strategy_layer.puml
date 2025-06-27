@@ -1,0 +1,41 @@
+@startuml
+!include <archimate/Archimate>
+
+title ArchiMate MCP Server - Strategy Layer
+
+' Description: Strategic resources, capabilities and courses of action
+
+top to bottom direction
+
+' Elements
+Strategy_Resource(intellectual_property, "ArchiMate IP Knowledge")
+Strategy_Resource(development_team, "Development Team")
+Strategy_Resource(mcp_ecosystem, "MCP Ecosystem")
+Strategy_Capability(archimate_modeling, "Enterprise Architecture Modeling")
+Strategy_Capability(diagram_generation, "Automated Diagram Generation")
+Strategy_Capability(protocol_integration, "MCP Protocol Integration")
+Strategy_Capability(validation_capability, "Model Validation")
+Strategy_CourseOfAction(open_source_strategy, "Open Source Strategy")
+Strategy_CourseOfAction(mcp_first_strategy, "MCP-First Strategy")
+Strategy_CourseOfAction(standards_compliance, "Standards Compliance")
+
+' Relationships
+Rel_Realization(intellectual_property, archimate_modeling, "realization")
+Rel_Realization(development_team, diagram_generation, "realization")
+Rel_Realization(development_team, validation_capability, "realization")
+Rel_Realization(mcp_ecosystem, protocol_integration, "realization")
+Rel_Specialization(archimate_modeling, diagram_generation, "specialization")
+Rel_Serving(protocol_integration, archimate_modeling, "serving")
+Rel_Serving(validation_capability, archimate_modeling, "serving")
+Rel_Influence(open_source_strategy, archimate_modeling, "influence")
+Rel_Influence(mcp_first_strategy, protocol_integration, "influence")
+Rel_Influence(standards_compliance, validation_capability, "influence")
+Rel_Association(mcp_first_strategy, open_source_strategy, "association")
+Rel_Association(standards_compliance, open_source_strategy, "association")
+
+' Legend
+legend right
+  Strategy Layer
+end legend
+
+@enduml

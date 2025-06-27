@@ -1,1 +1,0 @@
-"""Examples for ArchiMate MCP server usage."""

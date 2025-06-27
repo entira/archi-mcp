@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "archi-mcp": {
+      "command": "uv",
+      "args": ["run", "archi-mcp"],
+      "cwd": "/Users/patrik/Projects/archi-mcp",
+      "env": {
+        "ARCHI_MCP_LOG_LEVEL": "INFO",
+        "ARCHI_MCP_STRICT_VALIDATION": "true"
+      }
+    }
+  }
+}
