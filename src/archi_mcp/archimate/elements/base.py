@@ -51,7 +51,7 @@ class ArchiMateElement(BaseModel):
             stereotype_str = f" <<{self.stereotype}>>"
         
         # Generate PlantUML archimate element
-        plantuml_code = f'{self.layer.value}_{self.element_type}({self.id}, "{self.name}"{stereotype_str}) #{color}'
+        plantuml_code = f'{self.layer.value}_{self.element_type}({self.id}, "{self.name}"{stereotype_str})'
         
         return plantuml_code
     

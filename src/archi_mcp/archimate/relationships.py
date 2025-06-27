@@ -57,6 +57,9 @@ class ArchiMateRelationship(BaseModel):
         label = self.label or self.description or ""
         if label:
             label = f'"{label}"'
+        else:
+            # Use relationship type as default label
+            label = f'"{rel_type.lower()}"'
         
         # Generate PlantUML relationship
         plantuml_code = f'Rel_{rel_type}({self.from_element}, {self.to_element}, {label})'

@@ -103,24 +103,21 @@ class ArchiMateGenerator:
             lines.append(f"title {title}")
             lines.append("")
         
-        # Add description if provided
+        # Add description if provided (as a comment since note syntax may cause issues)
         if description:
-            lines.append(f"note top : {description}")
+            lines.append(f"' Description: {description}")
             lines.append("")
         
         # Set direction
         if self.layout.direction == "vertical":
-            lines.append("!define DIRECTION top to bottom direction")
+            lines.append("top to bottom direction")
         elif self.layout.direction == "horizontal":
-            lines.append("!define DIRECTION left to right direction")
+            lines.append("left to right direction")
         
         lines.append("")
         
-        # Generate elements
-        if self.layout.group_by_layer:
-            self._generate_elements_by_layer(lines)
-        else:
-            self._generate_elements_sequential(lines)
+        # Generate elements - use sequential for ArchiMate compatibility
+        self._generate_elements_sequential(lines)
         
         lines.append("")
         
@@ -154,12 +151,21 @@ class ArchiMateGenerator:
                 layers[layer] = []
             layers[layer].append(element)
         
-        # Generate each layer
-        for layer_name, layer_elements in layers.items():
-            lines.append(f"' {layer_name} Layer")
-            for element in layer_elements:
-                lines.append(element.to_plantuml())
-            lines.append("")
+        # Generate each layer with grouping for multi-layer diagrams
+        if len(layers) > 1:
+            for layer_name, layer_elements in layers.items():
+                lines.append(f"package \"{layer_name} Layer\" {{")
+                for element in layer_elements:
+                    lines.append("  " + element.to_plantuml())
+                lines.append("}")
+                lines.append("")
+        else:
+            # Single layer - no grouping needed
+            for layer_name, layer_elements in layers.items():
+                lines.append(f"' {layer_name} Layer")
+                for element in layer_elements:
+                    lines.append(element.to_plantuml())
+                lines.append("")
     
     def _generate_relationships(self, lines: List[str]) -> None:
         """Generate relationships."""
@@ -173,7 +179,7 @@ class ArchiMateGenerator:
     def _generate_legend(self, lines: List[str]) -> None:
         """Generate diagram legend."""
         lines.append("' Legend")
-        lines.append("legend")
+        lines.append("legend right")
         
         # Show layers present in diagram
         layers_used = set(element.layer.value for element in self.elements.values())
