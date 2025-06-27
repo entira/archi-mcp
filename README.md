@@ -35,15 +35,7 @@ pip install archi-mcp
 
 ### Claude Desktop Configuration
 
-**Quick Setup**: Copy the provided configuration file:
-```bash
-# Copy the sample configuration
-cp claude_desktop_config.json ~/Library/Application\ Support/Claude/claude_desktop_config.json  # macOS
-# or
-cp claude_desktop_config.json %APPDATA%\Claude\claude_desktop_config.json  # Windows
-```
-
-**Manual Setup**: Add to your Claude Desktop configuration file:
+**Setup**: Add to your Claude Desktop configuration file:
 
 **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
@@ -64,7 +56,7 @@ cp claude_desktop_config.json %APPDATA%\Claude\claude_desktop_config.json  # Win
 }
 ```
 
-**📖 Complete Setup Guide**: See [CLAUDE_DESKTOP_SETUP.md](CLAUDE_DESKTOP_SETUP.md) for detailed configuration options and troubleshooting.
+**📖 Complete Setup Guide**: See [CLAUDE_DESKTOP_SETUP.md](docs/CLAUDE_DESKTOP_SETUP.md) for detailed configuration options and troubleshooting.
 
 ### Basic Usage
 
@@ -93,50 +85,50 @@ The full architecture generator follows the **ArchiMate Cookbook methodology** a
 This repository showcases a comprehensive architectural blueprint of the ArchiMate MCP Server itself, demonstrating all 7 ArchiMate layers across 8 coordinated views:
 
 ### 🎯 **Motivation Layer** 
-![Motivation View](archi_mcp_motivation.svg)
+![Motivation View](docs/diagrams/archi_mcp_motivation.svg)
 - **Stakeholders**: Enterprise Architect, Software Developer, Claude Desktop User
 - **Drivers**: Architecture Complexity, ArchiMate Compliance, Modeling Automation
 - **Goals**: Enable ArchiMate Modeling, Claude Integration, High Quality Diagrams
 - **Requirements**: MCP Protocol Support, ArchiMate 3.2 Support, PlantUML Generation
 
 ### 📋 **Strategy Layer**
-![Strategy View](archi_mcp_strategy_layer.svg)
+![Strategy View](docs/diagrams/archi_mcp_strategy_layer.svg)
 - **Resources**: ArchiMate IP Knowledge, Development Team, MCP Ecosystem
 - **Capabilities**: Enterprise Architecture Modeling, Automated Diagram Generation, MCP Protocol Integration
 - **Courses of Action**: Open Source Strategy, MCP-First Strategy, Standards Compliance
 
 ### 🏗️ **Layered Architecture**
-![Layered Architecture](archi_mcp_layered_architecture.svg)
+![Layered Architecture](docs/diagrams/archi_mcp_layered_architecture.svg)
 - **Business Layer**: EA Role, Modeling Process, Diagram Service
 - **Application Layer**: MCP Server, ArchiMate Engine, PlantUML Generator, Validator
 - **Technology Layer**: Python Runtime, PlantUML JAR, Claude Desktop
 
 ### 💻 **Application Structure**
-![Application Structure](archi_mcp_application_structure.svg)
+![Application Structure](docs/diagrams/archi_mcp_application_structure.svg)
 - **Components**: MCP Server Main, Tool Registry, Request Handler, Element Factory, Relationship Manager
 - **Services**: Modeling Service, Validation Service, Generation Service
 - **Data Objects**: Element Model, Relationship Model, PlantUML Code
 
 ### ⚙️ **Technology Infrastructure**
-![Technology Layer](archi_mcp_technology_layer.svg)
+![Technology Layer](docs/diagrams/archi_mcp_technology_layer.svg)
 - **System Software**: Python Interpreter, Java Runtime, Operating System
 - **Nodes**: Development Environment, Production Environment, Claude Desktop Environment
 - **Services**: MCP Protocol Service, PlantUML Service, Python Runtime Service
 
 ### 🏗️ **Physical Infrastructure**
-![Physical Layer](archi_mcp_physical_layer.svg)
+![Physical Layer](docs/diagrams/archi_mcp_physical_layer.svg)
 - **Equipment**: Developer Workstation, Cloud Server, User Device
 - **Facilities**: Development Office, Cloud Datacenter, User Location
 - **Distribution Networks**: Development Path, Deployment Path, Distribution Path
 
 ### 🚀 **Implementation Roadmap**
-![Implementation & Migration](archi_mcp_implementation_migration.svg)
+![Implementation & Migration](docs/diagrams/archi_mcp_implementation_migration.svg)
 - **4 Development Phases**: Core Development, Advanced Features, Integration, Release
 - **Key Deliverables**: MCP Protocol Implementation, ArchiMate Engine, Validation Framework
 - **Milestone Events**: Project Start, Core Milestone, Feature Milestone, Release Event
 
 ### 🔗 **Multi-Layer Integration**
-![Multi-Layer Integration](archi_mcp_multi_layer_integration.svg)
+![Multi-Layer Integration](docs/diagrams/archi_mcp_multi_layer_integration.svg)
 - **Cross-layer Relationships**: End-to-end traceability from stakeholder goals to technical implementation
 - **Integration Points**: How motivation drives strategy, which shapes business processes, realized by applications, running on technology
 
@@ -346,25 +338,24 @@ archi-mcp/
 ## 📁 Complete Documentation
 
 ### Architecture Documentation
-- **[ARCHITECTURE_OVERVIEW.md](ARCHITECTURE_OVERVIEW.md)**: Executive summary and high-level architectural vision
-- **[ARCHITECTURE.md](ARCHITECTURE.md)**: Complete architectural analysis across all 7 ArchiMate layers
-- **[VIEWING_GUIDE.md](VIEWING_GUIDE.md)**: Comprehensive guide for viewing and working with generated diagrams
+- **[ARCHITECTURE_OVERVIEW.md](docs/ARCHITECTURE_OVERVIEW.md)**: Executive summary and high-level architectural vision
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)**: Complete architectural analysis across all 7 ArchiMate layers
+- **[VIEWING_GUIDE.md](docs/VIEWING_GUIDE.md)**: Comprehensive guide for viewing and working with generated diagrams
 
 ### Setup and Configuration
-- **[CLAUDE_DESKTOP_SETUP.md](CLAUDE_DESKTOP_SETUP.md)**: Complete Claude Desktop configuration guide with troubleshooting
+- **[CLAUDE_DESKTOP_SETUP.md](docs/CLAUDE_DESKTOP_SETUP.md)**: Complete Claude Desktop configuration guide with troubleshooting
 - **[CLAUDE.md](CLAUDE.md)**: Development instructions and project guidelines for Claude
-- **[claude_desktop_config.json](claude_desktop_config.json)**: Ready-to-use Claude Desktop configuration file
 
 ### Generated Diagrams
 All architectural views are available in both PlantUML source (`.puml`) and SVG format (`.svg`):
-- `archi_mcp_motivation.puml` / `.svg` - Motivation Layer
-- `archi_mcp_strategy_layer.puml` / `.svg` - Strategy Layer  
-- `archi_mcp_layered_architecture.puml` / `.svg` - Layered Architecture
-- `archi_mcp_application_structure.puml` / `.svg` - Application Structure
-- `archi_mcp_technology_layer.puml` / `.svg` - Technology Infrastructure
-- `archi_mcp_physical_layer.puml` / `.svg` - Physical Infrastructure
-- `archi_mcp_implementation_migration.puml` / `.svg` - Implementation Roadmap
-- `archi_mcp_multi_layer_integration.puml` / `.svg` - Multi-Layer Integration
+- `examples/diagrams/archi_mcp_motivation.puml` / `docs/diagrams/archi_mcp_motivation.svg` - Motivation Layer
+- `examples/diagrams/archi_mcp_strategy_layer.puml` / `docs/diagrams/archi_mcp_strategy_layer.svg` - Strategy Layer  
+- `examples/diagrams/archi_mcp_layered_architecture.puml` / `docs/diagrams/archi_mcp_layered_architecture.svg` - Layered Architecture
+- `examples/diagrams/archi_mcp_application_structure.puml` / `docs/diagrams/archi_mcp_application_structure.svg` - Application Structure
+- `examples/diagrams/archi_mcp_technology_layer.puml` / `docs/diagrams/archi_mcp_technology_layer.svg` - Technology Infrastructure
+- `examples/diagrams/archi_mcp_physical_layer.puml` / `docs/diagrams/archi_mcp_physical_layer.svg` - Physical Infrastructure
+- `examples/diagrams/archi_mcp_implementation_migration.puml` / `docs/diagrams/archi_mcp_implementation_migration.svg` - Implementation Roadmap
+- `examples/diagrams/archi_mcp_multi_layer_integration.puml` / `docs/diagrams/archi_mcp_multi_layer_integration.svg` - Multi-Layer Integration
 
 > **💡 Self-Generated**: All these diagrams were created using the ArchiMate MCP Server itself, proving the tool's real-world capabilities and production readiness.
 
