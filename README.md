@@ -54,6 +54,7 @@ Add the following to your Claude Desktop configuration file:
 
 Once configured, you can use ArchiMate MCP Server through Claude Desktop:
 
+**Basic Diagram Generation:**
 ```
 Create an ArchiMate diagram showing a three-tier architecture with:
 - A business service layer
@@ -61,6 +62,15 @@ Create an ArchiMate diagram showing a three-tier architecture with:
 - A technology infrastructure layer
 Include the relationships between these layers.
 ```
+
+**Full Architecture Generation (NEW!):**
+```
+Generate a complete enterprise architecture for an online banking portal 
+including motivation view, layered view, application structure, and 
+implementation roadmap with 4 phases.
+```
+
+The full architecture generator follows the **ArchiMate Cookbook methodology** and automatically creates multiple coordinated views with proper element relationships and business domain context.
 
 ## 🏛️ ArchiMate Support
 
@@ -88,7 +98,7 @@ All 12 ArchiMate relationship types with directional variants:
 
 ## 🛠️ MCP Tools
 
-The server provides 6 comprehensive MCP tools:
+The server provides 7 comprehensive MCP tools:
 
 ### 1. `create_archimate_diagram`
 Generate complete ArchiMate diagrams from structured input.
@@ -161,6 +171,29 @@ Export diagrams to PlantUML format with optional file output.
   "output_path": "./diagrams/architecture.puml"
 }
 ```
+
+### 7. `generate_full_architecture`
+Generate complete layered enterprise architecture following ArchiMate methodology with multiple coordinated views.
+
+```json
+{
+  "system_description": "Online banking portal with mobile app and web interface",
+  "business_domain": "banking",
+  "architecture_scope": "system", 
+  "include_views": ["motivation", "layered_view", "application_structure", "implementation_roadmap"],
+  "implementation_phases": 4
+}
+```
+
+This tool implements the **ArchiMate Cookbook methodology** and generates:
+- **Motivation View** - stakeholders, drivers, goals, requirements
+- **Business Model Canvas** - business logic and value propositions  
+- **Value Stream View** - customer value generation via capabilities
+- **Strategy & Capability Views** - goal-to-capability mapping
+- **Layered Views** - business, application, technology structure
+- **Interaction Views** - actor, process, application interactions
+- **Application & Technology Structure** - detailed component breakdowns
+- **Implementation Roadmap** - phased delivery timeline
 
 ## 📚 Templates
 

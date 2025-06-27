@@ -46,6 +46,7 @@ from .templates import (
     ARCHITECTURE_PATTERNS,
     INDUSTRY_TEMPLATES,
 )
+from .architecture_generator import FullArchitectureGenerator
 
 # Setup logging
 setup_logging(level="INFO")
@@ -60,6 +61,7 @@ class ArchiMCPServer:
         self.server = Server("archi-mcp")
         self.generator = ArchiMateGenerator()
         self.validator = ArchiMateValidator()
+        self.full_arch_generator = FullArchitectureGenerator()
         
         # Register MCP tools
         self._register_tools()
@@ -201,6 +203,51 @@ class ArchiMCPServer:
                                 "clear_after_export": {"type": "boolean", "description": "Clear diagram after export", "default": False}
                             }
                         }
+                    ),
+                    Tool(
+                        name="generate_full_architecture",
+                        description="Generate a complete layered enterprise architecture following ArchiMate methodology with multiple coordinated views (Motivation, Business Model Canvas, Value Stream, Strategy & Capability, Layered Views, Interaction Views, Application & Technology Structure, Implementation Roadmap)",
+                        inputSchema={
+                            "type": "object",
+                            "properties": {
+                                "system_description": {
+                                    "type": "string", 
+                                    "description": "Description of the target system or business problem to architect"
+                                },
+                                "business_domain": {
+                                    "type": "string",
+                                    "description": "Business domain (e.g., 'banking', 'healthcare', 'e-commerce', 'manufacturing')",
+                                    "default": "general"
+                                },
+                                "architecture_scope": {
+                                    "type": "string",
+                                    "description": "Scope of architecture",
+                                    "enum": ["enterprise", "system", "application", "component"],
+                                    "default": "system"
+                                },
+                                "include_views": {
+                                    "type": "array",
+                                    "description": "Which ArchiMate views to include",
+                                    "items": {
+                                        "type": "string",
+                                        "enum": [
+                                            "motivation", "business_model_canvas", "value_stream",
+                                            "strategy_capability", "layered_view", "interaction_view",
+                                            "application_structure", "technology_structure", "implementation_roadmap"
+                                        ]
+                                    },
+                                    "default": ["motivation", "layered_view", "application_structure", "implementation_roadmap"]
+                                },
+                                "implementation_phases": {
+                                    "type": "integer",
+                                    "description": "Number of implementation phases for roadmap",
+                                    "minimum": 1,
+                                    "maximum": 6,
+                                    "default": 3
+                                }
+                            },
+                            "required": ["system_description"]
+                        }
                     )
                 ]
             )
@@ -221,6 +268,8 @@ class ArchiMCPServer:
                     return await self._generate_archimate_template(arguments)
                 elif name == "export_archimate_diagram":
                     return await self._export_archimate_diagram(arguments)
+                elif name == "generate_full_architecture":
+                    return await self._generate_full_architecture(arguments)
                 else:
                     return CallToolResult(
                         content=[TextContent(
@@ -469,6 +518,91 @@ class ArchiMCPServer:
             
         except Exception as e:
             raise ArchiMateGenerationError(f"Failed to export diagram: {str(e)}")
+    
+    async def _generate_full_architecture(self, arguments: dict) -> CallToolResult:
+        """Generate complete layered enterprise architecture following ArchiMate methodology."""
+        try:
+            system_description = arguments["system_description"]
+            business_domain = arguments.get("business_domain", "general")
+            architecture_scope = arguments.get("architecture_scope", "system")
+            include_views = arguments.get("include_views", ["motivation", "layered_view", "application_structure", "implementation_roadmap"])
+            implementation_phases = arguments.get("implementation_phases", 3)
+            
+            # Generate all requested views
+            architecture_views = self.full_arch_generator.generate_architecture(
+                system_description=system_description,
+                business_domain=business_domain,
+                architecture_scope=architecture_scope,
+                include_views=include_views,
+                implementation_phases=implementation_phases
+            )
+            
+            # Format output with proper ArchiMate methodology structure
+            result_text = f"# 🏗️ Complete Enterprise Architecture\n\n"
+            result_text += f"**System:** {system_description}\n"
+            result_text += f"**Domain:** {business_domain.title()}\n"
+            result_text += f"**Scope:** {architecture_scope.title()}\n"
+            result_text += f"**Views Generated:** {len(architecture_views)}\n\n"
+            result_text += "---\n\n"
+            
+            # Add each view with proper formatting
+            view_descriptions = {
+                "motivation": "Captures goals, stakeholders, drivers and requirements driving the architecture",
+                "business_model_canvas": "Describes the high-level business logic and value proposition",
+                "value_stream": "Shows how customer value is generated via capabilities",
+                "strategy_capability": "Maps goals to capabilities and their strategic planning",
+                "layered_view": "Models business, application, and technology structure in layers",
+                "interaction_view": "Shows actor, process and application level interactions",
+                "application_structure": "Detailed breakdown of application components and interfaces",
+                "technology_structure": "Infrastructure-level component breakdown and relationships",
+                "implementation_roadmap": "Represents phased evolution and delivery timeline"
+            }
+            
+            for view_name, plantuml_code in architecture_views.items():
+                view_title = view_name.replace("_", " ").title()
+                description = view_descriptions.get(view_name, "ArchiMate view")
+                
+                result_text += f"## {view_title}\n\n"
+                result_text += f"*{description}*\n\n"
+                result_text += f"```plantuml\n{plantuml_code}\n```\n\n"
+                result_text += "---\n\n"
+            
+            # Add implementation guidance
+            result_text += "## 📋 Implementation Guidance\n\n"
+            result_text += "### ArchiMate Methodology Notes:\n\n"
+            result_text += "- **Motivation View** establishes the 'why' - stakeholder needs and business drivers\n"
+            result_text += "- **Layered View** provides the core architectural structure across business, application, and technology\n"
+            result_text += "- **Application Structure** details the 'how' of system implementation\n"
+            result_text += "- **Implementation Roadmap** defines the 'when' with phased delivery approach\n\n"
+            
+            result_text += "### Next Steps:\n\n"
+            result_text += "1. **Validate** each view with stakeholders\n"
+            result_text += "2. **Refine** elements and relationships based on feedback\n"
+            result_text += "3. **Detail** critical components in focused views\n"
+            result_text += "4. **Align** implementation phases with business priorities\n"
+            result_text += "5. **Monitor** architecture evolution against original goals\n\n"
+            
+            result_text += f"✅ **Architecture Generation Complete**\n"
+            result_text += f"Generated {len(architecture_views)} coordinated ArchiMate views following enterprise architecture best practices.\n\n"
+            
+            # Additional metadata
+            total_elements = sum(view.count("(") for view in architecture_views.values())
+            total_relationships = sum(view.count("Rel_") for view in architecture_views.values())
+            
+            result_text += f"**Statistics:**\n"
+            result_text += f"- Views: {len(architecture_views)}\n"
+            result_text += f"- Estimated Elements: ~{total_elements}\n"
+            result_text += f"- Estimated Relationships: ~{total_relationships}\n"
+            
+            return CallToolResult(
+                content=[TextContent(
+                    type="text",
+                    text=result_text
+                )]
+            )
+            
+        except Exception as e:
+            raise ArchiMateGenerationError(f"Failed to generate full architecture: {str(e)}")
     
     def _create_element_from_data(self, data: dict) -> ArchiMateElement:
         """Create ArchiMateElement from data dictionary."""
