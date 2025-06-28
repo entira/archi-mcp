@@ -66,7 +66,7 @@ def test_create_diagram_with_validation(mock_validate):
         title="Test Diagram"
     )
     
-    result = create_archimate_diagram(diagram_input)
+    result = create_archimate_diagram.fn(diagram=diagram_input)
     
     # Should contain validation success message
     assert "✅" in result
@@ -99,7 +99,7 @@ def test_create_diagram_validation_failure(mock_validate):
     
     # Should raise exception on validation failure
     with pytest.raises(ArchiMateGenerationError) as exc_info:
-        create_archimate_diagram(diagram_input)
+        create_archimate_diagram.fn(diagram=diagram_input)
     
     assert "Generated diagram failed validation" in str(exc_info.value)
     assert "Test validation error" in str(exc_info.value)
@@ -123,7 +123,7 @@ def test_export_diagram_with_validation(mock_validate):
     element = _create_element_from_data(element_input)
     generator.add_element(element)
     
-    result = export_archimate_diagram(title="Test Export")
+    result = export_archimate_diagram.fn(title="Test Export")
     
     # Should contain validation success message
     assert "✅" in result
@@ -155,7 +155,7 @@ def test_export_diagram_validation_failure(mock_validate):
     
     # Should raise exception on validation failure
     with pytest.raises(ArchiMateGenerationError) as exc_info:
-        export_archimate_diagram(title="Test Export")
+        export_archimate_diagram.fn(title="Test Export")
     
     assert "Generated diagram failed validation" in str(exc_info.value)
     assert "Export validation error" in str(exc_info.value)
@@ -175,7 +175,7 @@ def test_template_with_validation(mock_validate):
             template_name="three_tier"
         )
         
-        result = generate_archimate_template(template_input)
+        result = generate_archimate_template.fn(template=template_input)
         
         # If successful, should contain validation success message
         assert "✅" in result
@@ -205,7 +205,7 @@ def test_full_architecture_with_validation(mock_validate):
         implementation_phases=1
     )
     
-    result = generate_full_architecture(architecture_input)
+    result = generate_full_architecture.fn(architecture=architecture_input)
     
     # Should contain validation success messages
     assert "✅" in result
@@ -235,7 +235,7 @@ def test_full_architecture_validation_failure(mock_validate):
     
     # Should raise exception on validation failure
     with pytest.raises(ArchiMateGenerationError) as exc_info:
-        generate_full_architecture(architecture_input)
+        generate_full_architecture.fn(architecture=architecture_input)
     
     assert "failed validation" in str(exc_info.value)
     assert "View validation failed" in str(exc_info.value)

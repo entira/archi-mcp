@@ -23,7 +23,7 @@ class TestPlantUMLGeneration:
             title="Syntax Test"
         )
         
-        result = create_archimate_diagram(diagram_input)
+        result = create_archimate_diagram.fn(diagram=diagram_input)
         
         # Extract PlantUML code
         plantuml_match = re.search(r'```plantuml\n(.*?)\n```', result, re.DOTALL)
@@ -52,7 +52,7 @@ class TestPlantUMLGeneration:
             ]
         )
         
-        result = create_archimate_diagram(diagram_input)
+        result = create_archimate_diagram.fn(diagram=diagram_input)
         
         # Should include ArchiMate library
         assert '!include' in result or 'archimate' in result.lower()
@@ -80,7 +80,7 @@ class TestPlantUMLGeneration:
                 ]
             )
             
-            result = create_archimate_diagram(diagram_input)
+            result = create_archimate_diagram.fn(diagram=diagram_input)
             
             # Extract PlantUML code
             plantuml_match = re.search(r'```plantuml\n(.*?)\n```', result, re.DOTALL)
@@ -123,7 +123,7 @@ class TestPlantUMLGeneration:
             ]
         )
         
-        result = create_archimate_diagram(diagram_input)
+        result = create_archimate_diagram.fn(diagram=diagram_input)
         
         # Extract PlantUML code
         plantuml_match = re.search(r'```plantuml\n(.*?)\n```', result, re.DOTALL)
@@ -151,7 +151,7 @@ class TestPlantUMLGeneration:
             ]
         )
         
-        result = create_archimate_diagram(diagram_input)
+        result = create_archimate_diagram.fn(diagram=diagram_input)
         
         # Should not contain unescaped special characters that break PlantUML
         plantuml_match = re.search(r'```plantuml\n(.*?)\n```', result, re.DOTALL)
@@ -172,7 +172,7 @@ class TestPlantUMLGeneration:
             title="Empty Diagram"
         )
         
-        result = create_archimate_diagram(diagram_input)
+        result = create_archimate_diagram.fn(diagram=diagram_input)
         
         # Should handle empty diagram gracefully
         assert isinstance(result, str)
@@ -200,7 +200,7 @@ class TestPlantUMLGeneration:
             title="Large Diagram Test"
         )
         
-        result = create_archimate_diagram(diagram_input)
+        result = create_archimate_diagram.fn(diagram=diagram_input)
         
         # Should handle multiple elements
         assert "Elements: 10" in result
@@ -230,7 +230,7 @@ class TestPlantUMLValidation:
             implementation_phases=1
         )
         
-        result = generate_full_architecture(architecture_input)
+        result = generate_full_architecture.fn(architecture=architecture_input)
         
         # Extract all PlantUML blocks
         plantuml_blocks = re.findall(r'```plantuml\n(.*?)\n```', result, re.DOTALL)
@@ -274,7 +274,7 @@ class TestPlantUMLValidation:
                 ]
             )
             
-            result = create_archimate_diagram(diagram_input)
+            result = create_archimate_diagram.fn(diagram=diagram_input)
             
             # Should generate without errors
             assert isinstance(result, str)
@@ -288,8 +288,8 @@ class TestPlantUMLValidation:
         )
         
         # Add elements first
-        add_archimate_element("Business_Actor", "actor1", "Actor 1", "Business")
-        add_archimate_element("Business_Service", "service1", "Service 1", "Business")
+        add_archimate_element.fn(element_type="Business_Actor", id="actor1", name="Actor 1", layer="Business")
+        add_archimate_element.fn(element_type="Business_Service", id="service1", name="Service 1", layer="Business")
         
         # Test valid relationship types
         valid_relationships = [
@@ -299,7 +299,7 @@ class TestPlantUMLValidation:
         ]
         
         for rel_type in valid_relationships:
-            result = add_archimate_relationship(
+            result = add_archimate_relationship.fn(
                 id=f"rel_{rel_type.lower()}",
                 from_element="actor1",
                 to_element="service1",
@@ -311,7 +311,7 @@ class TestPlantUMLValidation:
             assert "added successfully" in result
         
         # Export and check final diagram
-        export_result = export_archimate_diagram(title="Relationship Test")
+        export_result = export_archimate_diagram.fn(title="Relationship Test")
         assert "```plantuml" in export_result
 
 @pytest.mark.skipif(
@@ -340,7 +340,7 @@ class TestPlantUMLJavaValidation:
             title="Java Validation Test"
         )
         
-        result = create_archimate_diagram(diagram_input)
+        result = create_archimate_diagram.fn(diagram=diagram_input)
         
         # Extract PlantUML code
         plantuml_match = re.search(r'```plantuml\n(.*?)\n```', result, re.DOTALL)
@@ -379,9 +379,9 @@ def test_plantuml_output_format():
     from archi_mcp.server import export_archimate_diagram, add_archimate_element
     
     # Add a test element
-    add_archimate_element("Business_Actor", "format_test", "Format Test", "Business")
+    add_archimate_element.fn(element_type="Business_Actor", id="format_test", name="Format Test", layer="Business")
     
-    result = export_archimate_diagram(title="Format Test")
+    result = export_archimate_diagram.fn(title="Format Test")
     
     # Should contain properly formatted PlantUML block
     assert "```plantuml" in result

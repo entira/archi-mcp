@@ -1,0 +1,40 @@
+@startuml
+!include <archimate/Archimate>
+
+title E-Health Business Layer View
+
+' Description: Business aktéri, procesy a služby národného e-health systému
+
+left to right direction
+
+' Elements
+Business actor(BA001, "Pacient")
+Business actor(BA002, "Všeobecný lekár")
+Business actor(BA003, "Lekárnik")
+Business process(BP001, "Registrácia pacienta")
+Business process(BP002, "Založenie EZK")
+Business process(BP003, "Objednanie k lekárovi")
+Business process(BP004, "Predpis liekov")
+Business service(BS001, "Elektronická zdravotná knižka")
+Business service(BS002, "Online objednávanie")
+Business service(BS003, "Elektronické predpisovanie")
+Business object(BO001, "Zdravotný záznam")
+Business object(BO002, "Recepta")
+
+' Relationships
+Rel_Assignment(BA001, BP001, "Pacient sa registruje do systému")
+Rel_Assignment(BA002, BP002, "Lekár zakladá EZK")
+Rel_Assignment(BA001, BP003, "Pacient sa objednáva k lekárovi")
+Rel_Assignment(BA002, BP004, "Lekár predpisuje lieky")
+Rel_Realization(BP002, BS001, "Založenie EZK realizuje službu EZK")
+Rel_Realization(BP003, BS002, "Objednávanie realizuje online rezervácie")
+Rel_Realization(BP004, BS003, "Predpisovanie realizuje e-predpisovanie")
+Rel_Access(BP002, BO001, "Založenie EZK vytvára zdravotný záznam")
+Rel_Access(BP004, BO002, "Predpisovanie vytvára recepty")
+
+' Legend
+legend right
+  Business Layer
+end legend
+
+@enduml

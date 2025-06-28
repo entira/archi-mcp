@@ -15,12 +15,7 @@ from pathlib import Path
 from fastmcp import FastMCP
 from pydantic import BaseModel, Field
 
-try:
-    from fastmcp import Image
-    MCP_IMAGE_AVAILABLE = True
-except ImportError:
-    MCP_IMAGE_AVAILABLE = False
-    Image = None
+# Image import odstránený - používame iba PNG do /tmp
 
 from .utils.logging import setup_logging, get_logger
 from .utils.exceptions import (
@@ -49,15 +44,6 @@ from .templates import (
     INDUSTRY_TEMPLATES,
 )
 from .architecture_generator import FullArchitectureGenerator
-from .image_display import generate_mcp_image_object, generate_claude_desktop_image
-from .image_test_tool import (
-    test_approach_1_mcp_image, 
-    test_approach_2_base64_markdown,
-    test_approach_3_file_path,
-    test_approach_4_multiple_formats,
-    test_approach_5_text_visualization,
-    test_all_approaches
-)
 from .conversation_logger import log_mcp_tool_call, save_conversation_log
 from .mcp_debug_logger import (
     mcp_debug_logger, 
@@ -296,19 +282,35 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
             )
             generator.set_layout(layout)
         
-        # Generate PlantUML code
-        plantuml_code = generator.generate_plantuml(title=diagram.title, description=diagram.description)
+        # Handle empty diagrams gracefully
+        if len(diagram.elements) == 0:
+            # Create a minimal valid PlantUML diagram for empty case
+            plantuml_code = f"""@startuml
+!include <archimate/Archimate>
+title {diagram.title or "Empty ArchiMate Diagram"}
+note as N1
+  No elements defined in this diagram
+end note
+@enduml"""
+        else:
+            # Generate PlantUML code for normal diagrams
+            plantuml_code = generator.generate_plantuml(title=diagram.title, description=diagram.description)
         
-        # MANDATORY: Validate that diagram actually renders
-        context = {
-            "elements_count": len(diagram.elements),
-            "relationships_count": len(diagram.relationships) if diagram.relationships else 0,
-            "title": diagram.title,
-            "has_layout": diagram.layout is not None
-        }
-        renders_ok, error_msg = _validate_plantuml_renders(plantuml_code, "create_archimate_diagram", context)
-        if not renders_ok:
-            raise ArchiMateGenerationError(f"Generated diagram failed validation - {error_msg}")
+        # MANDATORY: Validate that diagram actually renders (skip validation for empty diagrams)
+        if len(diagram.elements) > 0:
+            context = {
+                "elements_count": len(diagram.elements),
+                "relationships_count": len(diagram.relationships) if diagram.relationships else 0,
+                "title": diagram.title,
+                "has_layout": diagram.layout is not None
+            }
+            renders_ok, error_msg = _validate_plantuml_renders(plantuml_code, "create_archimate_diagram", context)
+            if not renders_ok:
+                raise ArchiMateGenerationError(f"Generated diagram failed validation - {error_msg}")
+            render_status = "VERIFIED ✅"
+        else:
+            # Empty diagrams don't need full validation
+            render_status = "EMPTY DIAGRAM ✓"
         
         # Get diagram statistics
         stats = {
@@ -317,27 +319,15 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
             "layers": generator.get_layers_used()
         }
         
-        # Generate PNG to /tmp directory
+        # Generate PNG to /tmp directory - IBA PNG, žiadne URL ani iné prístupy
         try:
             png_path = generator.generate_png_to_tmp(title=diagram.title)
             png_info = f"📁 **PNG File:** `{png_path}`"
         except Exception as png_error:
             png_info = f"⚠️ **PNG Generation Failed:** {str(png_error)}"
         
-        # Try to generate MCP Image object for Claude Desktop display
-        if MCP_IMAGE_AVAILABLE:
-            image_obj = generate_mcp_image_object(plantuml_code, diagram.title)
-            if image_obj:
-                logger.info(f"Successfully generated MCP Image object for diagram: {diagram.title}")
-                return image_obj
-        
-        # Fallback to comprehensive image display for Claude Desktop
-        image_success, image_result = generate_claude_desktop_image(plantuml_code, diagram.title)
-        
-        if image_success:
-            return f"✅ ArchiMate diagram created and validated successfully!\n\nStatistics:\n- Elements: {stats['elements']}\n- Relationships: {stats['relationships']}\n- Layers: {', '.join(stats['layers'])}\n- Render Status: VERIFIED ✅\n- {png_info}\n\n{image_result}\n\n### 📄 PlantUML Source Code\n```plantuml\n{plantuml_code}\n```"
-        else:
-            return f"✅ ArchiMate diagram created and validated successfully!\n\nStatistics:\n- Elements: {stats['elements']}\n- Relationships: {stats['relationships']}\n- Layers: {', '.join(stats['layers'])}\n- Render Status: VERIFIED ✅\n- {png_info}\n\n⚠️ Image generation warning: {image_result}\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
+        # Vraciam iba jednoduché hlásenie s cestou k PNG súboru
+        return f"✅ ArchiMate diagram created and validated successfully!\n\nStatistics:\n- Elements: {stats['elements']}\n- Relationships: {stats['relationships']}\n- Layers: {', '.join(stats['layers'])}\n- Render Status: {render_status}\n- {png_info}\n\n### 📄 PlantUML Source Code\n```plantuml\n{plantuml_code}\n```"
         
     except Exception as e:
         raise ArchiMateGenerationError(f"Failed to create diagram: {str(e)}")
@@ -643,158 +633,7 @@ def generate_full_architecture(architecture: FullArchitectureInput) -> str:
     except Exception as e:
         raise ArchiMateGenerationError(f"Failed to generate full architecture: {str(e)}")
 
-@mcp.tool()
-def generate_diagram_image(
-    title: Optional[str] = None,
-    description: Optional[str] = None,
-    output_path: Optional[str] = None,
-    format: str = "png"
-) -> str:
-    """Generate ArchiMate diagram and convert to image file using PlantUML."""
-    try:
-        # Generate PlantUML code
-        plantuml_code = generator.generate_plantuml(title=title, description=description)
-        
-        # Set default output path
-        if not output_path:
-            output_path = f"/tmp/archimate_diagram_{hash(plantuml_code) % 10000}.{format}"
-        
-        # Ensure output directory exists
-        output_file = Path(output_path)
-        output_file.parent.mkdir(parents=True, exist_ok=True)
-        
-        # Create temporary PlantUML file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.puml', delete=False) as f:
-            f.write(plantuml_code)
-            temp_puml = f.name
-        
-        try:
-            # Find PlantUML jar
-            plantuml_jar = None
-            possible_locations = [
-                "/Users/patrik/Projects/archi-mcp/plantuml.jar",
-                "./plantuml.jar",
-                "/usr/local/bin/plantuml.jar",
-                "/opt/homebrew/bin/plantuml.jar"
-            ]
-            
-            for jar_path in possible_locations:
-                if os.path.exists(jar_path):
-                    plantuml_jar = jar_path
-                    break
-            
-            if not plantuml_jar:
-                return f"❌ PlantUML jar not found. Please ensure plantuml.jar is available.\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
-            
-            # Generate image using PlantUML
-            cmd = [
-                "java", "-jar", plantuml_jar,
-                "-t" + format,  # output format
-                "-o", str(output_file.parent),  # output directory
-                temp_puml
-            ]
-            
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-            
-            if result.returncode != 0:
-                return f"❌ PlantUML generation failed:\n{result.stderr}\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
-            
-            # Check if output file was created
-            expected_output = output_file.parent / f"{Path(temp_puml).stem}.{format}"
-            if expected_output.exists():
-                # Move to desired location if different
-                if expected_output != output_file:
-                    expected_output.rename(output_file)
-                
-                file_size = output_file.stat().st_size
-                return f"✅ ArchiMate diagram image generated successfully!\n\n📁 **File:** {output_path}\n📊 **Size:** {file_size} bytes\n🖼️ **Format:** {format.upper()}\n\n**Statistics:**\n- Elements: {generator.get_element_count()}\n- Relationships: {generator.get_relationship_count()}\n- Layers: {', '.join(generator.get_layers_used())}\n\n**PlantUML Code:**\n```plantuml\n{plantuml_code}\n```"
-            else:
-                return f"❌ Output file not created: {expected_output}\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
-                
-        finally:
-            # Clean up temporary file
-            if os.path.exists(temp_puml):
-                os.unlink(temp_puml)
-                
-    except subprocess.TimeoutExpired:
-        raise ArchiMateGenerationError("PlantUML generation timed out after 30 seconds")
-    except Exception as e:
-        raise ArchiMateGenerationError(f"Failed to generate diagram image: {str(e)}")
-
-@mcp.tool()
-def get_diagram_as_base64(
-    title: Optional[str] = None,
-    description: Optional[str] = None,
-    format: str = "png"
-) -> str:
-    """Generate ArchiMate diagram and return as base64 encoded image."""
-    try:
-        # Generate PlantUML code
-        plantuml_code = generator.generate_plantuml(title=title, description=description)
-        
-        # Create temporary files
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.puml', delete=False) as f:
-            f.write(plantuml_code)
-            temp_puml = f.name
-        
-        try:
-            # Find PlantUML jar
-            plantuml_jar = None
-            possible_locations = [
-                "/Users/patrik/Projects/archi-mcp/plantuml.jar",
-                "./plantuml.jar",
-                "/usr/local/bin/plantuml.jar",
-                "/opt/homebrew/bin/plantuml.jar"
-            ]
-            
-            for jar_path in possible_locations:
-                if os.path.exists(jar_path):
-                    plantuml_jar = jar_path
-                    break
-            
-            if not plantuml_jar:
-                return f"❌ PlantUML jar not found. Cannot generate base64 image.\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
-            
-            # Generate image using PlantUML
-            cmd = [
-                "java", "-jar", plantuml_jar,
-                "-t" + format,
-                temp_puml
-            ]
-            
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-            
-            if result.returncode != 0:
-                return f"❌ PlantUML generation failed:\n{result.stderr}\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
-            
-            # Find generated image file
-            generated_image = Path(temp_puml).parent / f"{Path(temp_puml).stem}.{format}"
-            
-            if generated_image.exists():
-                # Read image and encode as base64
-                with open(generated_image, 'rb') as img_file:
-                    image_data = img_file.read()
-                    base64_data = base64.b64encode(image_data).decode('utf-8')
-                
-                file_size = len(image_data)
-                data_url = f"data:image/{format};base64,{base64_data}"
-                
-                # Clean up generated image
-                generated_image.unlink()
-                
-                return f"✅ ArchiMate diagram generated as base64!\n\n📊 **Format:** {format.upper()}\n📏 **Size:** {file_size} bytes\n🔗 **Base64 Length:** {len(base64_data)} characters\n\n**Statistics:**\n- Elements: {generator.get_element_count()}\n- Relationships: {generator.get_relationship_count()}\n- Layers: {', '.join(generator.get_layers_used())}\n\n**Data URL (copy to browser):**\n```\n{data_url[:200]}...\n```\n\n**Full Base64 Data:**\n```\n{base64_data}\n```\n\n**PlantUML Code:**\n```plantuml\n{plantuml_code}\n```"
-            else:
-                return f"❌ Generated image not found: {generated_image}\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
-                
-        finally:
-            # Clean up temporary files
-            if os.path.exists(temp_puml):
-                os.unlink(temp_puml)
-                    
-    except subprocess.TimeoutExpired:
-        raise ArchiMateGenerationError("PlantUML generation timed out after 30 seconds")
-    except Exception as e:
-        raise ArchiMateGenerationError(f"Failed to generate base64 image: {str(e)}")
+# Všetky image testing tools boli odstránené - použitím iba PNG do /tmp
 
 @mcp.tool()
 def validate_plantuml_syntax(
@@ -898,85 +737,6 @@ def validate_plantuml_syntax(
         raise ArchiMateGenerationError("PlantUML validation timed out")
     except Exception as e:
         raise ArchiMateGenerationError(f"Failed to validate PlantUML syntax: {str(e)}")
-
-def _plantuml_encode(plantuml_text: str) -> str:
-    """Encode PlantUML text for online viewer URL."""
-    # PlantUML encoding algorithm
-    compressed = zlib.compress(plantuml_text.encode('utf-8'))
-    
-    # Custom base64 encoding for PlantUML
-    def encode6bit(b):
-        if b < 10:
-            return chr(48 + b)  # 0-9
-        b -= 10
-        if b < 26:
-            return chr(65 + b)  # A-Z
-        b -= 26
-        if b < 26:
-            return chr(97 + b)  # a-z
-        b -= 26
-        if b == 0:
-            return '-'
-        if b == 1:
-            return '_'
-        return '?'
-    
-    result = ""
-    for i in range(0, len(compressed), 3):
-        b1 = compressed[i] if i < len(compressed) else 0
-        b2 = compressed[i + 1] if i + 1 < len(compressed) else 0
-        b3 = compressed[i + 2] if i + 2 < len(compressed) else 0
-        
-        result += encode6bit(b1 >> 2)
-        result += encode6bit(((b1 & 0x3) << 4) | (b2 >> 4))
-        result += encode6bit(((b2 & 0xF) << 2) | (b3 >> 6))
-        result += encode6bit(b3 & 0x3F)
-    
-    return result
-
-@mcp.tool()
-def get_plantuml_online_url(
-    title: Optional[str] = None,
-    description: Optional[str] = None,
-    format: str = "svg"
-) -> str:
-    """Generate PlantUML online viewer URL for immediate preview."""
-    try:
-        # Generate PlantUML code
-        plantuml_code = generator.generate_plantuml(title=title, description=description)
-        
-        # Encode for PlantUML server
-        try:
-            encoded = _plantuml_encode(plantuml_code)
-            
-            # Generate URLs for different servers
-            servers = {
-                "Official": f"http://www.plantuml.com/plantuml/{format}/{encoded}",
-                "Alternative": f"https://plantuml-server.kkeisuke.app/{format}/{encoded}",
-                "GitHub": f"https://kroki.io/plantuml/{format}/{base64.urlsafe_b64encode(plantuml_code.encode()).decode()}"
-            }
-            
-            result = f"🌐 **PlantUML Online Preview URLs**\n\n"
-            result += f"**Format:** {format.upper()}\n\n"
-            
-            for server_name, url in servers.items():
-                result += f"**{server_name} Server:**\n{url}\n\n"
-            
-            result += f"**Statistics:**\n"
-            result += f"- Elements: {generator.get_element_count()}\n"
-            result += f"- Relationships: {generator.get_relationship_count()}\n"
-            result += f"- Layers: {', '.join(generator.get_layers_used())}\n\n"
-            
-            result += f"**PlantUML Code:**\n```plantuml\n{plantuml_code}\n```\n\n"
-            result += f"💡 **Tip:** Copy any URL above and paste it in your browser to view the diagram!"
-            
-            return result
-            
-        except Exception as encode_error:
-            return f"❌ Failed to encode PlantUML for online viewing: {str(encode_error)}\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
-            
-    except Exception as e:
-        raise ArchiMateGenerationError(f"Failed to generate online URL: {str(e)}")
 
 
 # 📝 DEBUG & CONVERSATION LOGGING TOOLS
@@ -1293,66 +1053,6 @@ No validation errors detected in the specified timeframe. The architecture gener
         
     except Exception as e:
         return f"❌ Failed to extract recent problems: {str(e)}"
-
-# 🧪 IMAGE TESTING TOOLS - Test zobrazenia obrázkov v Claude Desktop
-@mcp.tool()
-def test_image_display_approach_1() -> str:
-    """Test 1: FastMCP Image object - priamy return Image objektu pre Claude Desktop."""
-    try:
-        result = test_approach_1_mcp_image()
-        log_mcp_tool_call("test_image_display_approach_1", {}, result, True)
-        if isinstance(result, str):
-            return result
-        else:
-            # If it's an Image object, we should return it directly
-            # But FastMCP tools expect string returns, so this needs special handling
-            return "✅ FastMCP Image object created successfully - should display as image"
-    except Exception as e:
-        log_mcp_tool_call("test_image_display_approach_1", {}, str(e), False, str(e))
-        return f"❌ Test 1 failed: {str(e)}"
-
-@mcp.tool()
-def test_image_display_approach_2() -> str:
-    """Test 2: Base64 encoded image v Markdown formáte."""
-    try:
-        result = test_approach_2_base64_markdown()
-        log_mcp_tool_call("test_image_display_approach_2", {}, result, True)
-        return result
-    except Exception as e:
-        log_mcp_tool_call("test_image_display_approach_2", {}, str(e), False, str(e))
-        return f"❌ Test 2 failed: {str(e)}"
-
-@mcp.tool()
-def test_image_display_approach_3() -> str:
-    """Test 3: Temporary file path - uloženie do /tmp a vrátenie cesty."""
-    try:
-        return test_approach_3_file_path()
-    except Exception as e:
-        return f"❌ Test 3 failed: {str(e)}"
-
-@mcp.tool()
-def test_image_display_approach_4() -> str:
-    """Test 4: Multiple formats - kombinácia viacerých prístupov naraz."""
-    try:
-        return test_approach_4_multiple_formats()
-    except Exception as e:
-        return f"❌ Test 4 failed: {str(e)}"
-
-@mcp.tool()
-def test_image_display_approach_5() -> str:
-    """Test 5: Text visualization - ASCII/text reprezentácia ako fallback."""
-    try:
-        return test_approach_5_text_visualization()
-    except Exception as e:
-        return f"❌ Test 5 failed: {str(e)}"
-
-@mcp.tool()
-def test_all_image_approaches() -> str:
-    """Comprehensive test všetkých prístupov k zobrazeniu obrázkov v Claude Desktop."""
-    try:
-        return test_all_approaches()
-    except Exception as e:
-        return f"❌ Comprehensive test failed: {str(e)}"
 
 def main() -> None:
     """Main entry point for the ArchiMate MCP server."""

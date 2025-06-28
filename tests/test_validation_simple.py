@@ -213,7 +213,8 @@ def test_validation_timeout_safety():
     if not renders_ok:
         assert ("timeout" in error_msg.lower() or 
                 "jar not found" in error_msg.lower() or
-                "validation error" in error_msg.lower())
+                "validation error" in error_msg.lower() or
+                "archimate validation failed" in error_msg.lower())
 
 def test_imports_work():
     """Test that all necessary imports work."""

@@ -1,0 +1,26 @@
+@startuml
+!include <archimate/Archimate>
+
+title Large Diagram Test
+
+left to right direction
+
+' Elements
+Business_Actor(element_0, "Element 0")
+Business_Actor(element_1, "Element 1")
+Business_Actor(element_2, "Element 2")
+Business_Actor(element_3, "Element 3")
+Business_Actor(element_4, "Element 4")
+Business_Actor(element_5, "Element 5")
+Business_Actor(element_6, "Element 6")
+Business_Actor(element_7, "Element 7")
+Business_Actor(element_8, "Element 8")
+Business_Actor(element_9, "Element 9")
+
+
+' Legend
+legend right
+  Business Layer
+end legend
+
+@enduml

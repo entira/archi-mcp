@@ -1,0 +1,107 @@
+@startuml
+!include <archimate/Archimate>
+
+title Národný e-health systém
+
+' Description: Export PlantUML kódu pre národný e-health systém
+
+left to right direction
+
+' Elements
+Motivation_Stakeholder(stakeholder_1, "Business Stakeholder")
+Motivation_Driver(driver_1, "Business Driver")
+Motivation_Goal(goal_1, "Strategic Goal")
+Motivation_Requirement(requirement_1, "Business Requirement")
+Motivation_Principle(principle_1, "Architecture Principle")
+Motivation_Stakeholder(stakeholder_pacienti, "Pacienti")
+Motivation_Stakeholder(stakeholder_lekari, "Lekári")
+Motivation_Stakeholder(stakeholder_zdravotny_personal, "Zdravotnícky personál")
+Motivation_Stakeholder(stakeholder_mz, "Ministerstvo zdravotníctva")
+Motivation_Stakeholder(stakeholder_poistovne, "Zdravotné poisťovne")
+Motivation_Stakeholder(stakeholder_lekarne, "Lekárne")
+Motivation_Stakeholder(stakeholder_nemocnice, "Nemocnice a polikliniky")
+Motivation_Stakeholder(stakeholder_it_dodavatelia, "IT dodávatelia")
+Motivation_Stakeholder(stakeholder_regulatori, "Regulátori")
+Motivation_Driver(driver_kvalita_zdravotnej_care, "Zvýšenie kvality zdravotnej péče")
+Motivation_Driver(driver_znizenie_nakladov, "Zníženie nákladov na zdravotníctvo")
+Motivation_Driver(driver_dostupnost_sluzieb, "Zlepšenie dostupnosti zdravotných služieb")
+Motivation_Driver(driver_digitalizacia, "Digitalizácia zdravotníctva")
+Motivation_Driver(driver_bezpecnost_dat, "Bezpečnosť pacientskych dát")
+Motivation_Driver(driver_interoperabilita, "Interoperabilita medzi poskytovateľmi")
+Motivation_Driver(driver_efektivnost_procesov, "Efektívnosť administratívnych procesov")
+Motivation_Goal(goal_ezk_pre_vsetkych, "Implementovať elektronickú zdravotnú knižku pre všetkých občanov")
+Motivation_Goal(goal_elektronicka_komunikacia, "Zabezpečiť elektronickú komunikáciu medzi poskytovateľmi")
+Motivation_Goal(goal_elektronicke_predpisovanie, "Umožniť elektronické predpisovanie liekov")
+Motivation_Goal(goal_centralny_register, "Vybudovať centrálny zdravotný register")
+Motivation_Goal(goal_telemedicina, "Zaviesť telemedicínske služby")
+Motivation_Goal(goal_pokrytie_100, "Dosiahnuť 100% pokrytie elektronickými službami")
+Motivation_Requirement(req_dostupnost_24_7, "Systém musí byť dostupný 24/7")
+Motivation_Requirement(req_sifrovanie_dat, "Dáta musia byť šifrované")
+Motivation_Requirement(req_hl7_standardy, "Systém musí podporovať HL7 štandardy")
+Motivation_Requirement(req_mobilna_aplikacia, "Mobilná aplikácia pre všetky platformy")
+Motivation_Requirement(req_integracia_existujucich, "Integrácia s existujúcimi systémami")
+Strategy_Capability(cap_sprava_ezz, "Správa elektronických zdravotných záznamov")
+Strategy_Capability(cap_elektronicke_predpisovanie, "Elektronické predpisovanie")
+Strategy_Capability(cap_telemedicina, "Telemedicína")
+Strategy_Capability(cap_zdravotna_analytika, "Zdravotná analytika")
+Strategy_Capability(cap_bezpecnost_ochrana_dat, "Bezpečnosť a ochrana dát")
+Strategy_Capability(cap_interoperabilita_systemov, "Interoperabilita systémov")
+Strategy_Capability(cap_mobilne_zdravotne_sluzby, "Mobilné zdravotné služby")
+Strategy_Resource(res_it_infrastruktura, "IT infraštruktúra")
+Strategy_Resource(res_ludske_zdroje, "Ľudské zdroje")
+Strategy_Resource(res_financne_prostriedky, "Finančné prostriedky")
+Strategy_Resource(res_legislativny_ramec, "Legislatívny rámec")
+Strategy_Resource(res_standardy_protokoly, "Štandardy a protokoly")
+Strategy_Resource(res_bezpecnostne_certifikaty, "Bezpečnostné certifikáty")
+Business_Actor(business_actor_pacient, "Pacient")
+Business_Actor(business_actor_vseobecny_lekar, "Všeobecný lekár")
+Business_Actor(business_actor_specialista, "Špecialista")
+Business_Actor(business_actor_zdravotna_sestra, "Zdravotná sestra")
+Business_Actor(business_actor_laborant, "Laborant")
+Business_Actor(business_actor_lekarnik, "Lekárnik")
+Business_Actor(business_actor_admin_pracovnik, "Administratívny pracovník")
+Business_Actor(business_actor_zdravotna_poistovna, "Zdravotná poisťovňa")
+Role(business_role_poskytovatel_primarnej, "Poskytovateľ primárnej starostlivosti")
+Role(business_role_poskytovatel_specializovanej, "Poskytovateľ špecializovanej starostlivosti")
+Role(business_role_spravca_zdravotnych_dat, "Správca zdravotných dát")
+Role(business_role_schvalovatel_uhrad, "Schvaľovateľ úhrad")
+Role(business_role_kontrolor_kvality, "Kontrolór kvality")
+Role(business_role_bezpecnostny_spravca, "Bezpečnostný správca")
+
+' Relationships
+Rel_Association(stakeholder_1, driver_1, "association")
+Rel_Influence(driver_1, goal_1, "influence")
+Rel_Realization(goal_1, requirement_1, "realization")
+Rel_Influence(principle_1, requirement_1, "influence")
+Rel_Association(stakeholder_pacienti, driver_kvalita_zdravotnej_care, "Pacienti sú motivovaní potrebou kvalitinejšej zdravotnej starostlivosti")
+Rel_Association(stakeholder_pacienti, driver_dostupnost_sluzieb, "Pacienti potrebujú lepšiu dostupnosť zdravotných služieb")
+Rel_Association(stakeholder_mz, driver_digitalizacia, "Ministerstvo zdravotníctva riadi digitalizáciu zdravotníctva")
+Rel_Association(stakeholder_poistovne, driver_znizenie_nakladov, "Zdravotné poisťovne chcú znižovať náklady na zdravotníctvo")
+Rel_Association(stakeholder_lekari, driver_interoperabilita, "Lekári potrebujú interoperabilitu pre efektívnu prácu")
+Rel_Association(stakeholder_regulatori, driver_bezpecnost_dat, "Regulátori dbajú o bezpečnosť pacientskych dát")
+Rel_Influence(driver_digitalizacia, goal_ezk_pre_vsetkych, "Digitalizácia ovplyvňuje cieľ implementácie EZK")
+Rel_Influence(driver_interoperabilita, goal_elektronicka_komunikacia, "Interoperabilita ovplyvňuje elektronickú komunikáciu")
+Rel_Influence(driver_efektivnost_procesov, goal_elektronicke_predpisovanie, "Efektívnosť procesov ovplyvňuje elektronické predpisovanie")
+Rel_Influence(driver_dostupnost_sluzieb, goal_telemedicina, "Dostupnosť služieb ovplyvňuje zavedenie telemedicíny")
+Rel_Realization(goal_ezk_pre_vsetkych, req_dostupnost_24_7, "EZK pre všetkých realizuje požiadavku na 24/7 dostupnosť")
+Rel_Realization(goal_centralny_register, req_sifrovanie_dat, "Centrálny register realizuje požiadavku na šifrovanie dát")
+Rel_Realization(goal_elektronicka_komunikacia, req_hl7_standardy, "Elektronická komunikácia realizuje podporu HL7 štandardov")
+Rel_Realization(goal_telemedicina, req_mobilna_aplikacia, "Telemedicínske služby realizujú mobilnú aplikáciu")
+Rel_Realization(goal_pokrytie_100, req_integracia_existujucich, "100% pokrytie realizuje integráciu s existujúcimi systémami")
+Rel_Association(res_it_infrastruktura, cap_sprava_ezz, "IT infraštruktúra podporuje správu EZZ")
+Rel_Association(res_standardy_protokoly, cap_interoperabilita_systemov, "Štandardy a protokoly podporujú interoperabilitu systémov")
+Rel_Association(res_bezpecnostne_certifikaty, cap_bezpecnost_ochrana_dat, "Bezpečnostné certifikáty podporujú ochranu dát")
+Rel_Association(res_financne_prostriedky, cap_telemedicina, "Finančné prostriedky umožňujú telemedicínu")
+Rel_Assignment(business_actor_vseobecny_lekar, business_role_poskytovatel_primarnej, "Všeobecný lekár má rolu poskytovateľa primárnej starostlivosti")
+Rel_Assignment(business_actor_specialista, business_role_poskytovatel_specializovanej, "Špecialista má rolu poskytovateľa špecializovanej starostlivosti")
+Rel_Assignment(business_actor_admin_pracovnik, business_role_spravca_zdravotnych_dat, "Administratívny pracovník má rolu správcu zdravotných dát")
+Rel_Assignment(business_actor_zdravotna_poistovna, business_role_schvalovatel_uhrad, "Zdravotná poisťovňa má rolu schvaľovateľa úhrad")
+
+' Legend
+legend right
+  Business Layer
+  Motivation Layer
+  Strategy Layer
+end legend
+
+@enduml

@@ -233,7 +233,7 @@ def test_end_to_end_diagram_creation():
     else:
         # If it's a string, check for success message
         assert isinstance(result1, str)
-        assert "ArchiMate diagram created successfully!" in result1
+        assert "ArchiMate diagram created" in result1 and "successfully" in result1
     
     # Step 2: Add another element
     result2 = add_archimate_element.fn(
@@ -306,4 +306,4 @@ def test_performance_basic():
     else:
         # If it's a string, check for success message
         assert isinstance(result, str)
-        assert "ArchiMate diagram created successfully!" in result
+        assert "ArchiMate diagram created" in result and "successfully" in result
