@@ -5,7 +5,70 @@ import tempfile
 import subprocess
 import os
 from pathlib import Path
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union
+
+try:
+    from mcp.server.fastmcp import Image
+    MCP_IMAGE_AVAILABLE = True
+except ImportError:
+    MCP_IMAGE_AVAILABLE = False
+    Image = None
+
+def generate_mcp_image_object(plantuml_code: str, title: str = None) -> Union[Image, None]:
+    """
+    Generate FastMCP Image object for direct display in Claude Desktop.
+    Returns Image object if successful, None if failed.
+    """
+    if not MCP_IMAGE_AVAILABLE:
+        return None
+        
+    try:
+        # Find PlantUML jar
+        plantuml_jar = _find_plantuml_jar()
+        if not plantuml_jar:
+            return None
+            
+        # Create temporary PlantUML file
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.puml', delete=False, encoding='utf-8') as f:
+            f.write(plantuml_code)
+            temp_puml = f.name
+        
+        try:
+            # Generate PNG image using PlantUML
+            cmd = [
+                "java", "-jar", plantuml_jar,
+                "-tpng",
+                temp_puml
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            
+            if result.returncode != 0:
+                return None
+            
+            # Find generated image file
+            generated_image = Path(temp_puml).parent / f"{Path(temp_puml).stem}.png"
+            
+            if generated_image.exists():
+                # Read image bytes and create MCP Image object
+                with open(generated_image, 'rb') as img_file:
+                    image_data = img_file.read()
+                
+                # Clean up generated image
+                generated_image.unlink()
+                
+                # Return FastMCP Image object
+                return Image(data=image_data, format="png")
+            else:
+                return None
+                
+        finally:
+            # Clean up temporary files
+            if os.path.exists(temp_puml):
+                os.unlink(temp_puml)
+                    
+    except Exception as e:
+        return None
 
 def generate_claude_desktop_image(plantuml_code: str, title: str = None) -> Tuple[bool, str]:
     """

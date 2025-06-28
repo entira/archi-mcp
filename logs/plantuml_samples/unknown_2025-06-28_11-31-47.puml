@@ -1,0 +1,41 @@
+@startuml
+!include <archimate/Archimate>
+
+title Python MCP Servers - Layered Architecture
+
+' Description: Kompletná víavrstvová ArchiMate architektúra pre Python MCP servery
+
+top to bottom direction
+
+' Elements
+Business_Service(business_service, "Business Service")
+Application_Service(application_service, "Application Service")
+Technology_Service(technology_service, "Technology Service")
+Applicationcomponent(mcp_server_core, "MCP Server Core")
+Applicationcomponent(ai_assistant_client, "AI Assistant Client")
+Applicationcomponent(filesystem_mcp_server, "Filesystem MCP Server")
+Applicationcomponent(database_mcp_server, "Database MCP Server")
+Applicationcomponent(api_mcp_server, "REST API MCP Server")
+Systemsoftware(python_runtime, "Python Runtime")
+Systemsoftware(mcp_protocol_lib, "MCP Protocol Library")
+Systemsoftware(operating_system, "Operating System")
+
+' Relationships
+Rel_Realization(application_service, business_service, "realization")
+Rel_Realization(technology_service, application_service, "realization")
+Rel_Serving(ai_assistant_client, mcp_server_core, "AI asistent komunikuje s MCP serverom")
+Rel_Specialization(filesystem_mcp_server, mcp_server_core, "Filesystem server rozširuje základnú funkcionalitu")
+Rel_Specialization(database_mcp_server, mcp_server_core, "Database server rozširuje základnú funkcionalitu")
+Rel_Specialization(api_mcp_server, mcp_server_core, "API server rozširuje základnú funkcionalitu")
+Rel_Realization(python_runtime, mcp_server_core, "Python runtime realizuje MCP server")
+Rel_Serving(mcp_protocol_lib, mcp_server_core, "MCP knižnica podporuje server")
+Rel_Serving(operating_system, python_runtime, "OS hostuje Python runtime")
+
+' Legend
+legend right
+  Application Layer
+  Business Layer
+  Technology Layer
+end legend
+
+@enduml

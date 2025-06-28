@@ -1,0 +1,19 @@
+@startuml
+!include <archimate/Archimate>
+
+title Python MCP Servery - Test
+
+' Description: Test diagram pre zistenie podporovaných vrstiev
+
+left to right direction
+
+' Elements
+Applicationcomponent(app_comp_1, "MCP Server")
+
+
+' Legend
+legend right
+  Application Layer
+end legend
+
+@enduml

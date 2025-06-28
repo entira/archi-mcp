@@ -1,0 +1,39 @@
+@startuml
+!include <archimate/Archimate>
+
+title Test všetkých relationships
+
+' Description: Kompletný test ArchiMate vzťahov
+
+left to right direction
+
+' Elements
+Business_Actor(podnik_manazment, "Podnikový manažment")
+Business_Process(strategicke_planovanie, "Strategické plánovanie")
+Business_Service(konzultacne_sluzby, "Konzultačné služby")
+Application_Component(erp_system, "ERP Systém")
+Application_Service(financne_reporty, "Finančné reporty")
+Data_Object(zakaznicke_data, "Zákaznícke údaje")
+Technology_Node(db_server, "Databázový server")
+Technology_SystemSoftware(oracle_db, "Oracle Database")
+Technology_Service(data_storage, "Ukladanie dát")
+
+' Relationships
+Rel_Composition(db_server, oracle_db, "Server kompozuje Oracle DB (rovnaká vrstva)")
+Rel_Assignment(podnik_manazment, strategicke_planovanie, "Manažment je priradený k plánovaniu")
+Rel_Realization(erp_system, financne_reporty, "ERP realizuje reporty")
+Rel_Serving(data_storage, erp_system, "Úložisko slúži ERP")
+Rel_Access(erp_system, zakaznicke_data, "ERP pristupuje k dátam")
+Rel_Influence(strategicke_planovanie, konzultacne_sluzby, "Plánovanie ovplyvňuje služby")
+Rel_Triggering(strategicke_planovanie, financne_reporty, "Plánovanie spúšťa reporty")
+Rel_Flow(zakaznicke_data, financne_reporty, "Dátový tok z údajov do reportov")
+Rel_Association(oracle_db, data_storage, "Oracle je asociované s úložiskom")
+
+' Legend
+legend right
+  Application Layer
+  Business Layer
+  Technology Layer
+end legend
+
+@enduml

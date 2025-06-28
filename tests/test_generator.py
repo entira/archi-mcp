@@ -195,8 +195,8 @@ class TestArchiMateGenerator:
         
         plantuml = generator.generate_plantuml()
         
-        assert "' Business Layer" in plantuml
-        assert "' Application Layer" in plantuml
+        assert "package \"Business Layer\"" in plantuml
+        assert "package \"Application Layer\"" in plantuml
     
     def test_clear_diagram(self):
         """Test clearing diagram."""

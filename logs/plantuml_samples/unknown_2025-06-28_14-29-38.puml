@@ -1,0 +1,4 @@
+
+@startuml
+rectangle "Test" as test
+@enduml

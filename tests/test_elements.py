@@ -45,7 +45,7 @@ class TestArchiMateElement:
         )
         
         plantuml = element.to_plantuml()
-        expected = 'Business_Business_Actor(test_actor, "Test Actor") #Business'
+        expected = 'Business_Actor(test_actor, "Test Actor")'
         assert plantuml == expected
     
     def test_element_validation_success(self):
@@ -106,7 +106,7 @@ class TestBusinessElements:
             description="Bank customer"
         )
         
-        assert actor.element_type == "Business_Actor"
+        assert actor.element_type == "Actor"
         assert actor.layer == ArchiMateLayer.BUSINESS
         assert actor.aspect == ArchiMateAspect.ACTIVE_STRUCTURE
         assert actor.name == "Customer"
@@ -119,7 +119,7 @@ class TestBusinessElements:
             description="Account management services"
         )
         
-        assert service.element_type == "Business_Service"
+        assert service.element_type == "Service"
         assert service.layer == ArchiMateLayer.BUSINESS
         assert service.aspect == ArchiMateAspect.BEHAVIOR
     
@@ -131,7 +131,7 @@ class TestBusinessElements:
             description="Customer service contract"
         )
         
-        assert obj.element_type == "Business_Object"
+        assert obj.element_type == "Object"
         assert obj.layer == ArchiMateLayer.BUSINESS
         assert obj.aspect == ArchiMateAspect.PASSIVE_STRUCTURE
 
@@ -147,7 +147,7 @@ class TestApplicationElements:
             description="Customer-facing web application"
         )
         
-        assert component.element_type == "Application_Component"
+        assert component.element_type == "Component"
         assert component.layer == ArchiMateLayer.APPLICATION
         assert component.aspect == ArchiMateAspect.ACTIVE_STRUCTURE
     
@@ -159,7 +159,7 @@ class TestApplicationElements:
             description="User management service"
         )
         
-        assert service.element_type == "Application_Service"
+        assert service.element_type == "Service"
         assert service.layer == ArchiMateLayer.APPLICATION
         assert service.aspect == ArchiMateAspect.BEHAVIOR
     
@@ -171,7 +171,7 @@ class TestApplicationElements:
             description="User information storage"
         )
         
-        assert data.element_type == "Data_Object"
+        assert data.element_type == "DataObject"
         assert data.layer == ArchiMateLayer.APPLICATION
         assert data.aspect == ArchiMateAspect.PASSIVE_STRUCTURE
 

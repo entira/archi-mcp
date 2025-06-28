@@ -8,11 +8,19 @@ import os
 import tempfile
 import base64
 import zlib
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 from pathlib import Path
 
 from fastmcp import FastMCP
 from pydantic import BaseModel, Field
+
+try:
+    from fastmcp import Image
+    MCP_IMAGE_AVAILABLE = True
+except ImportError:
+    MCP_IMAGE_AVAILABLE = False
+    Image = None
 
 from .utils.logging import setup_logging, get_logger
 from .utils.exceptions import (
@@ -41,6 +49,32 @@ from .templates import (
     INDUSTRY_TEMPLATES,
 )
 from .architecture_generator import FullArchitectureGenerator
+from .image_display import generate_mcp_image_object, generate_claude_desktop_image
+from .image_test_tool import (
+    test_approach_1_mcp_image, 
+    test_approach_2_base64_markdown,
+    test_approach_3_file_path,
+    test_approach_4_multiple_formats,
+    test_approach_5_text_visualization,
+    test_all_approaches
+)
+from .conversation_logger import log_mcp_tool_call, save_conversation_log
+from .mcp_debug_logger import (
+    mcp_debug_logger, 
+    log_mcp_call_start, 
+    log_mcp_call_result, 
+    log_mcp_error,
+    get_debug_log_path
+)
+from .debug_tools import (
+    analyze_generator_state,
+    analyze_element_normalization_issues,
+    identify_architecture_problems
+)
+from .problem_extractor import (
+    extract_recent_problems,
+    extract_latest_problems
+)
 
 # Setup logging
 setup_logging(level="INFO")
@@ -53,6 +87,52 @@ mcp = FastMCP("archi-mcp")
 generator = ArchiMateGenerator()
 validator = ArchiMateValidator()
 full_arch_generator = FullArchitectureGenerator()
+
+# Tool call wrapper for automatic debug logging  
+def debug_tool_call(func):
+    """Decorator to automatically log MCP tool calls for debugging."""
+    import functools
+    
+    @functools.wraps(func)
+    def wrapper(**kwargs):  # Only use **kwargs to avoid *args issue
+        tool_name = func.__name__
+        parameters = kwargs.copy()
+        
+        # Convert complex objects to string representation for logging
+        log_parameters = {}
+        for param_name, param_value in parameters.items():
+            if isinstance(param_value, (dict, list)):
+                log_parameters[param_name] = param_value
+            else:
+                log_parameters[param_name] = str(param_value) if param_value is not None else None
+        
+        # Start logging
+        call_id = log_mcp_call_start(tool_name, log_parameters)
+        
+        try:
+            # Execute the tool
+            result = func(**kwargs)
+            
+            # Log successful result
+            log_mcp_call_result(call_id, result, success=True)
+            
+            # Also log to conversation logger for compatibility
+            log_mcp_tool_call(tool_name, log_parameters, result, True)
+            
+            return result
+            
+        except Exception as e:
+            # Log error
+            log_mcp_call_result(call_id, str(e), success=False, error=str(e))
+            log_mcp_error(e, f"Error in tool: {tool_name}")
+            
+            # Also log to conversation logger for compatibility
+            log_mcp_tool_call(tool_name, log_parameters, str(e), False, str(e))
+            
+            # Re-raise the exception
+            raise
+    
+    return wrapper
 
 # Pydantic models for input validation
 class ElementInput(BaseModel):
@@ -158,14 +238,14 @@ def _get_aspect_for_element_type(element_type: str) -> ArchiMateAspect:
         "Application_Component", "Application_Collaboration", "Application_Interface",
         "Node", "Device", "System_Software", "Technology_Collaboration", "Technology_Interface",
         "Path", "Communication_Network", "Equipment", "Facility", "Distribution_Network",
-        "Stakeholder", "Resource"
+        "Stakeholder", "Motivation_Stakeholder", "Strategy_Resource"
     ]
     
     # Passive Structure elements
     passive_structure = [
         "Business_Object", "Business_Contract", "Business_Representation", "Location",
-        "Data_Object", "Artifact", "Material", "Meaning", "Value", "Deliverable", 
-        "Plateau", "Gap"
+        "Data_Object", "Artifact", "Material", "Meaning", "Motivation_Meaning", "Value", "Motivation_Value", 
+        "Deliverable", "Implementation_Deliverable", "Plateau", "Implementation_Plateau", "Gap", "Implementation_Gap"
     ]
     
     # Behavior elements (everything else)
@@ -189,6 +269,7 @@ def _validate_plantuml_renders(plantuml_code: str, tool_name: str = "unknown", c
 
 # MCP Tools using FastMCP decorators
 @mcp.tool()
+@debug_tool_call
 def create_archimate_diagram(diagram: DiagramInput) -> str:
     """Generate complete ArchiMate diagrams from structured input with elements and relationships."""
     try:
@@ -236,14 +317,27 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
             "layers": generator.get_layers_used()
         }
         
-        # Generate comprehensive image display for Claude Desktop
-        from .image_display import generate_claude_desktop_image
+        # Generate PNG to /tmp directory
+        try:
+            png_path = generator.generate_png_to_tmp(title=diagram.title)
+            png_info = f"📁 **PNG File:** `{png_path}`"
+        except Exception as png_error:
+            png_info = f"⚠️ **PNG Generation Failed:** {str(png_error)}"
+        
+        # Try to generate MCP Image object for Claude Desktop display
+        if MCP_IMAGE_AVAILABLE:
+            image_obj = generate_mcp_image_object(plantuml_code, diagram.title)
+            if image_obj:
+                logger.info(f"Successfully generated MCP Image object for diagram: {diagram.title}")
+                return image_obj
+        
+        # Fallback to comprehensive image display for Claude Desktop
         image_success, image_result = generate_claude_desktop_image(plantuml_code, diagram.title)
         
         if image_success:
-            return f"✅ ArchiMate diagram created and validated successfully!\n\nStatistics:\n- Elements: {stats['elements']}\n- Relationships: {stats['relationships']}\n- Layers: {', '.join(stats['layers'])}\n- Render Status: VERIFIED ✅\n\n{image_result}\n\n### 📄 PlantUML Source Code\n```plantuml\n{plantuml_code}\n```"
+            return f"✅ ArchiMate diagram created and validated successfully!\n\nStatistics:\n- Elements: {stats['elements']}\n- Relationships: {stats['relationships']}\n- Layers: {', '.join(stats['layers'])}\n- Render Status: VERIFIED ✅\n- {png_info}\n\n{image_result}\n\n### 📄 PlantUML Source Code\n```plantuml\n{plantuml_code}\n```"
         else:
-            return f"✅ ArchiMate diagram created and validated successfully!\n\nStatistics:\n- Elements: {stats['elements']}\n- Relationships: {stats['relationships']}\n- Layers: {', '.join(stats['layers'])}\n- Render Status: VERIFIED ✅\n\n⚠️ Image generation warning: {image_result}\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
+            return f"✅ ArchiMate diagram created and validated successfully!\n\nStatistics:\n- Elements: {stats['elements']}\n- Relationships: {stats['relationships']}\n- Layers: {', '.join(stats['layers'])}\n- Render Status: VERIFIED ✅\n- {png_info}\n\n⚠️ Image generation warning: {image_result}\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
         
     except Exception as e:
         raise ArchiMateGenerationError(f"Failed to create diagram: {str(e)}")
@@ -397,7 +491,14 @@ def generate_archimate_template(template: TemplateInput) -> str:
         if not renders_ok:
             raise ArchiMateGenerationError(f"Generated template diagram failed validation - {error_msg}")
         
-        return f"✅ ArchiMate diagram generated from {template.template_type} template '{template.template_name}' and validated!\n\nTemplate: {template_obj.name}\nDescription: {template_obj.description}\n\nElements: {generator.get_element_count()}\nRelationships: {generator.get_relationship_count()}\nRender Status: VERIFIED ✅\n\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
+        # Generate PNG to /tmp directory
+        try:
+            png_path = generator.generate_png_to_tmp(title=template_obj.name)
+            png_info = f"📁 **PNG File:** `{png_path}`\n"
+        except Exception as png_error:
+            png_info = f"⚠️ **PNG Generation Failed:** {str(png_error)}\n"
+        
+        return f"✅ ArchiMate diagram generated from {template.template_type} template '{template.template_name}' and validated!\n\nTemplate: {template_obj.name}\nDescription: {template_obj.description}\n\nElements: {generator.get_element_count()}\nRelationships: {generator.get_relationship_count()}\nRender Status: VERIFIED ✅\n{png_info}\nPlantUML Code:\n```plantuml\n{plantuml_code}\n```"
         
     except Exception as e:
         raise ArchiMateTemplateError(f"Failed to generate template: {str(e)}")
@@ -419,7 +520,14 @@ def export_archimate_diagram(
         if not renders_ok:
             raise ArchiMateGenerationError(f"Generated diagram failed validation - {error_msg}")
         
-        result_text = "✅ ArchiMate diagram exported and validated successfully!\n\n"
+        # Generate PNG to /tmp directory
+        try:
+            png_path = generator.generate_png_to_tmp(title=title)
+            png_info = f"📁 **PNG File:** `{png_path}`\n"
+        except Exception as png_error:
+            png_info = f"⚠️ **PNG Generation Failed:** {str(png_error)}\n"
+        
+        result_text = f"✅ ArchiMate diagram exported and validated successfully!\n\n{png_info}"
         
         # Save to file if path provided
         if output_path:
@@ -869,6 +977,382 @@ def get_plantuml_online_url(
             
     except Exception as e:
         raise ArchiMateGenerationError(f"Failed to generate online URL: {str(e)}")
+
+
+# 📝 DEBUG & CONVERSATION LOGGING TOOLS
+@mcp.tool()
+def get_debug_log_info() -> str:
+    """Get information about the current MCP debug log session."""
+    try:
+        stats = mcp_debug_logger.get_session_stats()
+        log_path = get_debug_log_path()
+        
+        return f"""✅ **MCP Debug Logging Active**
+
+## 📊 Current Session Stats
+- **Session ID:** `{stats['session_id']}`
+- **Total Tool Calls:** {stats['total_calls']}
+- **Successful:** {stats['successful_calls']} ✅
+- **Failed:** {stats['failed_calls']} ❌
+- **Debug Entries:** {stats['total_entries']}
+
+## 📁 Debug Log File
+**Path:** `{log_path}`
+
+This debug log contains:
+- 🔧 **Detailed tool call tracking** with parameters and results
+- ⏱️ **Timing information** for performance analysis
+- 🚨 **Error logging** with full tracebacks
+- 💬 **Client-server communication** events
+- 📊 **Live session statistics**
+
+The log is automatically updated in real-time as you use MCP tools.
+"""
+    except Exception as e:
+        return f"❌ Failed to get debug log info: {str(e)}"
+
+@mcp.tool()
+def save_conversation_to_tmp() -> str:
+    """Save current MCP conversation log to markdown file in /tmp directory."""
+    try:
+        log_path = save_conversation_log()
+        debug_path = get_debug_log_path()
+        
+        return f"""✅ Conversation logs saved successfully!
+
+## 📁 **Conversation Log:** `{log_path}`
+- All MCP tool calls with parameters and results
+- Conversation timeline
+- Session statistics
+- Success/failure tracking
+
+## 🐛 **Debug Log:** `{debug_path}`
+- Enhanced debug information
+- Real-time tool call tracking
+- Error tracebacks and timing
+- Client-server communication
+
+You can open both files to review the complete session history and debug information."""
+    except Exception as e:
+        return f"❌ Failed to save conversation log: {str(e)}"
+
+@mcp.tool()
+def analyze_current_architecture() -> str:
+    """Analyze the current ArchiMate architecture state and identify problems."""
+    try:
+        # Analyze generator state
+        state_analysis = analyze_generator_state(generator)
+        
+        # Identify architecture problems
+        problems = identify_architecture_problems(generator, validator)
+        
+        # Analyze element normalization
+        normalization_analysis = analyze_element_normalization_issues()
+        
+        # Create comprehensive report
+        report = f"""# 🔍 ArchiMate Architecture Analysis Report
+
+## 📊 Current Architecture State
+
+### **Elements:** {state_analysis['element_count']}
+### **Relationships:** {state_analysis['relationship_count']}
+### **Layers Used:** {', '.join(state_analysis['layers_used']) if state_analysis['layers_used'] else 'None'}
+
+## 🎯 Architecture Health Summary
+- **Overall Status:** {'✅ Healthy' if problems['summary']['overall_health'] == 'healthy' else '⚠️ Issues Found'}
+- **Critical Issues:** {problems['summary']['total_issues']}
+- **Warnings:** {problems['summary']['total_warnings']}
+
+"""
+
+        # Add element details if any exist
+        if state_analysis['elements']:
+            report += "## 🏗️ Current Elements\n\n"
+            for element_id, element in state_analysis['elements'].items():
+                report += f"- **{element['name']}** (`{element_id}`)\n"
+                report += f"  - Type: {element['element_type']}\n"
+                report += f"  - Layer: {element['layer']}\n"
+                report += f"  - PlantUML: `{element['plantuml_output']}`\n\n"
+        
+        # Add relationship details if any exist
+        if state_analysis['relationships']:
+            report += "## 🔗 Current Relationships\n\n"
+            for rel in state_analysis['relationships']:
+                report += f"- **{rel['id']}**: {rel['from_element']} → {rel['to_element']}\n"
+                report += f"  - Type: {rel['relationship_type']}\n"
+                report += f"  - PlantUML: `{rel['plantuml_output']}`\n\n"
+        
+        # Add critical issues
+        if problems['critical_issues']:
+            report += "## 🚨 Critical Issues\n\n"
+            for issue in problems['critical_issues']:
+                report += f"### ❌ {issue.get('issue', 'Unknown Issue')}\n"
+                report += f"**Description:** {issue.get('description', issue.get('error', 'No description'))}\n"
+                if 'recommendation' in issue:
+                    report += f"**Recommendation:** {issue['recommendation']}\n"
+                report += "\n"
+        
+        # Add warnings
+        if problems['warnings']:
+            report += "## ⚠️ Warnings\n\n"
+            for warning in problems['warnings']:
+                report += f"### ⚠️ {warning['issue']}\n"
+                report += f"**Description:** {warning['description']}\n"
+                report += f"**Recommendation:** {warning['recommendation']}\n\n"
+        
+        # Add element normalization analysis
+        normalization_issues = [case for case in normalization_analysis['test_cases'] if case['status'] == 'error']
+        if normalization_issues:
+            report += "## 🔧 Element Normalization Issues\n\n"
+            for issue in normalization_issues:
+                report += f"- **{issue['input_type']}** in {issue['layer']} layer: {issue['error']}\n"
+        
+        # Add recommendations
+        if problems['recommendations']:
+            report += "\n## 💡 Recommendations\n\n"
+            for rec in problems['recommendations']:
+                report += f"- {rec}\n"
+        
+        return report
+        
+    except Exception as e:
+        return f"❌ Failed to analyze architecture: {str(e)}"
+
+@mcp.tool()
+def test_element_normalization() -> str:
+    """Test element type normalization across all ArchiMate layers."""
+    try:
+        analysis = analyze_element_normalization_issues()
+        
+        report = "# 🧪 Element Normalization Test Results\n\n"
+        
+        # Summary
+        total_tests = len(analysis['test_cases'])
+        successful_tests = len([case for case in analysis['test_cases'] if case['status'] == 'success'])
+        failed_tests = total_tests - successful_tests
+        
+        report += f"## 📊 Test Summary\n"
+        report += f"- **Total Tests:** {total_tests}\n"
+        report += f"- **Successful:** {successful_tests} ✅\n"
+        report += f"- **Failed:** {failed_tests} ❌\n"
+        report += f"- **Success Rate:** {(successful_tests/total_tests*100):.1f}%\n\n"
+        
+        # Layer-specific results
+        report += "## 🏗️ Layer-Specific Mappings\n\n"
+        for layer, mappings in analysis['layer_specific_mappings'].items():
+            report += f"### {layer.title()} Layer\n"
+            for input_type, normalized in mappings.items():
+                report += f"- `{input_type}` → `{normalized}`\n"
+            report += "\n"
+        
+        # Failed tests
+        if analysis['issues_found']:
+            report += "## ❌ Failed Normalizations\n\n"
+            for issue in analysis['issues_found']:
+                report += f"- **{issue['element_type']}** in {issue['layer']} layer: {issue['error']}\n"
+        
+        return report
+        
+    except Exception as e:
+        return f"❌ Failed to test element normalization: {str(e)}"
+
+@mcp.tool()
+def extract_problems_from_latest_attempt() -> str:
+    """Extract and analyze problems from the most recent architecture creation attempt."""
+    try:
+        analysis = extract_latest_problems()
+        
+        report = f"""# 🔍 Latest Attempt Problem Analysis
+
+## 📊 Summary
+**{analysis['summary']}**
+
+### Quick Stats
+- **Total Errors:** {analysis['total_errors']}
+- **Timeframe:** {analysis['timeframe']}
+
+"""
+        
+        # Error type breakdown
+        if analysis['error_types']:
+            report += "## 🏷️ Error Types\n\n"
+            for error_type, count in sorted(analysis['error_types'].items(), key=lambda x: x[1], reverse=True):
+                report += f"- **{error_type}**: {count} occurrences\n"
+            report += "\n"
+        
+        # Critical issues
+        if analysis['critical_issues']:
+            report += "## 🚨 Critical Issues\n\n"
+            for issue in analysis['critical_issues']:
+                severity_icon = "🚨" if issue['severity'] == 'critical' else "⚠️"
+                report += f"### {severity_icon} {issue['issue']}\n"
+                report += f"**Description:** {issue['description']}\n"
+                report += f"**Recommendation:** {issue['recommendation']}\n\n"
+        
+        # Pattern analysis
+        patterns = analysis['pattern_analysis']
+        if any(patterns.values()):
+            report += "## 🔍 Pattern Analysis\n\n"
+            
+            for pattern_type, pattern_list in patterns.items():
+                if pattern_list:
+                    report += f"### {pattern_type.replace('_', ' ').title()}\n"
+                    for pattern in pattern_list:
+                        report += f"- {pattern}\n"
+                    report += "\n"
+        
+        # Sample errors for debugging
+        if analysis['sample_errors']:
+            report += "## 🐛 Sample Errors for Debugging\n\n"
+            for i, sample in enumerate(analysis['sample_errors'], 1):
+                report += f"### Error {i}: {sample['error_type']}\n"
+                report += f"**Tool:** {sample['tool_name']}\n"
+                report += f"**Time:** {sample['timestamp']}\n"
+                report += f"**Message:** {sample['error_message']}\n"
+                if sample['plantuml_sample']:
+                    report += f"**PlantUML Sample:**\n```plantuml\n{sample['plantuml_sample']}\n```\n"
+                report += "\n"
+        
+        # Recommendations
+        if analysis['recommendations']:
+            report += "## 💡 Recommended Actions\n\n"
+            for i, rec in enumerate(analysis['recommendations'], 1):
+                report += f"{i}. {rec}\n"
+        
+        return report
+        
+    except Exception as e:
+        return f"❌ Failed to extract problems from latest attempt: {str(e)}"
+
+@mcp.tool()
+def extract_problems_from_recent_attempts(minutes: int = 10) -> str:
+    """Extract and analyze problems from recent architecture attempts.
+    
+    Args:
+        minutes: Look back this many minutes (default: 10)
+    """
+    try:
+        analysis = extract_recent_problems(minutes)
+        
+        report = f"""# 🔍 Recent Problems Analysis (Last {minutes} minutes)
+
+## 📊 Summary
+**{analysis['summary']}**
+
+### Quick Stats
+- **Total Errors:** {analysis['total_errors']}
+- **Timeframe:** Last {minutes} minutes
+
+"""
+        
+        if analysis['total_errors'] == 0:
+            report += """## ✅ No Recent Problems
+No validation errors detected in the specified timeframe. The architecture generation system appears to be working well.
+
+### Recommendations:
+- System is stable for architecture creation
+- Safe to proceed with complex diagrams
+- Monitoring systems are active and ready
+"""
+            return report
+        
+        # Error type breakdown
+        if analysis['error_types']:
+            report += "## 🏷️ Error Types\n\n"
+            for error_type, count in sorted(analysis['error_types'].items(), key=lambda x: x[1], reverse=True):
+                percentage = (count / analysis['total_errors']) * 100
+                report += f"- **{error_type}**: {count} occurrences ({percentage:.1f}%)\n"
+            report += "\n"
+        
+        # Tools with errors
+        if analysis['tools_with_errors']:
+            report += "## 🔧 Tools with Errors\n\n"
+            for tool_name, count in sorted(analysis['tools_with_errors'].items(), key=lambda x: x[1], reverse=True):
+                report += f"- **{tool_name}**: {count} errors\n"
+            report += "\n"
+        
+        # Critical issues
+        if analysis['critical_issues']:
+            report += "## 🚨 Critical Issues Requiring Immediate Action\n\n"
+            for issue in analysis['critical_issues']:
+                severity_icon = "🚨" if issue['severity'] == 'critical' else "⚠️"
+                report += f"### {severity_icon} {issue['issue']}\n"
+                report += f"**Severity:** {issue['severity'].upper()}\n"
+                report += f"**Description:** {issue['description']}\n"
+                report += f"**Recommendation:** {issue['recommendation']}\n\n"
+        
+        # Recommendations
+        if analysis['recommendations']:
+            report += "## 💡 Immediate Actions\n\n"
+            for i, rec in enumerate(analysis['recommendations'], 1):
+                report += f"{i}. {rec}\n"
+        
+        report += f"\n---\n*Analysis completed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*"
+        
+        return report
+        
+    except Exception as e:
+        return f"❌ Failed to extract recent problems: {str(e)}"
+
+# 🧪 IMAGE TESTING TOOLS - Test zobrazenia obrázkov v Claude Desktop
+@mcp.tool()
+def test_image_display_approach_1() -> str:
+    """Test 1: FastMCP Image object - priamy return Image objektu pre Claude Desktop."""
+    try:
+        result = test_approach_1_mcp_image()
+        log_mcp_tool_call("test_image_display_approach_1", {}, result, True)
+        if isinstance(result, str):
+            return result
+        else:
+            # If it's an Image object, we should return it directly
+            # But FastMCP tools expect string returns, so this needs special handling
+            return "✅ FastMCP Image object created successfully - should display as image"
+    except Exception as e:
+        log_mcp_tool_call("test_image_display_approach_1", {}, str(e), False, str(e))
+        return f"❌ Test 1 failed: {str(e)}"
+
+@mcp.tool()
+def test_image_display_approach_2() -> str:
+    """Test 2: Base64 encoded image v Markdown formáte."""
+    try:
+        result = test_approach_2_base64_markdown()
+        log_mcp_tool_call("test_image_display_approach_2", {}, result, True)
+        return result
+    except Exception as e:
+        log_mcp_tool_call("test_image_display_approach_2", {}, str(e), False, str(e))
+        return f"❌ Test 2 failed: {str(e)}"
+
+@mcp.tool()
+def test_image_display_approach_3() -> str:
+    """Test 3: Temporary file path - uloženie do /tmp a vrátenie cesty."""
+    try:
+        return test_approach_3_file_path()
+    except Exception as e:
+        return f"❌ Test 3 failed: {str(e)}"
+
+@mcp.tool()
+def test_image_display_approach_4() -> str:
+    """Test 4: Multiple formats - kombinácia viacerých prístupov naraz."""
+    try:
+        return test_approach_4_multiple_formats()
+    except Exception as e:
+        return f"❌ Test 4 failed: {str(e)}"
+
+@mcp.tool()
+def test_image_display_approach_5() -> str:
+    """Test 5: Text visualization - ASCII/text reprezentácia ako fallback."""
+    try:
+        return test_approach_5_text_visualization()
+    except Exception as e:
+        return f"❌ Test 5 failed: {str(e)}"
+
+@mcp.tool()
+def test_all_image_approaches() -> str:
+    """Comprehensive test všetkých prístupov k zobrazeniu obrázkov v Claude Desktop."""
+    try:
+        return test_all_approaches()
+    except Exception as e:
+        return f"❌ Comprehensive test failed: {str(e)}"
 
 def main() -> None:
     """Main entry point for the ArchiMate MCP server."""

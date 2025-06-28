@@ -1,0 +1,31 @@
+@startuml
+!include <archimate/Archimate>
+
+title Slovenské bankovníctvo - ArchiMate model
+
+' Description: Model procesov slovenského bankovníctva s podporou diakritiky a národných špecifík
+
+top to bottom direction
+
+' Elements
+Business_Actor(sk_zakaznik, "Slovenský zákazník")
+Business_Process(schvalovanie_uveru, "Schvaľovanie úveru")
+Business_Service(online_banking, "Online bankovníctvo")
+Application_Component(bis, "Bankový informačný systém")
+Data_Object(udaje_uvery, "Údaje o úveroch")
+Technology_Node(hlavny_server, "Hlavný bankový server")
+
+' Relationships
+Rel_Serving(online_banking, sk_zakaznik, "Online bankovníctvo slúži zákazníkovi")
+Rel_Realization(online_banking, schvalovanie_uveru, "Online bankovníctvo realizuje schvaľovanie")
+Rel_Access(bis, udaje_uvery, "BIS pristupuje k údajom")
+Rel_Assignment(hlavny_server, bis, "Server hostuje BIS")
+
+' Legend
+legend right
+  Application Layer
+  Business Layer
+  Technology Layer
+end legend
+
+@enduml

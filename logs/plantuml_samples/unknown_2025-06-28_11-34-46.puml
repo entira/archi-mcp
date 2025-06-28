@@ -1,0 +1,55 @@
+@startuml
+!include <archimate/Archimate>
+
+title Python MCP Servers - All Layers
+
+' Description: Export kompletnej Python MCP architektúry
+
+left to right direction
+
+' Elements
+Motivation_Stakeholder(stakeholder_developers, "AI Developers")
+Motivation_Driver(driver_integration, "AI Integration Needs")
+Motivation_Goal(goal_seamless_ai, "Seamless AI-External Integration")
+Motivation_Outcome(outcome_enhanced_ai, "Enhanced AI Capabilities")
+Businessactor(business_ai_developer, "AI Developer")
+Businessservice(integration_service, "AI Integration Service")
+Businessprocess(mcp_deployment_process, "MCP Server Deployment")
+Applicationcomponent(mcp_server_framework, "MCP Server Framework")
+Applicationcomponent(filesystem_server, "Filesystem Server")
+Applicationcomponent(database_server, "Database Server")
+Applicationcomponent(api_integration_server, "API Integration Server")
+Applicationcomponent(ai_assistant, "AI Assistant")
+Systemsoftware(python_runtime_env, "Python Runtime")
+Systemsoftware(mcp_protocol, "MCP Protocol Library")
+Systemsoftware(database_system, "Database System")
+Systemsoftware(operating_system_host, "Operating System")
+Technology_Device(server_hardware, "Server Hardware")
+Communicationnetwork(network_infrastructure, "Network Infrastructure")
+
+' Relationships
+Rel_Association(stakeholder_developers, driver_integration, "association")
+Rel_Influence(driver_integration, goal_seamless_ai, "influence")
+Rel_Influence(goal_seamless_ai, outcome_enhanced_ai, "influence")
+Rel_Serving(business_ai_developer, integration_service, "Developer používa integračnú službu")
+Rel_Realization(mcp_deployment_process, integration_service, "Deployment proces realizuje integračnú službu")
+Rel_Serving(ai_assistant, mcp_server_framework, "AI asistent používa MCP framework")
+Rel_Specialization(filesystem_server, mcp_server_framework, "Filesystem server rozširuje MCP framework")
+Rel_Specialization(database_server, mcp_server_framework, "Database server rozširuje MCP framework")
+Rel_Specialization(api_integration_server, mcp_server_framework, "API server rozširuje MCP framework")
+Rel_Realization(python_runtime_env, mcp_server_framework, "Python runtime realizuje MCP framework")
+Rel_Serving(mcp_protocol, mcp_server_framework, "MCP protokol podporuje framework")
+Rel_Realization(database_system, database_server, "Databázový systém podporuje databázový server")
+Rel_Realization(server_hardware, operating_system_host, "Server hardware hostuje operačný systém")
+Rel_Realization(operating_system_host, python_runtime_env, "OS hostuje Python runtime")
+
+' Legend
+legend right
+  Application Layer
+  Business Layer
+  Motivation Layer
+  Physical Layer
+  Technology Layer
+end legend
+
+@enduml

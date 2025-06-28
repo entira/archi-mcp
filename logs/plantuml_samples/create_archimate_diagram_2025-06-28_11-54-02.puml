@@ -1,0 +1,47 @@
+@startuml
+!include <archimate/Archimate>
+
+title MCP Server - Technologická implementácia
+
+' Description: Pohľad na technologické komponenty a ich vzťahy
+
+top to bottom direction
+
+' Elements
+Application_Component(python_stack, "Python Stack")
+Application_Component(fastapi_framework, "FastAPI Framework")
+Application_Component(pydantic_validation, "Pydantic")
+Application_Component(asyncio_runtime, "AsyncIO")
+Application_Component(uvicorn_server, "Uvicorn ASGI")
+Application_Component(redis_cache, "Redis")
+Application_Component(postgresql_db, "PostgreSQL")
+Technology_Platform(docker_platform, "Docker")
+Application_Component(kubernetes_orchestration, "Kubernetes")
+Application_Component(nginx_proxy, "Nginx")
+Application_Component(monitoring_stack, "Monitoring Stack")
+Application_Component(logging_system, "Centralized Logging")
+Technology_Node(cloud_node, "Cloud Infrastructure")
+Technology_Node(container_cluster, "Container Cluster")
+
+' Relationships
+Rel_Composition(fastapi_framework, python_stack, "composition")
+Rel_Composition(pydantic_validation, python_stack, "composition")
+Rel_Composition(asyncio_runtime, python_stack, "composition")
+Rel_Serving(uvicorn_server, fastapi_framework, "serving")
+Rel_Flow(python_stack, redis_cache, "flow")
+Rel_Flow(python_stack, postgresql_db, "flow")
+Rel_Realization(docker_platform, python_stack, "realization")
+Rel_Composition(kubernetes_orchestration, docker_platform, "composition")
+Rel_Serving(nginx_proxy, uvicorn_server, "serving")
+Rel_Serving(monitoring_stack, python_stack, "serving")
+Rel_Serving(logging_system, python_stack, "serving")
+Rel_Realization(container_cluster, kubernetes_orchestration, "realization")
+Rel_Composition(cloud_node, container_cluster, "composition")
+
+' Legend
+legend right
+  Physical Layer
+  Technology Layer
+end legend
+
+@enduml

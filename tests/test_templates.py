@@ -102,7 +102,7 @@ class TestPatternTemplates:
     def test_essential_patterns_present(self):
         """Test that essential patterns are present."""
         essential_patterns = [
-            "three_tier",
+            "three_tier_architecture",
             "microservices",
             "event_driven",
             "layered_service"
@@ -113,7 +113,7 @@ class TestPatternTemplates:
     
     def test_get_pattern_template_success(self):
         """Test successful pattern template retrieval."""
-        template = get_pattern_template("three_tier")
+        template = get_pattern_template("three_tier_architecture")
         
         assert template is not None
         assert isinstance(template, PatternTemplate)
@@ -132,7 +132,7 @@ class TestPatternTemplates:
         
         assert isinstance(patterns, list)
         assert len(patterns) > 0
-        assert "three_tier" in patterns
+        assert "three_tier_architecture" in patterns
     
     def test_get_patterns_by_type(self):
         """Test getting patterns by type."""
@@ -140,11 +140,11 @@ class TestPatternTemplates:
         
         assert isinstance(architectural_patterns, list)
         assert len(architectural_patterns) > 0
-        assert "three_tier" in architectural_patterns
+        assert "three_tier_architecture" in architectural_patterns
     
     def test_three_tier_pattern_structure(self):
         """Test three-tier pattern structure."""
-        template = get_pattern_template("three_tier")
+        template = get_pattern_template("three_tier_architecture")
         
         assert template.name == "Three-Tier Architecture"
         assert template.pattern_type == "architectural"

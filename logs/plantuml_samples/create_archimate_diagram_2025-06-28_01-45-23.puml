@@ -1,0 +1,28 @@
+@startuml
+!include <archimate/Archimate>
+
+title Enhanced Element Normalization Test
+
+' Description: Test automatickej opravy element types a IDs
+
+
+' Elements
+Business_Actor(podnik_manazment, "Podnikový manažment")
+Business_Process(strategicke_plnovanie, "Strategické plánovanie")
+Business_Service(konzultacne_sluzby, "Konzultačné služby")
+Application_Component(erp_system, "ERP Systém")
+Application_Service(financne_reporty, "Finančné reporty")
+Application_DataObject(zakaznicke_data, "Zákaznícke údaje")
+Technology_Node(db_server, "Databázový server")
+Technology_SystemSoftware(oracle_db, "Oracle Database")
+Technology_Service(data_storage, "Ukladanie dát")
+
+
+' Legend
+legend right
+  Application Layer
+  Business Layer
+  Technology Layer
+end legend
+
+@enduml

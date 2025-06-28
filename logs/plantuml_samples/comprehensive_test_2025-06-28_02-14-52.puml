@@ -1,0 +1,32 @@
+@startuml
+!include <archimate/Archimate>
+
+title ArchiMate Enhanced Element Validation Test
+
+left to right direction
+
+' Elements
+Motivation_Stakeholder(stakeholder1, "Healthcare Administration")
+Motivation_Driver(driver1, "Patient Care Quality")
+Motivation_Goal(goal1, "Improve Service")
+Motivation_Requirement(req1, "Functional Requirements")
+Motivation_Principle(principle1, "Architecture Principles")
+Business_Actor(actor1, "Healthcare Provider")
+Business_Service(service1, "Patient Care Service")
+Business_Process(process1, "Patient Treatment Process")
+Business_Object(object1, "Medical Records Data")
+Application_Component(component1, "User Interface")
+Application_Service(appservice1, "API Gateway")
+Application_DataObject(dataobj1, "Application Database")
+Implementation_Work_Package(workpkg1, "Cloud Migration")
+
+
+' Legend
+legend right
+  Application Layer
+  Business Layer
+  Implementation Layer
+  Motivation Layer
+end legend
+
+@enduml

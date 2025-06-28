@@ -9,10 +9,12 @@ def test_validate_plantuml_renders_function():
     """Test the central validation function."""
     from archi_mcp.server import _validate_plantuml_renders
     
-    # Test with minimal PlantUML code
+    # Test with minimal ArchiMate PlantUML code
     test_plantuml = """
 @startuml
-rectangle "Test" as test
+!include <archimate/Archimate>
+
+Business_Actor(test, "Test Actor")
 @enduml
 """
     
@@ -28,7 +30,9 @@ rectangle "Test" as test
     
     # If PlantUML jar is not found, should return False with appropriate message
     if not renders_ok:
-        assert "PlantUML jar not found" in error_msg or "Validation error" in error_msg
+        assert ("PlantUML jar not found" in error_msg or 
+                "Validation error" in error_msg or 
+                "ArchiMate validation failed" in error_msg)
 
 @patch('archi_mcp.server._validate_plantuml_renders')
 def test_create_diagram_with_validation(mock_validate):

@@ -1,9 +1,10 @@
 """Element type normalizer for proper ArchiMate syntax."""
 
-def normalize_element_type(element_type: str) -> str:
+def normalize_element_type(element_type: str, layer: str = None) -> str:
     """
     Normalize element type to proper ArchiMate PlantUML syntax.
     Fixes common issues like kebab-case, missing prefixes, etc.
+    For PlantUML output, adds layer prefixes for ambiguous elements.
     """
     # Handle kebab-case to underscore conversion
     normalized = element_type.replace('-', '_')
@@ -12,9 +13,12 @@ def normalize_element_type(element_type: str) -> str:
     type_mappings = {
         # Business layer
         'business_actor': 'Business_Actor',
-        'business_process': 'Business_Process', 
+        'actor': 'Business_Actor',  # Short version
+        'business_process': 'Business_Process',
+        'process': 'Business_Process',  # Short version
         'business_service': 'Business_Service',
         'business_object': 'Business_Object',
+        'object': 'Business_Object',  # Short version
         'business_role': 'Business_Role',
         'business_collaboration': 'Business_Collaboration',
         'business_interface': 'Business_Interface',
@@ -26,6 +30,7 @@ def normalize_element_type(element_type: str) -> str:
         
         # Application layer
         'application_component': 'Application_Component',
+        'component': 'Application_Component',  # Short version
         'application_service': 'Application_Service',
         'application_collaboration': 'Application_Collaboration',
         'application_interface': 'Application_Interface',
@@ -33,13 +38,16 @@ def normalize_element_type(element_type: str) -> str:
         'application_interaction': 'Application_Interaction',
         'application_process': 'Application_Process',
         'application_event': 'Application_Event',
-        'data_object': 'Application_DataObject',
+        'data_object': 'Application_DataObject',  # Fixed: Use Application_DataObject for consistency
+        'dataobject': 'Application_DataObject',  # Short version
         'application_dataobject': 'Application_DataObject',
         'artifact': 'Application_Artifact',
         
         # Technology layer  
         'node': 'Technology_Node',
+        'technology_node': 'Technology_Node',
         'device': 'Technology_Device',
+        'technology_device': 'Technology_Device',
         'system_software': 'Technology_SystemSoftware',
         'technology_systemsoftware': 'Technology_SystemSoftware',
         'technology_collaboration': 'Technology_Collaboration',
@@ -61,15 +69,25 @@ def normalize_element_type(element_type: str) -> str:
         
         # Motivation layer
         'stakeholder': 'Motivation_Stakeholder',
+        'motivation_stakeholder': 'Motivation_Stakeholder',
         'driver': 'Motivation_Driver',
+        'motivation_driver': 'Motivation_Driver',
         'assessment': 'Motivation_Assessment',
+        'motivation_assessment': 'Motivation_Assessment',
         'goal': 'Motivation_Goal',
+        'motivation_goal': 'Motivation_Goal',
         'outcome': 'Motivation_Outcome',
+        'motivation_outcome': 'Motivation_Outcome',
         'principle': 'Motivation_Principle',
+        'motivation_principle': 'Motivation_Principle',
         'requirement': 'Motivation_Requirement',
+        'motivation_requirement': 'Motivation_Requirement',
         'constraint': 'Motivation_Constraint',
+        'motivation_constraint': 'Motivation_Constraint',
         'meaning': 'Motivation_Meaning',
+        'motivation_meaning': 'Motivation_Meaning',
         'value': 'Motivation_Value',
+        'motivation_value': 'Motivation_Value',
         
         # Strategy layer
         'resource': 'Strategy_Resource',
@@ -79,10 +97,15 @@ def normalize_element_type(element_type: str) -> str:
         
         # Implementation layer
         'work_package': 'Implementation_Work_Package',
+        'workpackage': 'Implementation_Work_Package',  # Short version  
+        'implementation_work_package': 'Implementation_Work_Package',
         'deliverable': 'Implementation_Deliverable',
+        'implementation_deliverable': 'Implementation_Deliverable',
         'implementation_event': 'Implementation_Event',
         'plateau': 'Implementation_Plateau',
-        'gap': 'Implementation_Gap'
+        'implementation_plateau': 'Implementation_Plateau',
+        'gap': 'Implementation_Gap',
+        'implementation_gap': 'Implementation_Gap'
     }
     
     # Try exact match first
@@ -108,6 +131,67 @@ def normalize_element_type(element_type: str) -> str:
     
     # Last resort - capitalize first letter
     return normalized.capitalize()
+
+def normalize_for_plantuml(element_type: str, layer: str) -> str:
+    """
+    Normalize element type specifically for PlantUML output.
+    Adds layer prefixes for elements that need them to avoid ambiguity in PlantUML.
+    """
+    # First do basic normalization
+    normalized = normalize_element_type(element_type)
+    
+    # Elements that need layer prefixes based on context
+    layer_specific_mappings = {
+        'motivation': {
+            'Stakeholder': 'Motivation_Stakeholder',
+            'Driver': 'Motivation_Driver', 
+            'Assessment': 'Motivation_Assessment',
+            'Goal': 'Motivation_Goal',
+            'Outcome': 'Motivation_Outcome',
+            'Principle': 'Motivation_Principle',
+            'Requirement': 'Motivation_Requirement',
+            'Constraint': 'Motivation_Constraint',
+            'Meaning': 'Motivation_Meaning',
+            'Value': 'Motivation_Value',
+        },
+        'business': {
+            'Actor': 'Business_Actor',
+            'Service': 'Business_Service', 
+            'Process': 'Business_Process',
+            'Object': 'Business_Object',
+        },
+        'application': {
+            'Component': 'Application_Component',
+            'Service': 'Application_Service',
+            'DataObject': 'Application_DataObject',  # Fixed: Use Application_DataObject for consistency
+        },
+        'technology': {
+            'Service': 'Technology_Service',
+        },
+        'implementation': {
+            'Work_Package': 'Implementation_Work_Package',
+            'Workpackage': 'Implementation_Work_Package',  # Handle both forms
+            'WorkPackage': 'Implementation_Work_Package',   # Handle CamelCase
+            'Deliverable': 'Implementation_Deliverable',
+            'Gap': 'Implementation_Gap',
+            'Plateau': 'Implementation_Plateau',
+        }
+    }
+    
+    # Check layer-specific mappings first
+    layer_lower = layer.lower()
+    if layer_lower in layer_specific_mappings:
+        layer_mappings = layer_specific_mappings[layer_lower]
+        if normalized in layer_mappings:
+            return layer_mappings[normalized]
+    
+    # If the element already has a layer prefix, keep it
+    if '_' in normalized and any(normalized.startswith(prefix) for prefix in 
+                                ['Business_', 'Application_', 'Technology_', 'Physical_', 
+                                 'Motivation_', 'Strategy_', 'Implementation_']):
+        return normalized
+    
+    return normalized
 
 def validate_element_id(element_id: str) -> str:
     """

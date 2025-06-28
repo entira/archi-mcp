@@ -1,0 +1,37 @@
+@startuml
+!include <archimate/Archimate>
+
+title Motivation View
+
+' Description: Stakeholders, drivers, goals and requirements for Basic healthcare IT system
+
+top to bottom direction
+
+' Elements
+Stakeholder(business_stakeholder, "Healthcare Administration")
+Stakeholder(customer_stakeholder, "Customer")
+Stakeholder(it_stakeholder, "IT Department")
+Driver(business_driver, "Patient Care Quality")
+Driver(efficiency_driver, "Operational Efficiency")
+Goal(primary_goal, "Deliver Basic healthcare IT system")
+Goal(user_satisfaction_goal, "Improve User Satisfaction")
+Requirement(functional_requirement, "Functional Requirements")
+Requirement(performance_requirement, "Performance Requirements")
+Requirement(security_requirement, "Security Requirements")
+Principle(architecture_principle, "Architecture Principles")
+
+' Relationships
+Rel_Association(business_stakeholder, business_driver, "association")
+Rel_Influence(customer_stakeholder, user_satisfaction_goal, "influence")
+Rel_Influence(business_driver, primary_goal, "influence")
+Rel_Influence(efficiency_driver, primary_goal, "influence")
+Rel_Realization(primary_goal, functional_requirement, "realization")
+Rel_Realization(user_satisfaction_goal, performance_requirement, "realization")
+Rel_Influence(architecture_principle, security_requirement, "influence")
+
+' Legend
+legend right
+  Motivation Layer
+end legend
+
+@enduml

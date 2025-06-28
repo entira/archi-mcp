@@ -1,0 +1,34 @@
+@startuml
+!include <archimate/Archimate>
+
+title E-commerce System Architecture
+
+' Description: Simple e-commerce system showing business, application and technology layers
+
+
+' Elements
+Business_Actor(customer, "Customer")
+Business_Process(order_process, "Order Management")
+Business_Service(payment_service, "Payment Service")
+Application_Component(web_app, "E-commerce Web App")
+Application_Service(api_gateway, "API Gateway")
+Data_Object(product_db, "Product Database")
+Technology_Node(web_server, "Web Server")
+Technology_Device(database_server, "Database Server")
+
+' Relationships
+Rel_Assignment(customer, order_process, "assignment")
+Rel_Realization(order_process, payment_service, "realization")
+Rel_Serving(web_app, api_gateway, "serving")
+Rel_Access(api_gateway, product_db, "access")
+Rel_Assignment(web_server, web_app, "assignment")
+Rel_Assignment(database_server, product_db, "assignment")
+
+' Legend
+legend right
+  Application Layer
+  Business Layer
+  Technology Layer
+end legend
+
+@enduml

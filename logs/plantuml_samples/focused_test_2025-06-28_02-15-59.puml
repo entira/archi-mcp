@@ -1,0 +1,22 @@
+@startuml
+!include <archimate/Archimate>
+
+title Focused Element Test
+
+left to right direction
+
+' Elements
+Motivation_Stakeholder(stakeholder1, "Healthcare Administration")
+Business_Actor(actor1, "Healthcare Provider")
+Application_Component(component1, "User Interface")
+Data_Object(dataobj1, "Application Database")
+
+
+' Legend
+legend right
+  Application Layer
+  Business Layer
+  Motivation Layer
+end legend
+
+@enduml

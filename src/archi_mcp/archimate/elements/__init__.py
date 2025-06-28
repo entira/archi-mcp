@@ -35,6 +35,7 @@ ARCHIMATE_ELEMENTS = {
     "Application_Event": ApplicationElement,
     "Application_Service": ApplicationElement,
     "Data_Object": ApplicationElement,
+    "Application_DataObject": ApplicationElement,
     
     # Technology Layer
     "Node": TechnologyElement,
@@ -68,6 +69,17 @@ ARCHIMATE_ELEMENTS = {
     "Constraint": MotivationElement,
     "Meaning": MotivationElement,
     "Value": MotivationElement,
+    # Also include prefixed versions for normalized elements
+    "Motivation_Stakeholder": MotivationElement,
+    "Motivation_Driver": MotivationElement,
+    "Motivation_Assessment": MotivationElement,
+    "Motivation_Goal": MotivationElement,
+    "Motivation_Outcome": MotivationElement,
+    "Motivation_Principle": MotivationElement,
+    "Motivation_Requirement": MotivationElement,
+    "Motivation_Constraint": MotivationElement,
+    "Motivation_Meaning": MotivationElement,
+    "Motivation_Value": MotivationElement,
     
     # Strategy Layer
     "Resource": StrategyElement,
