@@ -34,7 +34,6 @@ if not renders_ok:
 - ✅ **Status:** VERIFIED ✅ označenie v odpovedi
 - ❌ **Chyba:** ArchiMateGenerationError ak diagram nie je renderovateľný
 
-#### 2. `export_archimate_diagram`
 ```python
 # MANDATORY: Validate that diagram actually renders
 renders_ok, error_msg = _validate_plantuml_renders(plantuml_code)
@@ -84,7 +83,6 @@ Otestuj novú 100% validáciu povinného renderovania:
 
 2. Použi create_archimate_diagram - musí vrátiť "VERIFIED ✅"
 
-3. Použi export_archimate_diagram - musí vrátiť "VERIFIED ✅"
 
 4. Otestuj generate_archimate_template s "three_tier" pattern - musí vrátiť "VERIFIED ✅"
 

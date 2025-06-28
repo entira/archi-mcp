@@ -74,7 +74,6 @@ Táto zložka obsahuje kompletné testovacie materiály pre ArchiMate MCP server
 3. `add_archimate_relationship`
 4. `validate_archimate_model`
 5. `generate_archimate_template`
-6. `export_archimate_diagram`
 7. `generate_full_architecture`
 
 ---

@@ -104,61 +104,7 @@ def test_create_diagram_validation_failure(mock_validate):
     assert "Generated diagram failed validation" in str(exc_info.value)
     assert "Test validation error" in str(exc_info.value)
 
-@patch('archi_mcp.server._validate_plantuml_renders')
-def test_export_diagram_with_validation(mock_validate):
-    """Test export_archimate_diagram with validation."""
-    from archi_mcp.server import export_archimate_diagram, generator, ElementInput, _create_element_from_data
-    
-    # Mock successful validation
-    mock_validate.return_value = (True, "Diagram renders successfully")
-    
-    # Add an element to generator first
-    generator.clear()
-    element_input = ElementInput(
-        id="test_element",
-        name="Test Element",
-        element_type="Business_Actor",
-        layer="Business"
-    )
-    element = _create_element_from_data(element_input)
-    generator.add_element(element)
-    
-    result = export_archimate_diagram.fn(title="Test Export")
-    
-    # Should contain validation success message
-    assert "✅" in result
-    assert "VERIFIED ✅" in result
-    assert "exported and validated successfully" in result
-    
-    # Validation function should have been called
-    mock_validate.assert_called_once()
 
-@patch('archi_mcp.server._validate_plantuml_renders')
-def test_export_diagram_validation_failure(mock_validate):
-    """Test export_archimate_diagram with validation failure."""
-    from archi_mcp.server import export_archimate_diagram, generator, ElementInput, _create_element_from_data
-    from archi_mcp.utils.exceptions import ArchiMateGenerationError
-    
-    # Mock failed validation
-    mock_validate.return_value = (False, "Export validation error")
-    
-    # Add an element to generator first
-    generator.clear()
-    element_input = ElementInput(
-        id="test_element",
-        name="Test Element",
-        element_type="Business_Actor",
-        layer="Business"
-    )
-    element = _create_element_from_data(element_input)
-    generator.add_element(element)
-    
-    # Should raise exception on validation failure
-    with pytest.raises(ArchiMateGenerationError) as exc_info:
-        export_archimate_diagram.fn(title="Test Export")
-    
-    assert "Generated diagram failed validation" in str(exc_info.value)
-    assert "Export validation error" in str(exc_info.value)
 
 @patch('archi_mcp.server._validate_plantuml_renders')
 def test_template_with_validation(mock_validate):
@@ -293,7 +239,6 @@ def test_all_tools_have_validation():
     # Get the actual functions from the module
     function_names = [
         'create_archimate_diagram',
-        'export_archimate_diagram', 
         'generate_archimate_template',
         'generate_full_architecture'
     ]
@@ -307,7 +252,7 @@ def test_all_tools_have_validation():
                 break
     
     # Check that we found all functions
-    assert len(functions_to_check) >= 4, "Some validation functions not found"
+    assert len(functions_to_check) >= 3, "Some validation functions not found"
     
     for func in functions_to_check:
         try:

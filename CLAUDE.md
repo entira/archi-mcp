@@ -151,13 +151,7 @@ Generate ArchiMate diagram from predefined templates.
 - **Patterns**: Three-Tier Architecture, Microservices, Event-Driven, CQRS
 - **Industries**: Banking, E-commerce, Healthcare, Manufacturing
 
-### 6. `export_archimate_diagram(title: str = None, description: str = None, output_path: str = None, ...) -> str`
-Export ArchiMate diagram to PlantUML format with optional file output.
-- File saving with automatic directory creation
-- Configurable titles and descriptions
-- Optional diagram clearing after export
-
-### 7. `generate_full_architecture(architecture: FullArchitectureInput) -> str`
+### 6. `generate_full_architecture(architecture: FullArchitectureInput) -> str`
 Generate complete layered enterprise architecture following ArchiMate methodology.
 - **Multiple Coordinated Views**: Motivation, Business Model Canvas, Value Stream, Strategy & Capability, Layered Views, Interaction Views, Application & Technology Structure, Implementation Roadmap
 - **ArchiMate Cookbook Methodology**: Automated architecture generation following enterprise architecture best practices

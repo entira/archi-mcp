@@ -27,7 +27,6 @@ def _validate_plantuml_renders(plantuml_code: str) -> tuple[bool, str]:
 - **Status:** `Render Status: VERIFIED ✅`
 - **Error:** ArchiMateGenerationError pri zlyhaní
 
-#### 2. `export_archimate_diagram` ✅  
 - **Validácia:** POVINNÁ pred exportom/uložením
 - **Success:** `✅ ArchiMate diagram exported and validated successfully!`
 - **Status:** `Render Status: VERIFIED ✅`
@@ -102,7 +101,6 @@ tests/test_server.py - 6 testov SKIPPED (FastMCP tools not directly callable)
 
 ### Chránené Nástroje
 1. **create_archimate_diagram** - 🛡️ Validovaný
-2. **export_archimate_diagram** - 🛡️ Validovaný  
 3. **generate_archimate_template** - 🛡️ Validovaný
 4. **generate_full_architecture** - 🛡️ Validovaný (všetky views)
 

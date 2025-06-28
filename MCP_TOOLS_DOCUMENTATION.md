@@ -237,7 +237,6 @@ ArchiMate MCP Server poskytuje **11 powerful tools** pre enterprise architecture
 
 ---
 
-### 6. 📤 `export_archimate_diagram`
 
 **Purpose:** Export current ArchiMate diagram to PlantUML format with enhanced validation.
 
@@ -483,7 +482,6 @@ element name         → "element name"
 3. **Build relationships** - Use `add_archimate_relationship` s proper types
 4. **Validate frequently** - Use `validate_plantuml_syntax` pre early error detection
 5. **Generate images** - Use multiple formats pre different viewing needs
-6. **Export final** - Use `export_archimate_diagram` s file save
 
 ### 🎨 Element Type Guidelines
 

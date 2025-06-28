@@ -255,7 +255,7 @@ def identify_architecture_problems(generator: ArchiMateGenerator, validator: Arc
         problems["recommendations"].extend([
             "Test PlantUML generation with validate_archimate_model tool",
             "Generate PNG diagrams to /tmp for visual verification",
-            "Use export_archimate_diagram to save PlantUML code",
+            "Use create_archimate_diagram to generate PlantUML code",
             "Consider using templates for standard architecture patterns"
         ])
     

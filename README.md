@@ -224,7 +224,6 @@ Generate diagrams from predefined templates.
 }
 ```
 
-### 6. `export_archimate_diagram`
 Export diagrams to PlantUML format with optional file output.
 
 ```json

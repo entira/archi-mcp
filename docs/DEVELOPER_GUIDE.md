@@ -608,7 +608,6 @@ class CustomArchitectureGenerator(FullArchitectureGenerator):
 
 ```python
 @mcp.tool()
-def export_archimate_diagram_advanced(
     format: str = "plantuml",
     include_metadata: bool = True,
     output_path: Optional[str] = None

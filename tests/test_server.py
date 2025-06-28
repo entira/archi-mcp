@@ -125,12 +125,6 @@ async def test_generate_archimate_template():
         pass
 
 @pytest.mark.asyncio
-async def test_export_archimate_diagram():
-    """Test export_archimate_diagram tool."""
-    # Skip this test since FastMCP tools are not directly callable in tests
-    pytest.skip("FastMCP tools not directly callable in test environment")
-
-@pytest.mark.asyncio
 async def test_generate_full_architecture():
     """Test generate_full_architecture tool."""
     # Skip this test since FastMCP tools are not directly callable in tests

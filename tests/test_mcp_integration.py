@@ -53,7 +53,6 @@ def test_fastmcp_tools_registration():
         'add_archimate_relationship',
         'validate_archimate_model',
         'generate_archimate_template',
-        'export_archimate_diagram',
         'generate_full_architecture'
     ]
     
@@ -207,7 +206,7 @@ def test_end_to_end_diagram_creation():
     """Integration test for complete diagram creation workflow."""
     from archi_mcp.server import (
         create_archimate_diagram, add_archimate_element, add_archimate_relationship,
-        validate_archimate_model, export_archimate_diagram,
+        validate_archimate_model,
         DiagramInput, ElementInput, RelationshipInput
     )
     
@@ -259,18 +258,10 @@ def test_end_to_end_diagram_creation():
     result4 = validate_archimate_model.fn(strict=False)
     assert "validation" in result4.lower()
     
-    # Step 5: Export diagram
-    result5 = export_archimate_diagram.fn(
-        title="Final Banking System",
-        description="Complete banking system diagram"
-    )
-    assert "exported" in result5 and "successfully" in result5
-    assert "```plantuml" in result5
-    
     # All steps should complete without errors (result1 might be Image object)
-    assert all(result is not None for result in [result1, result2, result3, result4, result5])
-    # Results 2-5 should be strings
-    assert all(isinstance(result, str) for result in [result2, result3, result4, result5])
+    assert all(result is not None for result in [result1, result2, result3, result4])
+    # Results 2-4 should be strings
+    assert all(isinstance(result, str) for result in [result2, result3, result4])
 
 def test_performance_basic():
     """Basic performance test for tool execution."""

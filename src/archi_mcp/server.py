@@ -493,60 +493,6 @@ def generate_archimate_template(template: TemplateInput) -> str:
     except Exception as e:
         raise ArchiMateTemplateError(f"Failed to generate template: {str(e)}")
 
-@mcp.tool()
-def export_archimate_diagram(
-    title: Optional[str] = None,
-    description: Optional[str] = None,
-    output_path: Optional[str] = None,
-    clear_after_export: bool = False
-) -> str:
-    """Export ArchiMate diagram to PlantUML format and optionally save to file."""
-    try:
-        # Generate PlantUML code
-        plantuml_code = generator.generate_plantuml(title=title, description=description)
-        
-        # MANDATORY: Validate that diagram actually renders
-        renders_ok, error_msg = _validate_plantuml_renders(plantuml_code)
-        if not renders_ok:
-            raise ArchiMateGenerationError(f"Generated diagram failed validation - {error_msg}")
-        
-        # Generate PNG to /tmp directory
-        try:
-            png_path = generator.generate_png_to_tmp(title=title)
-            png_info = f"📁 **PNG File:** `{png_path}`\n"
-        except Exception as png_error:
-            png_info = f"⚠️ **PNG Generation Failed:** {str(png_error)}\n"
-        
-        result_text = f"✅ ArchiMate diagram exported and validated successfully!\n\n{png_info}"
-        
-        # Save to file if path provided
-        if output_path:
-            try:
-                output_file = Path(output_path)
-                output_file.parent.mkdir(parents=True, exist_ok=True)
-                
-                with open(output_file, 'w', encoding='utf-8') as f:
-                    f.write(plantuml_code)
-                
-                result_text += f"Saved to: {output_path}\n"
-            except Exception as e:
-                result_text += f"Warning: Could not save to file: {str(e)}\n"
-        
-        result_text += f"Elements: {generator.get_element_count()}\n"
-        result_text += f"Relationships: {generator.get_relationship_count()}\n"
-        result_text += f"Layers: {', '.join(generator.get_layers_used())}\n"
-        result_text += f"Render Status: VERIFIED ✅\n\n"
-        result_text += f"PlantUML Code:\n```plantuml\n{plantuml_code}\n```"
-        
-        # Clear diagram if requested
-        if clear_after_export:
-            generator.clear()
-            result_text += "\n\nDiagram cleared after export."
-        
-        return result_text
-        
-    except Exception as e:
-        raise ArchiMateGenerationError(f"Failed to export diagram: {str(e)}")
 
 @mcp.tool()
 def generate_full_architecture(architecture: FullArchitectureInput) -> str:
