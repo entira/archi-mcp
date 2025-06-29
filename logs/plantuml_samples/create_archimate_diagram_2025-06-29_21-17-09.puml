@@ -1,0 +1,37 @@
+@startuml
+!include <archimate/Archimate>
+
+title Apple Pay - Implementačná roadmapa
+
+' Description: Strategické iniciatívy a implementácia Apple Pay stratégie
+
+left to right direction
+
+' Implementation Layer
+Implementation_Work_Package(geograficka_expanzia, "Geografická expanzia")
+Implementation_Work_Package(partnersky_program, "Program partnerstiev")
+Implementation_Work_Package(inovacny_program, "Inovačný program")
+Implementation_Work_Package(bezpecnostny_upgrade, "Bezpečnostný upgrade")
+Implementation_Deliverable(nove_trhy, "Nové trhy")
+Implementation_Deliverable(partnerske_zmluvy, "Partnerské zmluvy")
+Implementation_Deliverable(apple_cash, "Apple Cash")
+Implementation_Deliverable(apple_card, "Apple Card")
+Implementation_Deliverable(enhanced_security, "Zlepšená bezpečnosť")
+
+
+' Relationships
+Rel_Realization(geograficka_expanzia, nove_trhy, "realization")
+Rel_Realization(partnersky_program, partnerske_zmluvy, "realization")
+Rel_Realization(inovacny_program, apple_cash, "realization")
+Rel_Realization(inovacny_program, apple_card, "realization")
+Rel_Realization(bezpecnostny_upgrade, enhanced_security, "realization")
+Rel_Association(geograficka_expanzia, partnersky_program, "vyžaduje")
+Rel_Association(partnerske_zmluvy, nove_trhy, "umožňujú")
+Rel_Association(bezpecnostny_upgrade, inovacny_program, "podporuje")
+
+' Legend
+legend right
+  Implementation Layer
+end legend
+
+@enduml

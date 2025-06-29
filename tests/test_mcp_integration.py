@@ -46,11 +46,13 @@ def test_fastmcp_tools_registration():
     assert mcp is not None
     assert hasattr(mcp, '_tool_manager')
     
-    # Check expected core tools are registered (simplified API)
+    # Check expected core tools are registered (simplified API - 5 tools)
     expected_tools = [
         'create_archimate_diagram',
         'validate_archimate_model',
-        'generate_full_architecture'
+        'analyze_current_architecture',
+        'test_element_normalization',
+        'get_debug_log_info'
     ]
     
     registered_tools = list(mcp._tool_manager._tools.keys())
@@ -177,8 +179,7 @@ class TestMCPProtocolCompliance:
         # Test core imports
         from archi_mcp.server import (
             mcp, main, 
-            DiagramInput, ElementInput, RelationshipInput, 
-            TemplateInput, FullArchitectureInput
+            DiagramInput, ElementInput, RelationshipInput
         )
         
         # Test ArchiMate module imports
@@ -238,7 +239,7 @@ def test_end_to_end_diagram_creation():
         title="Banking System Integration Test"
     )
     
-    result1 = create_archimate_diagram.fn(diagram=diagram_input)
+    result1 = create_archimate_diagram.fn(diagram_input)
     # Should be a string with success message
     assert isinstance(result1, str)
     assert "ArchiMate diagram created successfully" in result1 or "Test" in result1

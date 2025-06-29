@@ -1,0 +1,63 @@
+@startuml
+!include <archimate/Archimate>
+
+title Apple Pay - Strategická a realizačná vrstva
+
+' Description: Schopnosti, zdroje a implementácia Apple Pay stratégie
+
+
+package "Business Layer" {
+  Function(schopnost_mobilnych_platieb, "Schopnosť mobilných platieb")
+  Function(biometricka_autentifikacia, "Biometrická autentifikácia")
+  Function(tokenizacia, "Tokenizácia")
+  Business_Service(apple_pay_service, "Apple Pay služba")
+}
+
+package "Technology Layer" {
+  Technology_Device(nfc_technologia, "NFC technológia")
+  Technology_Device(secure_element, "Secure Element")
+}
+
+package "Application Layer" {
+  Application_Component(wallet_app, "Wallet aplikácia")
+}
+
+package "Implementation Layer" {
+  Implementation_Work_Package(geograficka_expanzia, "Geografická expanzia")
+  Implementation_Work_Package(strategicke_partnerstva, "Strategické partnerstvá")
+  Implementation_Work_Package(kontinualna_inovacia, "Kontinuálna inovácia")
+}
+
+package "Motivation Layer" {
+  Motivation_Requirement(zabezpecene_platby_req, "Požiadavka zabezpečených platieb")
+  Motivation_Requirement(pohodlna_skusenost_req, "Požiadavka pohodlnej skúsenosti")
+}
+
+
+' Relationships
+Rel_Realization(biometricka_autentifikacia, zabezpecene_platby_req, "zabezpečuje")
+Rel_Realization(schopnost_mobilnych_platieb, pohodlna_skusenost_req, "umožňuje")
+Rel_Realization(tokenizacia, zabezpecene_platby_req, "chráni")
+Rel_Serving(nfc_technologia, schopnost_mobilnych_platieb, "podporuje")
+Rel_Serving(secure_element, tokenizacia, "implementuje")
+Rel_Realization(wallet_app, apple_pay_service, "poskytuje rozhranie")
+Rel_Realization(geograficka_expanzia, apple_pay_service, "rozširuje")
+Rel_Realization(strategicke_partnerstva, apple_pay_service, "posiluje")
+Rel_Realization(kontinualna_inovacia, apple_pay_service, "vylepšuje")
+Rel_Aggregation(apple_pay_service, schopnost_mobilnych_platieb, "aggregation")
+Rel_Aggregation(apple_pay_service, biometricka_autentifikacia, "aggregation")
+Rel_Aggregation(apple_pay_service, tokenizacia, "aggregation")
+Rel_Access(wallet_app, schopnost_mobilnych_platieb, "využíva")
+Rel_Serving(secure_element, wallet_app, "serving")
+Rel_Serving(nfc_technologia, wallet_app, "serving")
+
+' Legend
+legend right
+  Application Layer
+  Business Layer
+  Implementation Layer
+  Motivation Layer
+  Technology Layer
+end legend
+
+@enduml

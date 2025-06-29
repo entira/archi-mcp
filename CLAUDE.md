@@ -190,7 +190,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "archi-mcp": {
       "command": "uv",
-      "args": ["run", "--directory", "/Users/patrik/Projects/archi-mcp", "python", "src/archi_mcp/server.py"],
+      "args": ["run", "--directory", "/Users/patrik/Projects/archi-mcp", "python", "-m", "archi_mcp.server"],
       "cwd": "/Users/patrik/Projects/archi-mcp",
       "env": {
         "ARCHI_MCP_LOG_LEVEL": "INFO",

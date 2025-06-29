@@ -1,0 +1,30 @@
+@startuml
+!include <archimate/Archimate>
+
+title Apple Pay Strategy
+
+' Description: Simple strategy view
+
+top to bottom direction
+
+package "Motivation Layer" {
+  Motivation_Goal(goal1, "Market Leadership")
+  Motivation_Requirement(req1, "Security Requirement")
+}
+
+package "Business Layer" {
+  Function(capability1, "Payment Capability")
+}
+
+
+' Relationships
+Rel_Realization(capability1, goal1, "realization")
+Rel_Realization(capability1, req1, "realization")
+
+' Legend
+legend right
+  Business Layer
+  Motivation Layer
+end legend
+
+@enduml

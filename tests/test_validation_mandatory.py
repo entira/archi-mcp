@@ -71,7 +71,6 @@ def test_create_diagram_with_validation(mock_validate):
     # Should contain validation success message
     assert "✅" in result
     assert "VERIFIED ✅" in result
-    assert "created and validated successfully" in result
     
     # Validation function should have been called
     mock_validate.assert_called_once()
@@ -97,66 +96,17 @@ def test_create_diagram_validation_failure(mock_validate):
         title="Test Diagram"
     )
     
-    # Should raise exception on validation failure
-    with pytest.raises(ArchiMateGenerationError) as exc_info:
-        create_archimate_diagram.fn(diagram=diagram_input)
+    result = create_archimate_diagram.fn(diagram=diagram_input)
     
-    assert "Generated diagram failed validation" in str(exc_info.value)
-    assert "Test validation error" in str(exc_info.value)
+    # Should return error message instead of raising exception in simplified API
+    assert "❌" in result
+    assert "failed validation" in result
+    assert "Test validation error" in result
 
 
 
 
-@patch('archi_mcp.server._validate_plantuml_renders')
-def test_full_architecture_with_validation(mock_validate):
-    """Test generate_full_architecture with validation."""
-    from archi_mcp.server import generate_full_architecture, FullArchitectureInput
-    
-    # Mock successful validation for all views
-    mock_validate.return_value = (True, "View renders successfully")
-    
-    architecture_input = FullArchitectureInput(
-        system_description="Test system for validation",
-        business_domain="testing",
-        architecture_scope="system",
-        include_views=["motivation"],
-        implementation_phases=1
-    )
-    
-    result = generate_full_architecture.fn(architecture=architecture_input)
-    
-    # Should contain validation success messages
-    assert "✅" in result
-    assert "VERIFIED ✅" in result
-    assert "ALL VIEWS VERIFIED ✅" in result
-    assert "Architecture Generation Complete - All Views Validated" in result
-    
-    # Validation function should have been called for each view
-    assert mock_validate.call_count >= 1
-
-@patch('archi_mcp.server._validate_plantuml_renders')
-def test_full_architecture_validation_failure(mock_validate):
-    """Test generate_full_architecture with validation failure."""
-    from archi_mcp.server import generate_full_architecture, FullArchitectureInput
-    from archi_mcp.utils.exceptions import ArchiMateGenerationError
-    
-    # Mock failed validation
-    mock_validate.return_value = (False, "View validation failed")
-    
-    architecture_input = FullArchitectureInput(
-        system_description="Test system for validation failure",
-        business_domain="testing", 
-        architecture_scope="system",
-        include_views=["motivation"],
-        implementation_phases=1
-    )
-    
-    # Should raise exception on validation failure
-    with pytest.raises(ArchiMateGenerationError) as exc_info:
-        generate_full_architecture.fn(architecture=architecture_input)
-    
-    assert "failed validation" in str(exc_info.value)
-    assert "View validation failed" in str(exc_info.value)
+# Full architecture functions were removed in simplified API
 
 def test_validation_function_with_invalid_plantuml():
     """Test validation function with invalid PlantUML code."""
@@ -216,20 +166,18 @@ def test_all_tools_have_validation():
     
     # Verify core functions have validation logic
     assert "create_archimate_diagram" in server_source, "create_archimate_diagram not found"
-    assert "generate_full_architecture" in server_source, "generate_full_architecture not found"
     
     # Check for validation patterns in the source
     assert "VERIFIED ✅" in server_source, "Validation success indicators not found"
-    assert "ArchiMateGenerationError" in server_source, "Error handling not found"
     
     # Verify the tools are properly registered with FastMCP
     from archi_mcp.server import mcp
     registered_tools = list(mcp._tool_manager._tools.keys())
     
-    # Should have our 9 tools
-    assert len(registered_tools) == 9, f"Expected 9 tools, got {len(registered_tools)}"
+    # Should have our 5 tools
+    assert len(registered_tools) == 5, f"Expected 5 tools, got {len(registered_tools)}"
     assert 'create_archimate_diagram' in registered_tools
-    assert 'generate_full_architecture' in registered_tools
+    assert 'validate_archimate_model' in registered_tools
 
 @pytest.mark.integration
 def test_validation_with_real_plantuml():

@@ -1,0 +1,46 @@
+@startuml
+!include <archimate/Archimate>
+
+title Implementation Roadmap
+
+' Description: Phased implementation plan for Apple Pay implementacna roadmapa - strategicke iniciativy pre expanziu a inovaciu with 3 phases
+
+left to right direction
+
+' Elements
+Implementation_Work_Package(phase_1, "Phase 1: MVP")
+Implementation_Work_Package(phase_2, "Phase 2: Integration")
+Implementation_Work_Package(phase_3, "Phase 3: Enhancement")
+Implementation_Deliverable(deliverable_1_1, "Core Functionality")
+Implementation_Deliverable(deliverable_1_2, "Basic UI")
+Implementation_Deliverable(deliverable_1_3, "Essential APIs")
+Implementation_Deliverable(deliverable_2_1, "External Integrations")
+Implementation_Deliverable(deliverable_2_2, "Data Migration")
+Implementation_Deliverable(deliverable_2_3, "Testing Suite")
+Implementation_Deliverable(deliverable_3_1, "Advanced Features")
+Implementation_Deliverable(deliverable_3_2, "Performance Optimization")
+Implementation_Deliverable(deliverable_3_3, "User Experience")
+Implementation_Event(mvp_milestone, "MVP Release")
+Implementation_Event(integration_milestone, "Integration Complete")
+
+' Relationships
+Rel_Flow(phase_1, phase_2, "flow")
+Rel_Flow(phase_2, phase_3, "flow")
+Rel_Triggering(phase_1, mvp_milestone, "triggering")
+Rel_Triggering(phase_2, integration_milestone, "triggering")
+Rel_Flow(phase_1, deliverable_1_1, "flow")
+Rel_Flow(phase_1, deliverable_1_2, "flow")
+Rel_Flow(phase_1, deliverable_1_3, "flow")
+Rel_Flow(phase_2, deliverable_2_1, "flow")
+Rel_Flow(phase_2, deliverable_2_2, "flow")
+Rel_Flow(phase_2, deliverable_2_3, "flow")
+Rel_Flow(phase_3, deliverable_3_1, "flow")
+Rel_Flow(phase_3, deliverable_3_2, "flow")
+Rel_Flow(phase_3, deliverable_3_3, "flow")
+
+' Legend
+legend right
+  Implementation Layer
+end legend
+
+@enduml
