@@ -12,7 +12,7 @@ A specialized MCP (Model Context Protocol) server for generating PlantUML ArchiM
 
 ArchiMate MCP Server fills a crucial gap in the MCP ecosystem by providing dedicated support for ArchiMate enterprise architecture modeling. While existing MCP servers offer general UML diagram generation, this server focuses specifically on ArchiMate 3.2 specification compliance with full support for all layers, elements, and relationships.
 
-### Key Features (4-Tool Focused API)
+### Key Features
 
 - **Complete ArchiMate 3.2 Support**: All 55+ elements across 7 layers
 - **Intelligent Input Normalization**: Case-insensitive inputs with automatic correction
@@ -64,20 +64,13 @@ pip install archi-mcp
 
 Once configured, you can use ArchiMate MCP Server through Claude Desktop:
 
-**Basic Diagram Generation:**
+**Basic Diagram Generation:**  @@@ tento popis uprav podla  businnes logiky kodu
 ```
 Create an ArchiMate diagram showing a three-tier architecture with:
 - A business service layer
 - An application component layer  
 - A technology infrastructure layer
 Include the relationships between these layers.
-```
-
-**Full Architecture Generation (NEW!):**
-```
-Generate a complete enterprise architecture for an online banking portal 
-including motivation view, layered view, application structure, and 
-implementation roadmap with 4 phases.
 ```
 
 The full architecture generator follows the **ArchiMate Cookbook methodology** and automatically creates multiple coordinated views with proper element relationships and business domain context.
@@ -162,101 +155,7 @@ All 12 ArchiMate relationship types with directional variants:
 
 ## 🛠️ MCP Tools
 
-The server provides 7 comprehensive MCP tools:
-
-### 1. `create_archimate_diagram`
-Generate complete ArchiMate diagrams from structured input.
-
-```json
-{
-  "elements": [
-    {
-      "id": "customer_service",
-      "name": "Customer Service",
-      "element_type": "Business_Service",
-      "layer": "Business"
-    }
-  ],
-  "relationships": [],
-  "title": "Customer Service Architecture"
-}
-```
-
-### 2. `add_archimate_element`
-Add individual elements to existing diagrams.
-
-```json
-{
-  "element_type": "Application_Component",
-  "id": "crm_system", 
-  "name": "CRM System",
-  "layer": "Application"
-}
-```
-
-### 3. `add_archimate_relationship`
-Create relationships between elements.
-
-```json
-{
-  "id": "realization_rel",
-  "from_element": "crm_system",
-  "to_element": "customer_service", 
-  "relationship_type": "Realization"
-}
-```
-
-### 4. `validate_archimate_model`
-Validate models against ArchiMate 3.2 specification.
-
-```json
-{
-  "strict": true
-}
-```
-
-### 5. `generate_archimate_template`
-Generate diagrams from predefined templates.
-
-```json
-{
-  "template_type": "viewpoint",
-  "template_name": "layered",
-  "customization": {}
-}
-```
-
-Export diagrams to PlantUML format with optional file output.
-
-```json
-{
-  "title": "Enterprise Architecture",
-  "output_path": "./diagrams/architecture.puml"
-}
-```
-
-### 7. `generate_full_architecture`
-Generate complete layered enterprise architecture following ArchiMate methodology with multiple coordinated views.
-
-```json
-{
-  "system_description": "Online banking portal with mobile app and web interface",
-  "business_domain": "banking",
-  "architecture_scope": "system", 
-  "include_views": ["motivation", "layered_view", "application_structure", "implementation_roadmap"],
-  "implementation_phases": 4
-}
-```
-
-This tool implements the **ArchiMate Cookbook methodology** and generates:
-- **Motivation View** - stakeholders, drivers, goals, requirements
-- **Business Model Canvas** - business logic and value propositions  
-- **Value Stream View** - customer value generation via capabilities
-- **Strategy & Capability Views** - goal-to-capability mapping
-- **Layered Views** - business, application, technology structure
-- **Interaction Views** - actor, process, application interactions
-- **Application & Technology Structure** - detailed component breakdowns
-- **Implementation Roadmap** - phased delivery timeline
+@@@ toto napis znova, zmenilo sa to 
 
 ## 📚 Templates
 
@@ -274,7 +173,31 @@ This tool implements the **ArchiMate Cookbook methodology** and generates:
 - **Layered Service**: Service-oriented layered architecture
 - **CQRS**: Command Query Responsibility Segregation pattern
 
-### Industry Templates
+### Industry Templates - @@@ toto cele prerob na Roadmapu. Templeaty budu pridana ako prompty cez:
+```
+Prompts
+
+Prompts are reusable templates that help LLMs interact with your server effectively:
+from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp.prompts import base
+
+mcp = FastMCP("My App")
+
+
+@mcp.prompt(title="Code Review")
+def review_code(code: str) -> str:
+    return f"Please review this code:\n\n{code}"
+
+
+@mcp.prompt(title="Debug Assistant")
+def debug_error(error: str) -> list[base.Message]:
+    return [
+        base.UserMessage("I'm seeing this error:"),
+        base.UserMessage(error),
+        base.AssistantMessage("I'll help debug that. What have you tried so far?"),
+    ]
+```
+Priklady template promptov:
 - **Banking**: Core banking system architecture
 - **E-commerce**: Online retail platform architecture
 - **Healthcare**: Hospital information system architecture
@@ -315,7 +238,7 @@ uv run mypy src
 uv run ruff src tests
 ```
 
-### Project Structure
+### Project Structure @@@ - toto tiez nie je updatnute
 
 ```
 archi-mcp/
@@ -347,7 +270,7 @@ archi-mcp/
 - **[CLAUDE_DESKTOP_SETUP.md](docs/CLAUDE_DESKTOP_SETUP.md)**: Complete Claude Desktop configuration guide with troubleshooting
 - **[CLAUDE.md](CLAUDE.md)**: Development instructions and project guidelines for Claude
 
-### Generated Diagrams
+### Generated Diagrams - @@@ aj toto uz neplati, je tam duplicita obrazkov svg a png. puml tam chybaju. Updatni to a uprac.
 All architectural views are available in both PlantUML source (`.puml`) and SVG format (`.svg`):
 - `examples/diagrams/archi_mcp_motivation.puml` / `docs/diagrams/archi_mcp_motivation.svg` - Motivation Layer
 - `examples/diagrams/archi_mcp_strategy_layer.puml` / `docs/diagrams/archi_mcp_strategy_layer.svg` - Strategy Layer  
@@ -359,102 +282,6 @@ All architectural views are available in both PlantUML source (`.puml`) and SVG 
 - `examples/diagrams/archi_mcp_multi_layer_integration.puml` / `docs/diagrams/archi_mcp_multi_layer_integration.svg` - Multi-Layer Integration
 
 > **💡 Self-Generated**: All these diagrams were created using the ArchiMate MCP Server itself, proving the tool's real-world capabilities and production readiness.
-
-## 📖 Examples
-
-### Basic Three-Tier Architecture
-
-```python
-from archi_mcp.archimate.elements import BusinessElement, ApplicationElement, TechnologyElement
-from archi_mcp.archimate.relationships import create_relationship
-from archi_mcp.archimate.generator import ArchiMateGenerator
-
-# Create elements
-business_service = BusinessElement.create_business_service(
-    id="customer_service",
-    name="Customer Service"
-)
-
-app_component = ApplicationElement.create_application_component(
-    id="web_app", 
-    name="Web Application"
-)
-
-tech_node = TechnologyElement.create_node(
-    id="app_server",
-    name="Application Server"
-)
-
-# Create relationships
-app_realizes_business = create_relationship(
-    "realizes_1", "web_app", "customer_service", "Realization"
-)
-
-server_hosts_app = create_relationship(
-    "hosts_1", "app_server", "web_app", "Assignment"
-)
-
-# Generate diagram
-generator = ArchiMateGenerator()
-generator.add_element(business_service)
-generator.add_element(app_component)
-generator.add_element(tech_node)
-generator.add_relationship(app_realizes_business)
-generator.add_relationship(server_hosts_app)
-
-plantuml_code = generator.generate_plantuml(title="Three-Tier Architecture")
-print(plantuml_code)
-```
-
-### Using Templates
-
-```python
-from archi_mcp.templates import get_pattern_template
-from archi_mcp.archimate.generator import ArchiMateGenerator
-
-# Load microservices pattern template
-template = get_pattern_template("microservices")
-
-# Create generator and apply template
-generator = ArchiMateGenerator()
-
-# Add elements from template
-for elem_data in template.elements:
-    element = create_element_from_template(elem_data)
-    generator.add_element(element)
-
-# Add relationships from template  
-for rel_data in template.relationships:
-    relationship = create_relationship_from_template(rel_data)
-    generator.add_relationship(relationship)
-
-# Generate PlantUML
-plantuml_code = generator.generate_plantuml(title=template.name)
-```
-
-## 🔧 Configuration
-
-### Environment Variables
-
-- `ARCHI_MCP_LOG_LEVEL`: Logging level (DEBUG, INFO, WARNING, ERROR)
-- `ARCHI_MCP_LOG_FILE`: Optional log file path
-- `ARCHI_MCP_STRICT_VALIDATION`: Enable strict ArchiMate validation
-
-### Custom Templates
-
-You can extend the template library by creating custom templates:
-
-```python
-from archi_mcp.templates.patterns import PatternTemplate
-
-custom_pattern = PatternTemplate(
-    name="Custom Pattern",
-    description="My custom architecture pattern", 
-    elements=[...],
-    relationships=[...],
-    pattern_type="custom"
-)
-```
 
 ## 🤝 Contributing
 
