@@ -64,13 +64,13 @@ pip install archi-mcp
 
 Once configured, you can use ArchiMate MCP Server through Claude Desktop:
 
-**Basic Diagram Generation:**  @@@ tento popis uprav podla  businnes logiky kodu
+**Basic Diagram Generation:**
 ```
-Create an ArchiMate diagram showing a three-tier architecture with:
-- A business service layer
-- An application component layer  
-- A technology infrastructure layer
-Include the relationships between these layers.
+Create a simple service-oriented diagram with:
+- A customer facing business service
+- An application service implementing it
+- A supporting technology node
+Show how the layers interact.
 ```
 
 The full architecture generator follows the **ArchiMate Cookbook methodology** and automatically creates multiple coordinated views with proper element relationships and business domain context.
@@ -155,7 +155,12 @@ All 12 ArchiMate relationship types with directional variants:
 
 ## 🛠️ MCP Tools
 
-@@@ toto napis znova, zmenilo sa to 
+The server exposes four core tools via FastMCP:
+
+- **create_archimate_diagram** – generate diagrams from structured input
+- **analyze_current_architecture** – summarize the in-memory model
+- **test_element_normalization** – verify normalization logic
+- **analyze_recent_errors** – inspect recent errors and offer fixes
 
 ## 📚 Templates
 
@@ -173,31 +178,19 @@ All 12 ArchiMate relationship types with directional variants:
 - **Layered Service**: Service-oriented layered architecture
 - **CQRS**: Command Query Responsibility Segregation pattern
 
-### Industry Templates - @@@ toto cele prerob na Roadmapu. Templeaty budu pridana ako prompty cez:
-```
-Prompts
+### Roadmap
 
-Prompts are reusable templates that help LLMs interact with your server effectively:
-from mcp.server.fastmcp import FastMCP
-from mcp.server.fastmcp.prompts import base
+Industry templates will be provided as FastMCP prompts to streamline common architectures. An example prompt definition looks like:
+```python
+from fastmcp import FastMCP
 
 mcp = FastMCP("My App")
-
 
 @mcp.prompt(title="Code Review")
 def review_code(code: str) -> str:
     return f"Please review this code:\n\n{code}"
-
-
-@mcp.prompt(title="Debug Assistant")
-def debug_error(error: str) -> list[base.Message]:
-    return [
-        base.UserMessage("I'm seeing this error:"),
-        base.UserMessage(error),
-        base.AssistantMessage("I'll help debug that. What have you tried so far?"),
-    ]
 ```
-Priklady template promptov:
+Planned prompt libraries:
 - **Banking**: Core banking system architecture
 - **E-commerce**: Online retail platform architecture
 - **Healthcare**: Hospital information system architecture
@@ -238,25 +231,20 @@ uv run mypy src
 uv run ruff src tests
 ```
 
-### Project Structure @@@ - toto tiez nie je updatnute
+### Project Structure
 
 ```
 archi-mcp/
-├── src/archi_mcp/           # Main package
-│   ├── archimate/           # ArchiMate modeling components
-│   │   ├── elements/        # Element definitions by layer
-│   │   ├── relationships.py # Relationship types and validation
-│   │   ├── generator.py     # PlantUML code generation
+├── src/archi_mcp/           # Library and server code
+│   ├── archimate/           # Modeling components
+│   │   ├── elements/        # Element definitions
+│   │   ├── relationships.py # Relationship types
+│   │   ├── generator.py     # PlantUML generation
 │   │   └── validator.py     # Model validation
-│   ├── templates/           # Template library
-│   │   ├── viewpoints.py    # ArchiMate viewpoints
-│   │   ├── patterns.py      # Architecture patterns
-│   │   └── industry.py      # Industry-specific templates
-│   ├── utils/               # Utilities
-│   └── server.py           # MCP server implementation
-├── tests/                   # Comprehensive test suite
-├── examples/               # Usage examples
-└── docs/                   # Documentation
+│   ├── utils/               # Logging and exceptions
+│   └── server.py            # FastMCP server entry point
+├── tests/                   # Unit and integration tests
+├── docs/                    # Documentation and diagrams
 ```
 
 ## 📁 Complete Documentation
@@ -270,16 +258,16 @@ archi-mcp/
 - **[CLAUDE_DESKTOP_SETUP.md](docs/CLAUDE_DESKTOP_SETUP.md)**: Complete Claude Desktop configuration guide with troubleshooting
 - **[CLAUDE.md](CLAUDE.md)**: Development instructions and project guidelines for Claude
 
-### Generated Diagrams - @@@ aj toto uz neplati, je tam duplicita obrazkov svg a png. puml tam chybaju. Updatni to a uprac.
-All architectural views are available in both PlantUML source (`.puml`) and SVG format (`.svg`):
-- `examples/diagrams/archi_mcp_motivation.puml` / `docs/diagrams/archi_mcp_motivation.svg` - Motivation Layer
-- `examples/diagrams/archi_mcp_strategy_layer.puml` / `docs/diagrams/archi_mcp_strategy_layer.svg` - Strategy Layer  
-- `examples/diagrams/archi_mcp_layered_architecture.puml` / `docs/diagrams/archi_mcp_layered_architecture.svg` - Layered Architecture
-- `examples/diagrams/archi_mcp_application_structure.puml` / `docs/diagrams/archi_mcp_application_structure.svg` - Application Structure
-- `examples/diagrams/archi_mcp_technology_layer.puml` / `docs/diagrams/archi_mcp_technology_layer.svg` - Technology Infrastructure
-- `examples/diagrams/archi_mcp_physical_layer.puml` / `docs/diagrams/archi_mcp_physical_layer.svg` - Physical Infrastructure
-- `examples/diagrams/archi_mcp_implementation_migration.puml` / `docs/diagrams/archi_mcp_implementation_migration.svg` - Implementation Roadmap
-- `examples/diagrams/archi_mcp_multi_layer_integration.puml` / `docs/diagrams/archi_mcp_multi_layer_integration.svg` - Multi-Layer Integration
+### Generated Diagrams
+Pre-generated SVG diagrams are available in the `docs/diagrams` directory. PlantUML sources will be added in a future update.
+- `docs/diagrams/archi_mcp_motivation.svg` - Motivation Layer
+- `docs/diagrams/archi_mcp_strategy_layer.svg` - Strategy Layer
+- `docs/diagrams/archi_mcp_layered_architecture.svg` - Layered Architecture
+- `docs/diagrams/archi_mcp_application_structure.svg` - Application Structure
+- `docs/diagrams/archi_mcp_technology_layer.svg` - Technology Infrastructure
+- `docs/diagrams/archi_mcp_physical_layer.svg` - Physical Infrastructure
+- `docs/diagrams/archi_mcp_implementation_migration.svg` - Implementation Roadmap
+- `docs/diagrams/archi_mcp_multi_layer_integration.svg` - Multi-Layer Integration
 
 > **💡 Self-Generated**: All these diagrams were created using the ArchiMate MCP Server itself, proving the tool's real-world capabilities and production readiness.
 
