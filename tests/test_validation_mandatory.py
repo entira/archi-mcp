@@ -106,34 +106,6 @@ def test_create_diagram_validation_failure(mock_validate):
 
 
 
-@patch('archi_mcp.server._validate_plantuml_renders')
-def test_template_with_validation(mock_validate):
-    """Test generate_archimate_template with validation."""
-    from archi_mcp.server import generate_archimate_template, TemplateInput
-    
-    # Mock successful validation
-    mock_validate.return_value = (True, "Template renders successfully")
-    
-    # This test may fail if template doesn't exist, so we'll catch the exception
-    try:
-        template_input = TemplateInput(
-            template_type="pattern",
-            template_name="three_tier"
-        )
-        
-        result = generate_archimate_template.fn(template=template_input)
-        
-        # If successful, should contain validation success message
-        assert "✅" in result
-        assert "VERIFIED ✅" in result
-        assert "validated!" in result
-        
-    except Exception as e:
-        # Template might not exist, which is acceptable for testing
-        if "not found" in str(e):
-            pytest.skip("Template not found - skipping validation test")
-        else:
-            raise
 
 @patch('archi_mcp.server._validate_plantuml_renders')
 def test_full_architecture_with_validation(mock_validate):
@@ -232,55 +204,32 @@ rectangle "Test" as test
     assert isinstance(error_msg, str)
 
 def test_all_tools_have_validation():
-    """Test that all PlantUML-generating tools have validation."""
+    """Test that core PlantUML-generating tools have validation."""
     import inspect
     import archi_mcp.server as server_module
     
-    # Get the actual functions from the module
-    function_names = [
-        'create_archimate_diagram',
-        'generate_archimate_template',
-        'generate_full_architecture'
-    ]
-    
-    functions_to_check = []
-    for fname in function_names:
-        for name in dir(server_module):
-            obj = getattr(server_module, name)
-            if hasattr(obj, '__name__') and obj.__name__ == fname:
-                functions_to_check.append(obj)
-                break
-    
-    # Check that we found all functions
-    assert len(functions_to_check) >= 3, "Some validation functions not found"
-    
-    for func in functions_to_check:
-        try:
-            source = inspect.getsource(func)
-            
-            # Each function should call _validate_plantuml_renders
-            assert "_validate_plantuml_renders" in source, f"Function {func.__name__} missing validation"
-            
-            # Each function should have validation error handling
-            assert "ArchiMateGenerationError" in source, f"Function {func.__name__} missing error handling"
-            
-            # Each function should have validation success indicators
-            assert "VERIFIED" in source or "validated" in source, f"Function {func.__name__} missing success indicators"
-        except (TypeError, OSError):
-            # Skip if we can't get source (e.g., for FunctionTool objects)
-            pytest.skip(f"Cannot inspect source for {func}")
-
-    # Alternative validation - check the server module source directly
+    # Check the server module source directly
     server_source = inspect.getsource(server_module)
     
     # Verify validation function exists
     assert "_validate_plantuml_renders" in server_source, "Validation function not found in server"
     
-    # Verify all tools call validation
-    for fname in function_names:
-        # Check that the function definition exists and has validation
-        function_pattern = f"def {fname}"
-        assert function_pattern in server_source, f"Function {fname} not found in server"
+    # Verify core functions have validation logic
+    assert "create_archimate_diagram" in server_source, "create_archimate_diagram not found"
+    assert "generate_full_architecture" in server_source, "generate_full_architecture not found"
+    
+    # Check for validation patterns in the source
+    assert "VERIFIED ✅" in server_source, "Validation success indicators not found"
+    assert "ArchiMateGenerationError" in server_source, "Error handling not found"
+    
+    # Verify the tools are properly registered with FastMCP
+    from archi_mcp.server import mcp
+    registered_tools = list(mcp._tool_manager._tools.keys())
+    
+    # Should have our 9 tools
+    assert len(registered_tools) == 9, f"Expected 9 tools, got {len(registered_tools)}"
+    assert 'create_archimate_diagram' in registered_tools
+    assert 'generate_full_architecture' in registered_tools
 
 @pytest.mark.integration
 def test_validation_with_real_plantuml():

@@ -1,7 +1,7 @@
-# ArchiMate MCP Server - Business Logic Analysis
+# ArchiMate MCP Server - Business Logic Analysis (Simplified API)
 
 ## Overview
-The ArchiMate MCP server provides 13 specialized tools for AI-powered enterprise architecture modeling using ArchiMate 3.2 standard. Each tool serves specific business purposes in the architecture development lifecycle.
+The ArchiMate MCP server provides 9 specialized tools for AI-powered enterprise architecture modeling using ArchiMate 3.2 standard. The API has been simplified to focus on core functionality with 2 primary tools and 7 debug/utility tools.
 
 ---
 
@@ -35,70 +35,9 @@ The ArchiMate MCP server provides 13 specialized tools for AI-powered enterprise
 
 ---
 
-### 2. `add_archimate_element`
-**Business Purpose:** Incrementally add individual ArchiMate elements to existing diagrams.
-
-**Business Logic:**
-- **Element Normalization:** Automatically normalizes element types and IDs
-- **Layer Validation:** Ensures element belongs to correct ArchiMate layer
-- **Aspect Detection:** Automatically determines element aspect (Active/Passive Structure, Behavior)
-- **Generator Integration:** Adds to existing diagram state
-- **Progress Tracking:** Returns current element count for progress monitoring
-
-**Inputs:**
-- `element_type`: ArchiMate element type (e.g., "Business_Actor", "Application_Component")
-- `id`: Unique element identifier
-- `name`: Human-readable element name
-- `layer`: ArchiMate layer (Business, Application, Technology, etc.)
-- Optional: `description`, `stereotype`, `properties`
-
-**Outputs:**
-- Success confirmation message
-- Updated element count
-- Element validation status
-
-**Business Value:** Supports iterative architecture development and refinement.
-
-**Business Rules:**
-- Element IDs must be unique within diagram
-- Element types must conform to ArchiMate 3.2 specification
-- Layer assignments must be valid
-
----
-
-### 3. `add_archimate_relationship`
-**Business Purpose:** Create connections between ArchiMate elements to show architectural dependencies.
-
-**Business Logic:**
-- **Endpoint Validation:** Verifies source and target elements exist
-- **Relationship Type Validation:** Ensures relationship type is valid for connected elements
-- **Direction Support:** Optional directional hints for visual layout
-- **Label Management:** Support for relationship descriptions and labels
-
-**Inputs:**
-- `id`: Unique relationship identifier
-- `from_element`: Source element ID
-- `to_element`: Target element ID  
-- `relationship_type`: ArchiMate relationship type (Access, Realization, Serving, etc.)
-- Optional: `description`, `direction`, `label`
-
-**Outputs:**
-- Success confirmation message
-- Updated relationship count
-- Relationship validation status
-
-**Business Value:** Models architectural dependencies, flows, and structural relationships.
-
-**Business Rules:**
-- Both endpoints must exist before creating relationship
-- Relationship types must comply with ArchiMate metamodel
-- Circular dependencies are allowed but flagged in validation
-
----
-
 ## Architecture Generation Tools
 
-### 4. `generate_full_architecture`
+### 2. `generate_full_architecture`
 **Business Purpose:** Generate complete enterprise architectures following ArchiMate methodology.
 
 **Business Logic:**
@@ -133,38 +72,10 @@ The ArchiMate MCP server provides 13 specialized tools for AI-powered enterprise
 
 ---
 
-### 5. `generate_archimate_template`
-**Business Purpose:** Apply predefined architecture patterns and industry templates.
-
-**Business Logic:**
-- **Template Categories:** Supports viewpoints, patterns, and industry-specific templates
-- **Customization Engine:** Allows template parameter customization
-- **Pattern Library:** Includes common patterns (3-tier, microservices, event-driven)
-- **Industry Adaptation:** Banking, healthcare, e-commerce, manufacturing templates
-- **Layout Application:** Applies template-specific visual layouts
-
-**Inputs:**
-- `template_type`: Category (viewpoint, pattern, industry)
-- `template_name`: Specific template identifier
-- `customization`: Optional parameters for template customization
-
-**Outputs:**
-- Pre-configured ArchiMate diagram with template elements
-- PlantUML code with template-specific layout
-- Template documentation and usage guidance
-
-**Business Value:** Accelerates architecture creation using proven patterns.
-
-**Template Types:**
-- **Viewpoints:** Standard ArchiMate viewpoints (layered, service_realization, etc.)
-- **Patterns:** Architecture patterns (three_tier_architecture, microservices, event_driven)
-- **Industry:** Domain-specific templates with appropriate terminology
-
----
 
 ## Validation and Quality Assurance Tools
 
-### 6. `validate_archimate_model`
+### 3. `validate_archimate_model`
 **Business Purpose:** Ensure architecture compliance with ArchiMate 3.2 specification.
 
 **Business Logic:**
@@ -191,32 +102,10 @@ The ArchiMate MCP server provides 13 specialized tools for AI-powered enterprise
 
 ---
 
-### 7. `validate_plantuml_syntax`
-**Business Purpose:** Technical validation of generated PlantUML code.
-
-**Business Logic:**
-- **Syntax Checking:** Uses PlantUML JAR for syntax validation
-- **Render Testing:** Attempts actual image generation to verify renderability
-- **Error Reporting:** Detailed error messages for syntax issues
-- **Image Verification:** Confirms successful PNG generation with size reporting
-
-**Inputs:**
-- `title`: Optional diagram title
-- `description`: Optional diagram description
-
-**Outputs:**
-- PlantUML syntax validation results
-- Image generation confirmation
-- File size and path information
-- Technical error details if validation fails
-
-**Business Value:** Ensures generated diagrams are technically valid and renderable.
-
----
 
 ## Debug and Analysis Tools
 
-### 8. `analyze_current_architecture`
+### 4. `analyze_current_architecture`
 **Business Purpose:** Comprehensive analysis of current architecture state and health.
 
 **Business Logic:**
@@ -239,7 +128,7 @@ The ArchiMate MCP server provides 13 specialized tools for AI-powered enterprise
 
 ---
 
-### 9. `test_element_normalization`
+### 5. `test_element_normalization`
 **Business Purpose:** Test and validate element type normalization across all layers.
 
 **Business Logic:**
@@ -260,7 +149,7 @@ The ArchiMate MCP server provides 13 specialized tools for AI-powered enterprise
 
 ---
 
-### 10. `extract_problems_from_latest_attempt`
+### 6. `extract_problems_from_latest_attempt`
 **Business Purpose:** Analyze problems from the most recent architecture creation attempt.
 
 **Business Logic:**
@@ -283,7 +172,7 @@ The ArchiMate MCP server provides 13 specialized tools for AI-powered enterprise
 
 ---
 
-### 11. `extract_problems_from_recent_attempts`
+### 7. `extract_problems_from_recent_attempts`
 **Business Purpose:** Broader analysis of problems from recent architecture attempts.
 
 **Business Logic:**
@@ -309,7 +198,7 @@ The ArchiMate MCP server provides 13 specialized tools for AI-powered enterprise
 
 ## Utility and Support Tools
 
-### 12. `get_debug_log_info`
+### 8. `get_debug_log_info`
 **Business Purpose:** Provide access to detailed MCP session logging information.
 
 **Business Logic:**
@@ -331,7 +220,7 @@ The ArchiMate MCP server provides 13 specialized tools for AI-powered enterprise
 
 ---
 
-### 13. `save_conversation_to_tmp`
+### 9. `save_conversation_to_tmp`
 **Business Purpose:** Export conversation and debug logs for external analysis.
 
 **Business Logic:**
@@ -377,21 +266,13 @@ The ArchiMate MCP server provides 13 specialized tools for AI-powered enterprise
 
 ### Workflow Patterns:
 
-#### Basic Architecture Creation:
-1. `create_archimate_diagram` - Generate initial diagram
-2. `add_archimate_element` - Add additional elements incrementally
-3. `add_archimate_relationship` - Connect elements with relationships
-4. `validate_archimate_model` - Ensure compliance and quality
-
-#### Template-Based Development:
-1. `generate_archimate_template` - Start with proven pattern
-2. `add_archimate_element` - Customize with additional elements
-3. `validate_archimate_model` - Validate customizations
+#### Single Diagram Creation:
+1. `create_archimate_diagram` - Generate complete diagram in one step
+2. `validate_archimate_model` - Ensure compliance and quality
 
 #### Enterprise Architecture Development:
 1. `generate_full_architecture` - Generate comprehensive architecture
 2. `analyze_current_architecture` - Review and validate
-3. `validate_plantuml_syntax` - Ensure technical validity
 
 #### Troubleshooting and Debugging:
 1. `extract_problems_from_latest_attempt` - Identify immediate issues
@@ -399,4 +280,4 @@ The ArchiMate MCP server provides 13 specialized tools for AI-powered enterprise
 3. `get_debug_log_info` - Access detailed logging
 4. `save_conversation_to_tmp` - Export for external analysis
 
-This architecture provides a complete ecosystem for AI-powered enterprise architecture modeling with built-in quality assurance, debugging, and analysis capabilities.
+This simplified architecture provides a focused ecosystem for AI-powered enterprise architecture modeling with 2 core tools for architecture creation and 7 supporting tools for debugging, analysis, and quality assurance.

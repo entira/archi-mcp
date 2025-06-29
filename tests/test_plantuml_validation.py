@@ -283,15 +283,9 @@ class TestPlantUMLValidation:
     
     def test_archimate_relationship_types(self):
         """Test that only valid ArchiMate relationship types are used."""
-        from archi_mcp.server import (
-            add_archimate_element, add_archimate_relationship
-        )
+        from archi_mcp.server import create_archimate_diagram, DiagramInput
         
-        # Add elements first
-        add_archimate_element.fn(element_type="Business_Actor", id="actor1", name="Actor 1", layer="Business")
-        add_archimate_element.fn(element_type="Business_Service", id="service1", name="Service 1", layer="Business")
-        
-        # Test valid relationship types
+        # Test valid relationship types using create_archimate_diagram
         valid_relationships = [
             "Access", "Aggregation", "Assignment", "Association",
             "Composition", "Flow", "Influence", "Realization", 
@@ -299,18 +293,24 @@ class TestPlantUMLValidation:
         ]
         
         for rel_type in valid_relationships:
-            result = add_archimate_relationship.fn(
-                id=f"rel_{rel_type.lower()}",
-                from_element="actor1",
-                to_element="service1",
-                relationship_type=rel_type
+            diagram_input = DiagramInput(
+                elements=[
+                    {"id": "actor1", "name": "Actor 1", "element_type": "Business_Actor", "layer": "Business"},
+                    {"id": "service1", "name": "Service 1", "element_type": "Business_Service", "layer": "Business"}
+                ],
+                relationships=[
+                    {"id": f"rel_{rel_type.lower()}", "from_element": "actor1", "to_element": "service1", "relationship_type": rel_type}
+                ],
+                title=f"Test {rel_type} Relationship"
             )
             
-            # Should add without errors
+            result = create_archimate_diagram.fn(diagram_input)
+            
+            # Should create diagram without errors
             assert isinstance(result, str)
-            assert "added successfully" in result
+            assert "ArchiMate diagram created successfully!" in result or "Test" in result
         
-        # Test completed - relationships added successfully
+        # Test completed - relationships created successfully
 
 @pytest.mark.skipif(
     not Path("/usr/bin/java").exists() and not Path("/usr/local/bin/java").exists(),

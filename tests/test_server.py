@@ -86,43 +86,11 @@ def test_create_archimate_diagram():
             "Test Actor" in result)
     assert "VERIFIED ✅" in result or "```plantuml" in result or "plantuml" in result.lower()
 
-@pytest.mark.asyncio 
-async def test_add_archimate_element():
-    """Test add_archimate_element tool."""
-    # Skip this test since FastMCP tools are not directly callable in tests
-    pytest.skip("FastMCP tools not directly callable in test environment")
-
-@pytest.mark.asyncio
-async def test_add_archimate_relationship():
-    """Test add_archimate_relationship tool."""
-    # Skip this test since FastMCP tools are not directly callable in tests
-    pytest.skip("FastMCP tools not directly callable in test environment")
-
 @pytest.mark.asyncio
 async def test_validate_archimate_model():
     """Test validate_archimate_model tool."""
     # Skip this test since FastMCP tools are not directly callable in tests
     pytest.skip("FastMCP tools not directly callable in test environment")
-
-@pytest.mark.asyncio
-async def test_generate_archimate_template():
-    """Test generate_archimate_template tool."""
-    from archi_mcp.server import generate_archimate_template
-    from archi_mcp.server import TemplateInput
-    
-    template_input = TemplateInput(
-        template_type="pattern",
-        template_name="three_tier",
-        customization={}
-    )
-    
-    try:
-        result = generate_archimate_template(template_input)
-        assert isinstance(result, str)
-        # Template might not exist, but should handle gracefully
-    except Exception:
-        # Template not found is acceptable for testing
-        pass
 
 @pytest.mark.asyncio
 async def test_generate_full_architecture():
