@@ -1,7 +1,7 @@
 # ArchiMate MCP Server - Business Logic Analysis (Simplified API)
 
 ## Overview
-The ArchiMate MCP server provides 9 specialized tools for AI-powered enterprise architecture modeling using ArchiMate 3.2 standard. The API has been simplified to focus on core functionality with 2 primary tools and 7 debug/utility tools.
+The ArchiMate MCP server provides 5 specialized tools for AI-powered enterprise architecture modeling using ArchiMate 3.2 standard. The API has been simplified to focus on core functionality with robust normalization and validation.
 
 ---
 

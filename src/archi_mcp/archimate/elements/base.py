@@ -50,9 +50,8 @@ class ArchiMateElement(BaseModel):
         if self.stereotype:
             stereotype_str = f" <<{self.stereotype}>>"
         
-        # Use PlantUML-specific normalization to handle layer prefixes for ambiguous elements
-        from ...element_normalizer import normalize_for_plantuml
-        plantuml_element_type = normalize_for_plantuml(self.element_type, self.layer.value)
+        # Use local normalization for PlantUML element types
+        plantuml_element_type = self._normalize_for_plantuml(self.element_type, self.layer.value)
         
         # Generate PlantUML archimate element
         # Ensure proper UTF-8 encoding for names with diacritics
@@ -159,6 +158,27 @@ class ArchiMateElement(BaseModel):
     
     def __str__(self) -> str:
         return f"{self.element_type}({self.id}): {self.name}"
+    
+    def _normalize_for_plantuml(self, element_type: str, layer: str) -> str:
+        """Normalize element type for PlantUML with layer-specific handling.
+        
+        Args:
+            element_type: ArchiMate element type
+            layer: ArchiMate layer
+            
+        Returns:
+            PlantUML-compatible element type
+        """
+        # Handle layer-specific element prefixes for PlantUML
+        if element_type == "Function" and layer == "Business":
+            return "Business_Function"
+        elif element_type == "Function" and layer == "Application":
+            return "Application_Function"
+        elif element_type == "Function" and layer == "Technology":
+            return "Technology_Function"
+        
+        # Direct mapping for most elements
+        return element_type
     
     def __repr__(self) -> str:
         return f"ArchiMateElement(id='{self.id}', name='{self.name}', type='{self.element_type}')"

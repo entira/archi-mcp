@@ -1,7 +1,0 @@
-@startuml
-!include <archimate/Archimate>
-title Empty Diagram
-note as N1
-  No elements defined in this diagram
-end note
-@enduml

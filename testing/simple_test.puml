@@ -1,8 +1,0 @@
-@startuml
-!include <archimate/Archimate>
-
-Business_Actor(actor, "Test Actor")
-Application_Component(comp, "Test Component")  
-DataObject(data, "Test Data")
-
-@enduml

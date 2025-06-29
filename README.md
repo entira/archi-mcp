@@ -12,14 +12,15 @@ A specialized MCP (Model Context Protocol) server for generating PlantUML ArchiM
 
 ArchiMate MCP Server fills a crucial gap in the MCP ecosystem by providing dedicated support for ArchiMate enterprise architecture modeling. While existing MCP servers offer general UML diagram generation, this server focuses specifically on ArchiMate 3.2 specification compliance with full support for all layers, elements, and relationships.
 
-### Key Features
+### Key Features (Simplified API)
 
 - **Complete ArchiMate 3.2 Support**: All 55+ elements across 7 layers
-- **Full Relationship Matrix**: All 12 ArchiMate relationship types with directional variants
-- **Enterprise Architecture Templates**: Pre-built viewpoints, patterns, and industry-specific templates
-- **PlantUML Integration**: Native PlantUML code generation with ArchiMate styling
-- **Model Validation**: ArchiMate specification compliance checking
-- **Claude Desktop Integration**: Seamless integration with Claude Desktop via MCP
+- **Intelligent Input Normalization**: Case-insensitive inputs with automatic correction
+- **Built-in Validation**: Comprehensive PlantUML and ArchiMate validation
+- **PNG Generation**: Local file generation with macOS-optimized headless mode
+- **5 Focused Tools**: Streamlined API for core diagram creation and analysis
+- **FastMCP 2.8+ Integration**: Modern MCP protocol implementation
+- **Robust Testing**: 181 passing tests with comprehensive coverage
 
 ## 🚀 Quick Start
 
@@ -45,7 +46,7 @@ pip install archi-mcp
   "mcpServers": {
     "archi-mcp": {
       "command": "uv",
-      "args": ["run", "archi-mcp"],
+      "args": ["run", "--directory", "/path/to/your/archi-mcp", "python", "-m", "archi_mcp.server"],
       "cwd": "/path/to/your/archi-mcp",
       "env": {
         "ARCHI_MCP_LOG_LEVEL": "INFO",

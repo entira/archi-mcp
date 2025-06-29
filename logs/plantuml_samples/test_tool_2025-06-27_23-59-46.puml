@@ -1,4 +1,0 @@
-
-@startuml
-Business_Business_Actor(test-id, Test Name)
-@enduml

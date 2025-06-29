@@ -3,18 +3,16 @@
 ## Project Overview
 Professional Model Context Protocol server for ArchiMate enterprise architecture modeling with AI-powered diagram generation and PlantUML integration.
 
-## Key Features
+## Key Features (Simplified API)
 - **Complete ArchiMate 3.2 Support**: All 55+ elements across 7 layers
-- **Enhanced 4-Step Validation**: Syntax → ArchiMate → Rendering → Quality validation pipeline
-- **Automatic Element Normalization**: Fixes kebab-case to proper ArchiMate format (business-actor → Business_Actor)
-- **Multi-Format Image Generation**: Local PNG files + Base64 URLs + Online preview URLs for Claude Desktop
-- **Comprehensive Error Logging**: JSONL validation error tracking with detailed context
-- **Full Architecture Generation**: Automated enterprise architecture following ArchiMate Cookbook methodology
-- **PlantUML Integration**: Native PlantUML code generation with ArchiMate styling and rendering verification
-- **Enterprise Templates**: Pre-built viewpoints, patterns, and industry-specific templates
-- **Claude Desktop Integration**: Seamless integration with Claude Desktop via MCP
-- **Multi-View Architecture**: Motivation, Strategy, Business, Application, Technology, Physical, Implementation layers
-- **Slovak Diacritics Support**: Full national character preservation in diagrams
+- **Intelligent Input Normalization**: Case-insensitive inputs ("function" → "Business_Function", "motivation" → "Motivation")
+- **Built-in PlantUML Validation**: Automatic syntax and rendering validation before returning results
+- **PNG Generation**: Local file generation with proper macOS cursor handling
+- **FastMCP 2.8+ Integration**: Modern MCP protocol with 5 focused tools
+- **Comprehensive Testing**: 181 passing tests with robust error handling
+- **Claude Desktop Ready**: Optimized configuration for seamless integration
+- **Multi-Layer Support**: All 7 ArchiMate layers with proper aspect detection
+- **Debug & Analysis Tools**: Built-in architecture analysis and normalization testing
 
 ## Tech Stack
 - **Python 3.11+** with modern async/await
@@ -36,7 +34,7 @@ uv sync --extra dev
 
 ### Testing
 ```bash
-# Run all tests (85% pass rate - 163/184 tests passing)
+# Run all tests (181 passing tests)
 uv run pytest
 
 # Run tests with verbose output
@@ -46,8 +44,9 @@ uv run pytest -v
 uv run pytest --cov=archi_mcp --cov-report=html
 
 # Run specific test categories
-uv run pytest tests/test_mcp_integration.py    # MCP protocol tests (100% pass)
-uv run pytest tests/test_elements.py           # Element creation tests (100% pass) 
+uv run pytest tests/test_mcp_integration.py    # MCP protocol tests (11/11 pass)
+uv run pytest tests/test_elements.py           # Element creation tests (100% pass)
+uv run pytest tests/test_core_functionality.py # Core functionality tests 
 uv run pytest tests/test_generator.py          # PlantUML generation tests (100% pass)
 uv run pytest tests/test_templates.py          # Template system tests (100% pass)
 

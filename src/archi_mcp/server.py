@@ -339,7 +339,15 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
             for jar_path in possible_jars:
                 if os.path.exists(jar_path):
                     png_output = f"/tmp/archimate_diagram_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
-                    cmd = ["java", "-jar", jar_path, "-tpng", "-o", "/tmp", temp_puml]
+                    # Use headless mode to prevent GUI on macOS
+                    cmd = [
+                        "java", 
+                        "-Djava.awt.headless=true",  # Headless mode - prevents GUI
+                        "-jar", jar_path, 
+                        "-tpng", 
+                        "-o", "/tmp", 
+                        temp_puml
+                    ]
                     result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
                     
                     if result.returncode == 0:
