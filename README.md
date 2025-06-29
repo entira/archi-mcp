@@ -64,7 +64,7 @@ pip install archi-mcp
 
 Once configured, you can use ArchiMate MCP Server through Claude Desktop:
 
-**Basic Diagram Generation:**
+**Diagram Generation:**
 ```
 Create a simple service-oriented diagram with:
 - A customer facing business service
@@ -162,8 +162,6 @@ The server exposes four core tools via FastMCP:
 - **test_element_normalization** – verify normalization logic
 - **analyze_recent_errors** – inspect recent errors and offer fixes
 
-## 📚 Templates
-
 ### ArchiMate Viewpoints
 - **Layered**: Cross-layer relationships and dependencies
 - **Service Realization**: How services are realized by components
@@ -177,24 +175,6 @@ The server exposes four core tools via FastMCP:
 - **Event-Driven**: Event producers, consumers, and message flows
 - **Layered Service**: Service-oriented layered architecture
 - **CQRS**: Command Query Responsibility Segregation pattern
-
-### Roadmap
-
-Industry templates will be provided as FastMCP prompts to streamline common architectures. An example prompt definition looks like:
-```python
-from fastmcp import FastMCP
-
-mcp = FastMCP("My App")
-
-@mcp.prompt(title="Code Review")
-def review_code(code: str) -> str:
-    return f"Please review this code:\n\n{code}"
-```
-Planned prompt libraries:
-- **Banking**: Core banking system architecture
-- **E-commerce**: Online retail platform architecture
-- **Healthcare**: Hospital information system architecture
-- **Manufacturing**: Manufacturing execution system (MES)
 
 ## 🧪 Development
 
@@ -303,7 +283,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] Export to ArchiMate Open Exchange Format
 - [ ] Advanced model analysis and metrics
 - [ ] Collaborative modeling features
-
+- [ ] Industry templates will be provided as build-in prompts to streamline common architectures like Banking, E-commerce, Healthcare
 ---
 
 **ArchiMate MCP Server** - Bridging enterprise architecture modeling and AI assistance through the Model Context Protocol.
