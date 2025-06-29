@@ -12,15 +12,16 @@ A specialized MCP (Model Context Protocol) server for generating PlantUML ArchiM
 
 ArchiMate MCP Server fills a crucial gap in the MCP ecosystem by providing dedicated support for ArchiMate enterprise architecture modeling. While existing MCP servers offer general UML diagram generation, this server focuses specifically on ArchiMate 3.2 specification compliance with full support for all layers, elements, and relationships.
 
-### Key Features (Simplified API)
+### Key Features (4-Tool Focused API)
 
 - **Complete ArchiMate 3.2 Support**: All 55+ elements across 7 layers
 - **Intelligent Input Normalization**: Case-insensitive inputs with automatic correction
 - **Built-in Validation**: Comprehensive PlantUML and ArchiMate validation
-- **PNG Generation**: Local file generation with macOS-optimized headless mode
-- **5 Focused Tools**: Streamlined API for core diagram creation and analysis
+- **macOS-Optimized PNG Generation**: Headless mode prevents cursor interference
+- **4 Essential Tools**: Core diagram creation with intelligent error analysis
+- **Real-time Error Analysis**: Actionable troubleshooting guidance with pattern recognition
 - **FastMCP 2.8+ Integration**: Modern MCP protocol implementation
-- **Robust Testing**: 181 passing tests with comprehensive coverage
+- **Robust Testing**: 100+ passing tests with comprehensive coverage
 
 ## 🚀 Quick Start
 

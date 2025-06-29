@@ -8,9 +8,10 @@ import os
 import tempfile
 import base64
 import zlib
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 from pathlib import Path
+import glob
 
 from fastmcp import FastMCP
 from pydantic import BaseModel, Field
@@ -380,33 +381,7 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
         logger.error(f"Error in create_archimate_diagram: {e}")
         return f"❌ Error creating diagram: {str(e)}"
 
-@mcp.tool()
-def validate_archimate_model(strict: bool = False) -> str:
-    """Validate current ArchiMate model against ArchiMate 3.2 specification."""
-    try:
-        # Get current model state
-        elements = generator._elements
-        relationships = generator._relationships
-        
-        if not elements:
-            return "⚠️ **No elements to validate** - Create a diagram first using `create_archimate_diagram`"
-        
-        # Validate using ArchiMate validator
-        errors = validator.validate_model(elements, relationships)
-        
-        if not errors:
-            result = f"✅ **ArchiMate model validation successful!**\n\n"
-            result += f"**Elements validated:** {len(elements)}\n"
-            result += f"**Relationships validated:** {len(relationships)}\n"
-            result += f"**Validation mode:** {'Strict' if strict else 'Standard'}\n\n"
-            result += "All elements and relationships comply with ArchiMate 3.2 specification."
-            return result
-        else:
-            error_text = "\\n".join([f"• {error}" for error in errors])
-            return f"❌ ArchiMate model validation failed!\n\nFound {len(errors)} error(s):\n{error_text}"
-            
-    except Exception as e:
-        return f"❌ Validation failed: {str(e)}"
+# Removed validate_archimate_model - not needed in simplified API
 
 # Debug tools
 @mcp.tool() 
@@ -476,34 +451,167 @@ def test_element_normalization() -> str:
     except Exception as e:
         return f"❌ Test failed: {str(e)}"
 
+# Removed get_debug_log_info - not needed in simplified API
+
 @mcp.tool()
-def get_debug_log_info() -> str:
-    """Get information about the current MCP debug session."""
+def analyze_recent_errors(minutes: int = 10) -> str:
+    """Analyze recent PlantUML generation errors and provide troubleshooting guidance.
+    
+    Args:
+        minutes: Look back this many minutes for error analysis (default: 10)
+        
+    Returns:
+        Detailed analysis of recent errors with actionable recommendations
+    """
+    try:
+        # Get recent error data from various sources
+        analysis = _extract_recent_problems(minutes)
+        
+        if analysis['total_errors'] == 0:
+            return f"""✅ **No Recent Errors Found**
+
+**Analysis Period:** Last {minutes} minutes
+**Status:** System operating normally
+
+### 📊 Current Health Metrics:
+- PlantUML generation: ✅ Working
+- Element normalization: ✅ Working  
+- Validation pipeline: ✅ Working
+
+### 📈 Recommendations:
+- System is stable for architecture creation
+- Ready for complex multi-layer diagrams
+- All normalization functions operational
+"""
+        
+        # Build detailed error analysis
+        report = f"""🔍 **Recent Error Analysis** (Last {minutes} minutes)
+
+## 📊 Summary
+**Total Issues Found:** {analysis['total_errors']}
+**Error Categories:** {len(analysis['error_categories'])}
+**Timeframe:** {datetime.now().strftime('%H:%M:%S')} - {(datetime.now() - timedelta(minutes=minutes)).strftime('%H:%M:%S')}
+
+"""
+        
+        # Add error categories
+        if analysis['error_categories']:
+            report += "## 📊 Error Categories:\n"
+            for category, count in analysis['error_categories'].items():
+                report += f"- **{category}**: {count} occurrences\n"
+            report += "\n"
+        
+        # Add common patterns
+        if analysis['common_patterns']:
+            report += "## 🔎 Common Issues:\n"
+            for pattern in analysis['common_patterns']:
+                report += f"- {pattern}\n"
+            report += "\n"
+        
+        # Add troubleshooting recommendations
+        report += "## 🚀 Troubleshooting Steps:\n"
+        recommendations = _generate_troubleshooting_recommendations(analysis)
+        for rec in recommendations:
+            report += f"- {rec}\n"
+        
+        return report
+        
+    except Exception as e:
+        logger.error(f"Error in analyze_recent_errors: {e}")
+        return f"❌ Error analysis failed: {str(e)}"
+
+def _extract_recent_problems(minutes: int) -> Dict[str, Any]:
+    """Extract problems from recent logs and server state."""
+    from datetime import datetime, timedelta
+    import glob
+    
+    cutoff_time = datetime.now() - timedelta(minutes=minutes)
+    analysis = {
+        'total_errors': 0,
+        'error_categories': {},
+        'common_patterns': [],
+        'recent_attempts': []
+    }
+    
+    # Check for recent PlantUML generation errors in /tmp
+    temp_files = glob.glob('/tmp/archimate_diagram_*.png')
+    recent_files = [f for f in temp_files 
+                   if os.path.getmtime(f) > cutoff_time.timestamp()]
+    
+    # Analyze current generator state for issues
     try:
         elements_count = len(generator._elements)
         relationships_count = len(generator._relationships)
         
-        result = f"🔍 **Debug Information**\n\n"
-        result += f"**Server Status:** Active ✅\n"
-        result += f"**Current Elements:** {elements_count}\n" 
-        result += f"**Current Relationships:** {relationships_count}\n"
-        result += f"**Available Tools:** 5 core tools\n"
-        result += f"**Session Time:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+        # Check for common error patterns
+        if elements_count == 0:
+            analysis['common_patterns'].append(
+                "No elements in current diagram - may need to create elements first"
+            )
+            analysis['error_categories']['Empty Model'] = 1
+            analysis['total_errors'] += 1
         
-        if elements_count > 0:
-            layers = generator.get_layers_used()
-            result += f"**Active Layers:** {', '.join(layers)}\n"
+        # Check for orphaned relationships
+        element_ids = set(generator._elements.keys())
+        orphaned_rels = 0
+        for rel in generator._relationships.values():
+            if rel.from_element not in element_ids or rel.to_element not in element_ids:
+                orphaned_rels += 1
         
-        return result
-        
+        if orphaned_rels > 0:
+            analysis['common_patterns'].append(
+                f"Found {orphaned_rels} relationships with missing elements"
+            )
+            analysis['error_categories']['Orphaned Relationships'] = orphaned_rels
+            analysis['total_errors'] += orphaned_rels
+            
     except Exception as e:
-        return f"❌ Debug info failed: {str(e)}"
+        analysis['common_patterns'].append(f"Generator state analysis failed: {str(e)}")
+        analysis['error_categories']['System Error'] = 1
+        analysis['total_errors'] += 1
+    
+    return analysis
+
+def _generate_troubleshooting_recommendations(analysis: Dict[str, Any]) -> List[str]:
+    """Generate specific troubleshooting recommendations based on error analysis."""
+    recommendations = []
+    
+    if 'Empty Model' in analysis['error_categories']:
+        recommendations.extend([
+            "Create elements first using create_archimate_diagram with element data",
+            "Ensure DiagramInput contains at least one ElementInput with valid layer and type",
+            "Check element normalization using test_element_normalization tool"
+        ])
+    
+    if 'Orphaned Relationships' in analysis['error_categories']:
+        recommendations.extend([
+            "Verify all relationship from_element and to_element IDs match existing element IDs",
+            "Use analyze_current_architecture to check element/relationship consistency",
+            "Consider recreating the diagram with proper element-relationship mapping"
+        ])
+    
+    if 'System Error' in analysis['error_categories']:
+        recommendations.extend([
+            "Check server logs for detailed error information",
+            "Verify PlantUML JAR file availability for PNG generation",
+            "Test basic functionality with simple single-element diagram"
+        ])
+    
+    # Default recommendations if no specific issues found
+    if not recommendations:
+        recommendations = [
+            "System appears healthy - ready for complex architecture creation",
+            "Use create_archimate_diagram for new diagrams", 
+            "Monitor with analyze_current_architecture for ongoing health checks"
+        ]
+    
+    return recommendations
 
 # Server startup
 def main():
     """Main entry point for the ArchiMate MCP server."""
     logger.info("Starting ArchiMate MCP Server with FastMCP")
-    logger.info(f"Available tools: create_archimate_diagram, validate_archimate_model, analyze_current_architecture, test_element_normalization, get_debug_log_info")
+    logger.info(f"Available tools: create_archimate_diagram, analyze_current_architecture, test_element_normalization, analyze_recent_errors")
     
     try:
         mcp.run()

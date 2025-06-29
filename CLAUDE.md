@@ -3,16 +3,16 @@
 ## Project Overview
 Professional Model Context Protocol server for ArchiMate enterprise architecture modeling with AI-powered diagram generation and PlantUML integration.
 
-## Key Features (Simplified API)
+## Key Features (4-Tool Focused API)
 - **Complete ArchiMate 3.2 Support**: All 55+ elements across 7 layers
 - **Intelligent Input Normalization**: Case-insensitive inputs ("function" → "Business_Function", "motivation" → "Motivation")
 - **Built-in PlantUML Validation**: Automatic syntax and rendering validation before returning results
-- **PNG Generation**: Local file generation with proper macOS cursor handling
-- **FastMCP 2.8+ Integration**: Modern MCP protocol with 5 focused tools
-- **Comprehensive Testing**: 181 passing tests with robust error handling
+- **macOS-Optimized PNG Generation**: Headless PlantUML mode prevents cursor interference
+- **FastMCP 2.8+ Integration**: Modern MCP protocol with 4 essential tools
+- **Intelligent Error Analysis**: Real-time error detection with actionable troubleshooting guidance
+- **Comprehensive Testing**: 100+ passing tests with robust error handling
 - **Claude Desktop Ready**: Optimized configuration for seamless integration
 - **Multi-Layer Support**: All 7 ArchiMate layers with proper aspect detection
-- **Debug & Analysis Tools**: Built-in architecture analysis and normalization testing
 
 ## Tech Stack
 - **Python 3.11+** with modern async/await
@@ -118,44 +118,37 @@ uv run ruff check src/ tests/
 uv run mypy src/
 ```
 
-## Available MCP Tools
+## Available MCP Tools (4-Tool Focused API)
 
 ### 1. `create_archimate_diagram(diagram: DiagramInput) -> str`
-Generate complete ArchiMate diagrams from structured input with elements and relationships.
-- Supports all ArchiMate 3.2 elements and relationships
-- Configurable layout and styling options
-- Returns PlantUML code with statistics
+**Core diagram creation tool** - Generate complete ArchiMate diagrams from structured input.
+- Supports all ArchiMate 3.2 elements (55+ types) and relationships (12 types)
+- Automatic element type and layer normalization (case-insensitive)
+- Built-in PlantUML validation before returning results
+- PNG generation with headless Java PlantUML integration (macOS-optimized)
+- Returns validated PlantUML code with statistics
 
-### 2. `add_archimate_element(element_type: str, id: str, name: str, layer: str, ...) -> str`
-Add single ArchiMate element to existing diagram.
-- All 7 ArchiMate layers supported
-- Optional description, stereotype, and properties
-- Automatic aspect detection (Active/Passive Structure, Behavior)
+### 2. `analyze_current_architecture() -> str`
+**Architecture health assessment tool** - Analyze current architecture state and provide insights.
+- Element and relationship statistics by layer
+- Architecture completeness assessment
+- Layer distribution analysis
+- Model health indicators and readiness check
 
-### 3. `add_archimate_relationship(id: str, from_element: str, to_element: str, relationship_type: str, ...) -> str`
-Add relationship between ArchiMate elements.
-- All 12 ArchiMate relationship types
-- Optional direction, description, and labels
-- Automatic validation against ArchiMate rules
+### 3. `test_element_normalization() -> str`
+**Element validation tool** - Test element type normalization across all ArchiMate layers.
+- Validates case-insensitive input handling ("function" → "Business_Function")
+- Tests common element type mappings and transformations
+- Verifies layer and relationship type normalization
+- Essential for troubleshooting input compatibility issues
 
-### 4. `validate_archimate_model(strict: bool = False) -> str`
-Validate ArchiMate model against ArchiMate 3.2 specification.
-- Standard and strict validation modes
-- Comprehensive error reporting
-- Layer and relationship compatibility checking
-
-### 5. `generate_archimate_template(template: TemplateInput) -> str`
-Generate ArchiMate diagram from predefined templates.
-- **Viewpoints**: Layered, Service Realization, Application Cooperation, Technology Usage, Motivation
-- **Patterns**: Three-Tier Architecture, Microservices, Event-Driven, CQRS
-- **Industries**: Banking, E-commerce, Healthcare, Manufacturing
-
-### 6. `generate_full_architecture(architecture: FullArchitectureInput) -> str`
-Generate complete layered enterprise architecture following ArchiMate methodology.
-- **Multiple Coordinated Views**: Motivation, Business Model Canvas, Value Stream, Strategy & Capability, Layered Views, Interaction Views, Application & Technology Structure, Implementation Roadmap
-- **ArchiMate Cookbook Methodology**: Automated architecture generation following enterprise architecture best practices
-- **Configurable Scope**: Enterprise, system, application, or component level
-- **Implementation Phases**: 1-6 phases with detailed roadmap
+### 4. `analyze_recent_errors(minutes: int = 10) -> str`
+**Intelligent error analysis tool** - Analyze recent diagram generation errors with actionable guidance.
+- Real-time error detection and pattern recognition
+- Categorized error reporting (Empty Model, Orphaned Relationships, System Errors)
+- Contextual troubleshooting recommendations
+- Configurable time window analysis (1-60 minutes)
+- Comprehensive documentation: [analyze_recent_errors.md](analyze_recent_errors.md)
 
 ## Project Structure
 ```

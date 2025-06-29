@@ -46,13 +46,12 @@ def test_fastmcp_tools_registration():
     assert mcp is not None
     assert hasattr(mcp, '_tool_manager')
     
-    # Check expected core tools are registered (simplified API - 5 tools)
+    # Check expected core tools are registered (4-tool focused API)
     expected_tools = [
         'create_archimate_diagram',
-        'validate_archimate_model',
         'analyze_current_architecture',
         'test_element_normalization',
-        'get_debug_log_info'
+        'analyze_recent_errors'
     ]
     
     registered_tools = list(mcp._tool_manager._tools.keys())
@@ -206,7 +205,7 @@ class TestMCPProtocolCompliance:
 def test_end_to_end_diagram_creation():
     """Integration test for complete diagram creation workflow using simplified API."""
     from archi_mcp.server import (
-        create_archimate_diagram, validate_archimate_model,
+        create_archimate_diagram, analyze_current_architecture,
         DiagramInput
     )
     
@@ -244,9 +243,9 @@ def test_end_to_end_diagram_creation():
     assert isinstance(result1, str)
     assert "ArchiMate diagram created successfully" in result1 or "Test" in result1
     
-    # Step 2: Validate model
-    result2 = validate_archimate_model.fn(strict=False)
-    assert "validation" in result2.lower()
+    # Step 2: Analyze current architecture
+    result2 = analyze_current_architecture.fn()
+    assert "Architecture Analysis Report" in result2 or "analysis" in result2.lower()
     
     # Both steps should complete without errors
     assert all(result is not None for result in [result1, result2])
