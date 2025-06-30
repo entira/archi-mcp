@@ -1,0 +1,19 @@
+@startuml
+!include <archimate/Archimate>
+
+title Test Success and Cleanup
+
+' Description: Test successful diagram generation and cleanup
+
+left to right direction
+
+' Elements
+Business_Actor(test_actor, "Test Actor")
+
+
+' Legend
+legend right
+  Business Layer
+end legend
+
+@enduml

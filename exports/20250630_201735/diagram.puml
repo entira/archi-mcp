@@ -1,0 +1,38 @@
+@startuml
+!include <archimate/Archimate>
+
+title MCP Python SDK - Application Landscape
+
+' Description: Technical architecture view showing MCP ecosystem components and interactions
+
+left to right direction
+
+' Elements
+Application_Component(app_component_ai_assistant, "AI Assistant (Claude)")
+Application_Component(app_component_mcp_client, "MCP Client Library")
+Application_Component(app_component_mcp_server, "MCP Server Framework")
+Application_Component(app_component_tool_wrapper, "Enterprise Tool Wrapper")
+Application_Component(app_component_resource_manager, "Resource Manager")
+Application_Component(app_component_security_gateway, "Security Gateway")
+Application_Service(app_service_tool_discovery, "Tool Discovery Service")
+Application_Service(app_service_resource_access, "Resource Access Service")
+Application_Interface(app_interface_mcp_protocol, "MCP Protocol Interface")
+Application_DataObject(data_object_tool_registry, "Tool Registry")
+
+' Relationships
+Rel_Composition(app_component_ai_assistant, app_component_mcp_client, "composition")
+Rel_Realization(app_component_mcp_client, app_interface_mcp_protocol, "realization")
+Rel_Realization(app_component_mcp_server, app_interface_mcp_protocol, "realization")
+Rel_Composition(app_component_mcp_server, app_component_tool_wrapper, "composition")
+Rel_Serving(app_component_tool_wrapper, app_component_resource_manager, "serving")
+Rel_Serving(app_component_resource_manager, app_component_security_gateway, "serving")
+Rel_Access(app_service_tool_discovery, data_object_tool_registry, "access")
+Rel_Realization(app_component_mcp_server, app_service_tool_discovery, "realization")
+Rel_Realization(app_component_resource_manager, app_service_resource_access, "realization")
+
+' Legend
+legend right
+  Application Layer
+end legend
+
+@enduml

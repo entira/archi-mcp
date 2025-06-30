@@ -1,0 +1,39 @@
+@startuml
+!include <archimate/Archimate>
+
+title MCP Python SDK - Use Case Implementation View
+
+' Description: Specific business use case implementations and their MCP server components
+
+left to right direction
+
+' Elements
+Business_Process(business_process_hr_automation, "HR Process Automation")
+Business_Process(business_process_financial_analysis, "Financial Data Analysis")
+Business_Process(business_process_customer_insights, "Customer Intelligence Generation")
+Business_Process(business_process_supply_chain_opt, "Supply Chain Optimization")
+Application_Component(app_component_hr_mcp_server, "HR MCP Server")
+Application_Component(app_component_finance_mcp_server, "Finance MCP Server")
+Application_Component(app_component_crm_mcp_server, "CRM MCP Server")
+Application_Component(app_component_erp_mcp_server, "ERP MCP Server")
+Business_Object(business_object_implementation_template, "Use Case Implementation Template")
+Application_Service(app_service_use_case_orchestrator, "Use Case Orchestration Service")
+
+' Relationships
+Rel_Realization(business_process_hr_automation, app_component_hr_mcp_server, "realization")
+Rel_Realization(business_process_financial_analysis, app_component_finance_mcp_server, "realization")
+Rel_Realization(business_process_customer_insights, app_component_crm_mcp_server, "realization")
+Rel_Realization(business_process_supply_chain_opt, app_component_erp_mcp_server, "realization")
+Rel_Serving(app_service_use_case_orchestrator, app_component_hr_mcp_server, "serving")
+Rel_Serving(app_service_use_case_orchestrator, app_component_finance_mcp_server, "serving")
+Rel_Serving(app_service_use_case_orchestrator, app_component_crm_mcp_server, "serving")
+Rel_Serving(app_service_use_case_orchestrator, app_component_erp_mcp_server, "serving")
+Rel_Influence(business_object_implementation_template, business_process_hr_automation, "influence")
+
+' Legend
+legend right
+  Application Layer
+  Business Layer
+end legend
+
+@enduml

@@ -1,0 +1,38 @@
+@startuml
+!include <archimate/Archimate>
+
+title MCP Python SDK - Value Chain Analysis
+
+' Description: Value creation and delivery process for MCP-enabled AI capabilities
+
+left to right direction
+
+' Elements
+Business_Process(process_value_discovery, "AI Value Discovery")
+Business_Process(process_solution_design, "AI Solution Design")
+Business_Process(process_integration_development, "MCP Integration Development")
+Business_Process(process_deployment_operations, "AI Solution Deployment")
+Business_Process(process_value_realization, "Business Value Realization")
+Business_Service(business_service_consulting, "AI Strategy Consulting")
+Business_Service(business_service_implementation, "MCP Implementation Service")
+Business_Service(business_service_support, "AI Operations Support")
+Business_Object(business_object_roi_metrics, "ROI Measurement Framework")
+Business_Object(business_object_best_practices, "AI Implementation Best Practices")
+
+' Relationships
+Rel_Triggering(process_value_discovery, process_solution_design, "triggering")
+Rel_Triggering(process_solution_design, process_integration_development, "triggering")
+Rel_Triggering(process_integration_development, process_deployment_operations, "triggering")
+Rel_Triggering(process_deployment_operations, process_value_realization, "triggering")
+Rel_Realization(process_value_discovery, business_service_consulting, "realization")
+Rel_Realization(process_integration_development, business_service_implementation, "realization")
+Rel_Realization(process_deployment_operations, business_service_support, "realization")
+Rel_Access(process_value_realization, business_object_roi_metrics, "access")
+Rel_Access(process_solution_design, business_object_best_practices, "access")
+
+' Legend
+legend right
+  Business Layer
+end legend
+
+@enduml

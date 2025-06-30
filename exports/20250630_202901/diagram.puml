@@ -1,0 +1,39 @@
+@startuml
+!include <archimate/Archimate>
+
+title MCP Python SDK - Compliance Architecture
+
+' Description: Regulatory compliance controls, reporting, and governance for MCP operations
+
+left to right direction
+
+' Elements
+Business_Object(business_object_gdpr_requirements, "GDPR Compliance Requirements")
+Business_Object(business_object_sox_requirements, "SOX Compliance Requirements")
+Business_Object(business_object_hipaa_requirements, "HIPAA Compliance Requirements")
+Application_Service(app_service_data_governance, "Data Governance Service")
+Application_Service(app_service_audit_logging, "Compliance Audit Logging")
+Application_Service(app_service_consent_management, "Consent Management Service")
+Application_Component(app_component_compliance_dashboard, "Compliance Monitoring Dashboard")
+Application_Service(app_service_data_masking, "Data Masking Service")
+Business_Process(business_process_compliance_reporting, "Regulatory Reporting Process")
+Application_DataObject(data_object_compliance_evidence, "Compliance Evidence Repository")
+
+' Relationships
+Rel_Realization(app_service_data_governance, business_object_gdpr_requirements, "realization")
+Rel_Realization(app_service_audit_logging, business_object_sox_requirements, "realization")
+Rel_Realization(app_service_data_masking, business_object_hipaa_requirements, "realization")
+Rel_Realization(app_service_consent_management, business_object_gdpr_requirements, "realization")
+Rel_Serving(app_component_compliance_dashboard, app_service_data_governance, "serving")
+Rel_Serving(app_component_compliance_dashboard, app_service_audit_logging, "serving")
+Rel_Access(business_process_compliance_reporting, data_object_compliance_evidence, "access")
+Rel_Assignment(app_service_audit_logging, data_object_compliance_evidence, "assignment")
+Rel_Serving(app_component_compliance_dashboard, business_process_compliance_reporting, "serving")
+
+' Legend
+legend right
+  Application Layer
+  Business Layer
+end legend
+
+@enduml
