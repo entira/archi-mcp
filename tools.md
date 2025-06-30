@@ -25,6 +25,14 @@ The simplified ArchiMate MCP server exposes four MCP tools focused on diagram cr
 
 **Business Value:** Enables complete architecture documentation from a single structured request.
 
+### Conversation Example
+```text
+User: "Please create an overview diagram of our CRM system."
+MCP Client: sends `create_archimate_diagram` request with structured diagram data.
+MPC Host: forwards the request to the ArchiMate MCP server.
+MCP Server: returns PlantUML code and `/tmp/CRM_System_Overview.png`.
+```
+
 ---
 
 ## 2. `analyze_current_architecture`
@@ -43,6 +51,14 @@ The simplified ArchiMate MCP server exposes four MCP tools focused on diagram cr
 
 **Business Value:** Helps verify diagram completeness and spot potential problems early.
 
+### Conversation Example
+```text
+User: "Check if our architecture is valid."
+MCP Client: invokes `analyze_current_architecture`.
+MPC Host: forwards the request to the MCP server.
+MCP Server: replies with statistics and validation status.
+```
+
 ---
 
 ## 3. `test_element_normalization`
@@ -58,6 +74,14 @@ The simplified ArchiMate MCP server exposes four MCP tools focused on diagram cr
 - Normalization results with success or failure indicators
 
 **Business Value:** Ensures reliable element processing and PlantUML generation.
+
+### Conversation Example
+```text
+User: "Run the element normalization tests."
+MCP Client: triggers `test_element_normalization`.
+MPC Host: sends the command to the MCP server.
+MCP Server: reports all elements normalized successfully.
+```
 
 ---
 
@@ -77,6 +101,14 @@ The simplified ArchiMate MCP server exposes four MCP tools focused on diagram cr
 - Recommended troubleshooting steps
 
 **Business Value:** Rapid problem diagnosis and continuous improvement of architecture generation.
+
+### Conversation Example
+```text
+User: "Show me errors from the last 30 minutes."
+MCP Client: calls `analyze_recent_errors` with `minutes=30`.
+MPC Host: forwards the request to the MCP server.
+MCP Server: summarizes recent issues and recommended fixes.
+```
 
 ---
 
