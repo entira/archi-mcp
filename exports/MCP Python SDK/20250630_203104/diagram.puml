@@ -1,0 +1,39 @@
+@startuml
+!include <archimate/Archimate>
+
+title MCP Python SDK - Development Workflow Architecture
+
+' Description: Development tools, workflows, and processes for building with MCP Python SDK
+
+left to right direction
+
+' Elements
+Business_Role(business_role_developer, "MCP Developer")
+Business_Role(business_role_devops_engineer, "DevOps Engineer")
+Business_Role(business_role_qa_engineer, "QA Engineer")
+Application_Service(app_service_mcp_sdk, "MCP Python SDK")
+Application_Service(app_service_testing_framework, "MCP Testing Framework")
+Application_Service(app_service_deployment_pipeline, "MCP Deployment Pipeline")
+Application_Component(app_component_ide_plugin, "MCP IDE Extensions")
+Application_Component(app_component_debugging_tools, "MCP Debugging Tools")
+Application_DataObject(data_object_code_templates, "MCP Code Templates")
+Business_Process(business_process_development_lifecycle, "MCP Development Lifecycle")
+
+' Relationships
+Rel_Serving(business_role_developer, app_service_mcp_sdk, "serving")
+Rel_Serving(business_role_devops_engineer, app_service_deployment_pipeline, "serving")
+Rel_Serving(business_role_qa_engineer, app_service_testing_framework, "serving")
+Rel_Serving(app_component_ide_plugin, business_role_developer, "serving")
+Rel_Serving(app_component_debugging_tools, business_role_developer, "serving")
+Rel_Assignment(app_service_mcp_sdk, data_object_code_templates, "assignment")
+Rel_Composition(app_service_deployment_pipeline, app_service_testing_framework, "composition")
+Rel_Assignment(business_process_development_lifecycle, business_role_developer, "assignment")
+Rel_Access(business_role_developer, data_object_code_templates, "access")
+
+' Legend
+legend right
+  Application Layer
+  Business Layer
+end legend
+
+@enduml

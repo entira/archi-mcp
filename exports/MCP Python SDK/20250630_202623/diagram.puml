@@ -1,0 +1,38 @@
+@startuml
+!include <archimate/Archimate>
+
+title MCP Python SDK - Data Architecture
+
+' Description: Data flows, storage, and access patterns for MCP-enabled AI capabilities
+
+left to right direction
+
+' Elements
+Application_DataObject(data_object_customer_data, "Customer Master Data")
+Application_DataObject(data_object_product_data, "Product Catalog Data")
+Application_DataObject(data_object_operational_data, "Operational Metrics Data")
+Application_DataObject(data_object_financial_data, "Financial Transaction Data")
+Application_Component(app_component_data_lake, "Enterprise Data Lake")
+Application_Component(app_component_data_warehouse, "Enterprise Data Warehouse")
+Application_Service(app_service_data_virtualization, "Data Virtualization Layer")
+Application_Service(app_service_data_governance, "Data Governance Service")
+Application_Component(app_component_mcp_data_proxy, "MCP Data Access Proxy")
+Application_DataObject(data_object_mcp_metadata, "MCP Data Catalog")
+
+' Relationships
+Rel_Assignment(app_component_data_warehouse, data_object_customer_data, "assignment")
+Rel_Assignment(app_component_data_warehouse, data_object_product_data, "assignment")
+Rel_Assignment(app_component_data_lake, data_object_operational_data, "assignment")
+Rel_Assignment(app_component_data_warehouse, data_object_financial_data, "assignment")
+Rel_Serving(app_service_data_virtualization, app_component_data_warehouse, "serving")
+Rel_Serving(app_service_data_virtualization, app_component_data_lake, "serving")
+Rel_Serving(app_component_mcp_data_proxy, app_service_data_virtualization, "serving")
+Rel_Serving(app_component_mcp_data_proxy, app_service_data_governance, "serving")
+Rel_Assignment(app_service_data_governance, data_object_mcp_metadata, "assignment")
+
+' Legend
+legend right
+  Application Layer
+end legend
+
+@enduml

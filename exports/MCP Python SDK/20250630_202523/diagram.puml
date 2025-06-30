@@ -1,0 +1,39 @@
+@startuml
+!include <archimate/Archimate>
+
+title MCP Python SDK - Business Capability Map
+
+' Description: Business capabilities enabled by MCP Python SDK for strategic planning and investment decisions
+
+left to right direction
+
+' Elements
+Business_Function(capability_ai_assisted_decision, "AI-Assisted Decision Making")
+Business_Function(capability_automated_workflows, "Automated Business Workflows")
+Business_Function(capability_intelligent_analytics, "Intelligent Analytics")
+Business_Function(capability_conversational_interfaces, "Conversational Business Interfaces")
+Business_Function(capability_predictive_maintenance, "Predictive Operations")
+Business_Function(capability_compliance_automation, "Automated Compliance")
+Business_Service(business_service_knowledge_mgmt, "Knowledge Management Service")
+Business_Service(business_service_customer_support, "Intelligent Customer Support")
+Application_Service(app_service_mcp_enablement, "MCP Enablement Service")
+Business_Object(business_object_enterprise_knowledge, "Enterprise Knowledge Base")
+
+' Relationships
+Rel_Realization(app_service_mcp_enablement, capability_ai_assisted_decision, "realization")
+Rel_Realization(app_service_mcp_enablement, capability_automated_workflows, "realization")
+Rel_Realization(app_service_mcp_enablement, capability_intelligent_analytics, "realization")
+Rel_Realization(app_service_mcp_enablement, capability_conversational_interfaces, "realization")
+Rel_Realization(capability_ai_assisted_decision, business_service_knowledge_mgmt, "realization")
+Rel_Realization(capability_conversational_interfaces, business_service_customer_support, "realization")
+Rel_Access(capability_intelligent_analytics, business_object_enterprise_knowledge, "access")
+Rel_Serving(capability_automated_workflows, capability_compliance_automation, "serving")
+Rel_Serving(capability_intelligent_analytics, capability_predictive_maintenance, "serving")
+
+' Legend
+legend right
+  Application Layer
+  Business Layer
+end legend
+
+@enduml

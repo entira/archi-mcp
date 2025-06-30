@@ -1,0 +1,40 @@
+@startuml
+!include <archimate/Archimate>
+
+title MCP Python SDK - Disaster Recovery Architecture
+
+' Description: Business continuity and disaster recovery capabilities for MCP infrastructure
+
+left to right direction
+
+' Elements
+Technology_Node(tech_node_primary_datacenter, "Primary Data Center")
+Technology_Node(tech_node_dr_datacenter, "Disaster Recovery Data Center")
+Technology_Node(tech_node_cloud_backup, "Cloud Backup Infrastructure")
+Application_Service(app_service_backup_orchestration, "Backup Orchestration Service")
+Application_Service(app_service_failover_automation, "Automated Failover Service")
+Application_Service(app_service_data_replication, "Data Replication Service")
+Business_Process(business_process_dr_activation, "DR Activation Process")
+Business_Object(business_object_rto_requirements, "RTO/RPO Requirements")
+Application_Component(app_component_mcp_cluster_primary, "Primary MCP Cluster")
+Application_Component(app_component_mcp_cluster_dr, "DR MCP Cluster")
+
+' Relationships
+Rel_Assignment(tech_node_primary_datacenter, app_component_mcp_cluster_primary, "assignment")
+Rel_Assignment(tech_node_dr_datacenter, app_component_mcp_cluster_dr, "assignment")
+Rel_Flow(app_service_data_replication, app_component_mcp_cluster_dr, "flow")
+Rel_Flow(app_service_backup_orchestration, tech_node_cloud_backup, "flow")
+Rel_Serving(app_service_backup_orchestration, app_component_mcp_cluster_primary, "serving")
+Rel_Triggering(app_service_failover_automation, app_component_mcp_cluster_dr, "triggering")
+Rel_Triggering(business_process_dr_activation, app_service_failover_automation, "triggering")
+Rel_Influence(business_object_rto_requirements, business_process_dr_activation, "influence")
+Rel_Serving(app_service_data_replication, app_component_mcp_cluster_primary, "serving")
+
+' Legend
+legend right
+  Application Layer
+  Business Layer
+  Technology Layer
+end legend
+
+@enduml

@@ -1,0 +1,94 @@
+ArchiMate Diagram Generation Log
+============================================================
+Generated at: 2025-06-30T20:27:42.458175
+Platform: Darwin 24.5.0
+Python: 3.13.5 (main, Jun 12 2025, 12:22:43) [Clang 20.1.4 ]
+============================================================
+
+[2025-06-30T20:27:39.651220] INFO: Cleared existing diagram
+
+[2025-06-30T20:27:39.651362] INFO: Processing 10 elements
+
+[2025-06-30T20:27:39.651411] DEBUG: Normalized element type: Technology_Node -> Technology_Node
+
+[2025-06-30T20:27:39.651429] DEBUG: Normalized element type: Technology_Node -> Technology_Node
+
+[2025-06-30T20:27:39.651440] DEBUG: Normalized element type: Technology_Node -> Technology_Node
+
+[2025-06-30T20:27:39.651446] DEBUG: Normalized element type: Application_Service -> Application_Service
+
+[2025-06-30T20:27:39.651450] DEBUG: Normalized element type: Application_Service -> Application_Service
+
+[2025-06-30T20:27:39.651453] DEBUG: Normalized element type: Application_Service -> Application_Service
+
+[2025-06-30T20:27:39.651456] DEBUG: Normalized element type: Business_Process -> Business_Process
+
+[2025-06-30T20:27:39.651459] DEBUG: Normalized element type: Business_Object -> Business_Object
+
+[2025-06-30T20:27:39.651463] DEBUG: Normalized element type: Application_Component -> Application_Component
+
+[2025-06-30T20:27:39.651467] DEBUG: Normalized element type: Application_Component -> Application_Component
+
+[2025-06-30T20:27:39.651471] INFO: Added 10 elements successfully
+
+[2025-06-30T20:27:39.651499] INFO: Processing 9 relationships
+
+[2025-06-30T20:27:39.651694] INFO: Added 9 relationships successfully
+
+[2025-06-30T20:27:39.651809] INFO: Generating PlantUML code
+
+[2025-06-30T20:27:39.651982] INFO: Generated PlantUML code: 1890 characters
+
+[2025-06-30T20:27:39.689971] INFO: Java environment detected
+  java_version: java version "1.8.0_451"
+
+[2025-06-30T20:27:39.690218] INFO: Found PlantUML jar at: /Users/patrik/Projects/archi-mcp/plantuml.jar
+
+[2025-06-30T20:27:40.133095] INFO: PlantUML version info
+  version: PlantUML version 1.2024.7 (Sat Sep 07 13:18:17 CEST 2024)
+(GPL source distribution)
+Java Runtime: Java(TM) SE Runtime Environment
+JVM: Java HotSpot(TM) 64-Bit Server VM
+Default Encoding: UTF-8
+Language: en
+Country: US
+ 
+PLANTUML_LIMIT_SIZE: 4096
+
+Dot version: dot - graphviz version 13.0.1 (20250615.1724)
+Installation seems OK. File generation OK
+
+[2025-06-30T20:27:40.133306] INFO: Starting PNG generation test
+
+[2025-06-30T20:27:40.133589] DEBUG: Executing PlantUML PNG command
+  command: java -Djava.awt.headless=true -jar /Users/patrik/Projects/archi-mcp/plantuml.jar -tpng -charset UTF-8 /tmp/tmp_uk6m26_.puml
+
+[2025-06-30T20:27:41.317412] INFO: PNG generation completed in 1.18 seconds
+  png_return_code: 0
+  png_stdout_length: 0
+  png_stderr_length: 0
+
+[2025-06-30T20:27:41.317825] INFO: PNG test generation successful: 46203 bytes
+
+[2025-06-30T20:27:41.317869] INFO: PNG successful, now generating SVG
+
+[2025-06-30T20:27:41.317895] DEBUG: Executing PlantUML SVG command
+  command: java -Djava.awt.headless=true -jar /Users/patrik/Projects/archi-mcp/plantuml.jar -tsvg -charset UTF-8 /tmp/tmp_uk6m26_.puml
+
+[2025-06-30T20:27:42.457074] INFO: SVG generation completed in 1.14 seconds
+  svg_return_code: 0
+  svg_stdout_length: 0
+  svg_stderr_length: 0
+
+[2025-06-30T20:27:42.457352] INFO: SVG generated successfully: 21250 bytes
+
+[2025-06-30T20:27:42.457496] INFO: PNG generation successful, creating export directory
+
+[2025-06-30T20:27:42.457686] INFO: Created export directory: /Users/patrik/Projects/archi-mcp/exports/20250630_202742
+
+[2025-06-30T20:27:42.457875] INFO: Saved PlantUML code to /Users/patrik/Projects/archi-mcp/exports/20250630_202742/diagram.puml
+
+[2025-06-30T20:27:42.458008] INFO: Moved PNG file to /Users/patrik/Projects/archi-mcp/exports/20250630_202742/diagram.png
+
+[2025-06-30T20:27:42.458104] INFO: Moved SVG file to /Users/patrik/Projects/archi-mcp/exports/20250630_202742/diagram.svg
+

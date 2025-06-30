@@ -1,0 +1,20 @@
+{
+  "title": "MCP Python SDK - Skills and Training Architecture",
+  "description": "Organizational capability development, training, and career progression for MCP adoption",
+  "generated_at": "2025-06-30T20:31:23.621105",
+  "generation_time_seconds": 2.86,
+  "statistics": {
+    "elements": 10,
+    "relationships": 9,
+    "layers": [
+      "Application",
+      "Business"
+    ]
+  },
+  "png_generated": true,
+  "svg_generated": true,
+  "plantuml_validation": {
+    "passed": true,
+    "message": "PlantUML validation passed"
+  }
+}

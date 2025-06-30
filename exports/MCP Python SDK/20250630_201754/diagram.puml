@@ -1,0 +1,40 @@
+@startuml
+!include <archimate/Archimate>
+
+title MCP Python SDK - Security Architecture
+
+' Description: Security controls and data protection view for CISO and compliance teams
+
+left to right direction
+
+' Elements
+Business_Actor(business_actor_external_ai, "External AI Service")
+Business_Actor(business_actor_internal_user, "Internal User")
+Application_Component(app_component_auth_service, "Authentication Service")
+Application_Component(app_component_authz_engine, "Authorization Engine")
+Application_Component(app_component_audit_logger, "Audit Logging Service")
+Application_Component(app_component_encryption_service, "Encryption Service")
+Application_Component(app_component_mcp_security_proxy, "MCP Security Proxy")
+Technology_Service(tech_service_tls_transport, "TLS Transport")
+Business_Object(business_object_sensitive_data, "Sensitive Enterprise Data")
+Application_Component(app_component_data_classifier, "Data Classification Service")
+
+' Relationships
+Rel_Serving(business_actor_external_ai, app_component_auth_service, "serving")
+Rel_Triggering(app_component_auth_service, app_component_authz_engine, "triggering")
+Rel_Serving(app_component_authz_engine, app_component_mcp_security_proxy, "serving")
+Rel_Access(app_component_mcp_security_proxy, business_object_sensitive_data, "access")
+Rel_Serving(app_component_audit_logger, app_component_mcp_security_proxy, "serving")
+Rel_Realization(app_component_encryption_service, tech_service_tls_transport, "realization")
+Rel_Serving(app_component_data_classifier, business_object_sensitive_data, "serving")
+Rel_Serving(business_actor_internal_user, app_component_auth_service, "serving")
+Rel_Serving(app_component_authz_engine, app_component_data_classifier, "serving")
+
+' Legend
+legend right
+  Application Layer
+  Business Layer
+  Technology Layer
+end legend
+
+@enduml

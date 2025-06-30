@@ -1,0 +1,20 @@
+ArchiMate Diagram Generation Log
+============================================================
+Generated at: 2025-06-30T20:16:38.072078
+Platform: Darwin 24.5.0
+Python: 3.13.5 (main, Jun 12 2025, 12:22:43) [Clang 20.1.4 ]
+============================================================
+
+[2025-06-30T20:16:38.071801] INFO: Cleared existing diagram
+
+[2025-06-30T20:16:38.071840] INFO: Processing 1 elements
+
+[2025-06-30T20:16:38.071868] ERROR: Element validation failed: Invalid element type: Invalid_Element_Type. Valid types: ['Business_Actor', 'Business_Role', 'Business_Collaboration', 'Business_Interface', 'Business_Function', 'Business_Process', 'Business_Event', 'Business_Service', 'Business_Object', 'Business_Contract']...
+  element_id: test_actor
+
+[2025-06-30T20:16:38.072000] INFO: Created error export directory for debugging: /Users/patrik/Projects/archi-mcp/exports/20250630_201638
+
+[2025-06-30T20:16:38.072018] ERROR: Final error: Element validation failed: Invalid element type: Invalid_Element_Type. Valid types: ['Business_Actor', 'Business_Role', 'Business_Collaboration', 'Business_Interface', 'Business_Function', 'Business_Process', 'Business_Event', 'Business_Service', 'Business_Object', 'Business_Contract']...
+  error_type: ArchiMateValidationError
+  total_generation_time: 0.0
+
