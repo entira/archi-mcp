@@ -7,7 +7,7 @@ Professional Model Context Protocol server for ArchiMate enterprise architecture
 - **Complete ArchiMate 3.2 Support**: All 55+ elements across 7 layers
 - **Intelligent Input Normalization**: Case-insensitive inputs ("function" → "Business_Function", "motivation" → "Motivation")
 - **Built-in PlantUML Validation**: Automatic syntax and rendering validation before returning results
-- **macOS-Optimized PNG Generation**: Headless PlantUML mode prevents cursor interference
+- **macOS-Optimized PNG/SVG Generation**: ALWAYS uses headless PlantUML mode to prevent cursor interference
 - **FastMCP 2.8+ Integration**: Modern MCP protocol with 4 essential tools
 - **Intelligent Error Analysis**: Real-time error detection with actionable troubleshooting guidance
 - **Comprehensive Testing**: 100+ passing tests with robust error handling
@@ -125,7 +125,7 @@ uv run mypy src/
 - Supports all ArchiMate 3.2 elements (55+ types) and relationships (12 types)
 - Automatic element type and layer normalization (case-insensitive)
 - Built-in PlantUML validation before returning results
-- PNG generation with headless Java PlantUML integration (macOS-optimized)
+- PNG/SVG generation with headless Java PlantUML integration (macOS-optimized, prevents focus stealing)
 - Returns validated PlantUML code with statistics
 
 ### 2. `analyze_current_architecture() -> str`
@@ -233,6 +233,14 @@ Use full path in Claude Desktop config with `uv` command and `--directory` flag.
 - **Rendering failures:** Ensure Java is installed for PlantUML jar execution
 - **JSONL log entries:** Each validation failure is logged with full context for debugging
 - **Fix-test cycle:** Always re-run tests after fixing validation errors to ensure log is clean
+
+### PlantUML Headless Mode (CRITICAL REQUIREMENT)
+- **ALWAYS use headless mode:** All PlantUML jar executions MUST include `-Djava.awt.headless=true`
+- **Focus stealing prevention:** Without headless mode, PlantUML steals desktop focus during PNG/SVG generation
+- **Implemented everywhere:** Both server.py and generator.py use headless mode consistently
+- **Test compatibility:** All tests and development commands use headless mode
+- **Example command:** `java -Djava.awt.headless=true -jar plantuml.jar -tpng diagram.puml`
+- **Never remove this flag:** Removing headless mode will cause desktop focus interruption
 
 ### Image generation not working in Claude Desktop
 - **Multi-format approach:** Server generates PNG files + Base64 URLs + Online preview URLs

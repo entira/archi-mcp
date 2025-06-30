@@ -8,6 +8,9 @@ import os
 import tempfile
 import base64
 import zlib
+import time
+import platform
+import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 from pathlib import Path
@@ -94,22 +97,22 @@ ELEMENT_TYPE_MAPPING = {
     "Application_Process": "Application_Process",
     "Application_Event": "Application_Event",
     "Application_Service": "Application_Service",
-    "Data_Object": "Data_Object",
+    "Data_Object": "Application_DataObject",
     
     # Technology Layer
-    "Node": "Node",
-    "Device": "Device",
-    "System_Software": "System_Software",
+    "Node": "Technology_Node",
+    "Device": "Technology_Device",
+    "System_Software": "Technology_SystemSoftware",
     "Technology_Collaboration": "Technology_Collaboration",
     "Technology_Interface": "Technology_Interface",
-    "Path": "Path",
-    "Communication_Network": "Communication_Network",
+    "Path": "Technology_Path",
+    "Communication_Network": "Technology_CommunicationNetwork",
     "Technology_Function": "Technology_Function",
     "Technology_Process": "Technology_Process",
     "Technology_Interaction": "Technology_Interaction", 
     "Technology_Event": "Technology_Event",
     "Technology_Service": "Technology_Service",
-    "Artifact": "Artifact",
+    "Artifact": "Technology_Artifact",
     
     # Physical Layer
     "Equipment": "Equipment",
@@ -160,6 +163,208 @@ VALID_RELATIONSHIPS = [
     "Composition", "Flow", "Influence", "Realization",
     "Serving", "Specialization", "Triggering"
 ]
+
+# Helper functions for exports directory
+def get_exports_directory() -> Path:
+    """Get the exports directory path, creating it if needed."""
+    exports_dir = Path.cwd() / "exports"
+    exports_dir.mkdir(exist_ok=True)
+    return exports_dir
+
+def create_diagram_export_directory() -> Path:
+    """Create a timestamped directory for diagram exports."""
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    export_dir = get_exports_directory() / timestamp
+    export_dir.mkdir(parents=True, exist_ok=True)
+    return export_dir
+
+def save_debug_log(export_dir: Path, log_entries: List[Dict[str, Any]]) -> Path:
+    """Save debug log to the export directory."""
+    log_file = export_dir / "generation.log"
+    with open(log_file, 'w', encoding='utf-8') as f:
+        f.write(f"ArchiMate Diagram Generation Log\n")
+        f.write(f"{'=' * 60}\n")
+        f.write(f"Generated at: {datetime.now().isoformat()}\n")
+        f.write(f"Platform: {platform.system()} {platform.release()}\n")
+        f.write(f"Python: {sys.version}\n")
+        f.write(f"{'=' * 60}\n\n")
+        
+        for entry in log_entries:
+            f.write(f"[{entry.get('timestamp', 'N/A')}] {entry.get('level', 'INFO')}: {entry.get('message', '')}\n")
+            if 'details' in entry:
+                for key, value in entry['details'].items():
+                    f.write(f"  {key}: {value}\n")
+            f.write("\n")
+    
+    return log_file
+
+def cleanup_failed_exports() -> None:
+    """Move failed export attempts to failed_attempts subdirectory after successful PNG generation."""
+    exports_dir = get_exports_directory()
+    failed_attempts_dir = exports_dir / "failed_attempts"
+    
+    # Find all export directories
+    export_subdirs = [d for d in exports_dir.iterdir() if d.is_dir() and d.name != "failed_attempts"]
+    
+    # Identify failed exports (no PNG file)
+    failed_dirs = []
+    for export_dir in export_subdirs:
+        png_file = export_dir / "diagram.png"
+        if not png_file.exists():
+            failed_dirs.append(export_dir)
+    
+    # Move failed attempts to failed_attempts directory
+    if failed_dirs:
+        failed_attempts_dir.mkdir(exist_ok=True)
+        
+        for failed_dir in failed_dirs:
+            destination = failed_attempts_dir / failed_dir.name
+            try:
+                failed_dir.rename(destination)
+                print(f"Moved failed export: {failed_dir.name} -> failed_attempts/")
+            except Exception as e:
+                print(f"Warning: Could not move {failed_dir.name}: {e}")
+
+def generate_architecture_markdown(generator, title: str, description: str, png_filename: str = "diagram.png") -> str:
+    """Generate markdown documentation for the architecture."""
+    md_content = []
+    
+    # Header
+    md_content.append(f"# {title}")
+    md_content.append("")
+    
+    if description:
+        md_content.append(f"*{description}*")
+        md_content.append("")
+    
+    # Generation info
+    md_content.append(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    md_content.append("")
+    
+    # Architecture diagram
+    md_content.append("## Architecture Diagram")
+    md_content.append("")
+    md_content.append(f"![{title}]({png_filename})")
+    md_content.append("")
+    
+    # Statistics overview
+    md_content.append("## Overview")
+    md_content.append("")
+    md_content.append(f"- **Total Elements:** {generator.get_element_count()}")
+    md_content.append(f"- **Total Relationships:** {generator.get_relationship_count()}")
+    md_content.append(f"- **Layers Used:** {', '.join(generator.get_layers_used())}")
+    md_content.append("")
+    
+    # Elements by layer
+    md_content.append("## Architecture Elements by Layer")
+    md_content.append("")
+    
+    # Group elements by layer
+    elements_by_layer = {}
+    for element in generator.elements.values():
+        layer = element.layer.value
+        if layer not in elements_by_layer:
+            elements_by_layer[layer] = []
+        elements_by_layer[layer].append(element)
+    
+    # Document each layer
+    for layer_name in sorted(elements_by_layer.keys()):
+        md_content.append(f"### {layer_name} Layer")
+        md_content.append("")
+        
+        elements = elements_by_layer[layer_name]
+        if elements:
+            md_content.append("| ID | Name | Type | Description |")
+            md_content.append("|---|---|---|---|")
+            
+            for element in sorted(elements, key=lambda e: e.id):
+                desc = element.description or "-"
+                element_type = element.element_type.replace("_", " ")
+                md_content.append(f"| `{element.id}` | **{element.name}** | {element_type} | {desc} |")
+            
+            md_content.append("")
+    
+    # Relationships
+    md_content.append("## Relationships")
+    md_content.append("")
+    
+    if generator.relationships:
+        md_content.append("| From | Relationship | To | Description |")
+        md_content.append("|---|---|---|---|")
+        
+        for rel in generator.relationships:
+            # Get element names
+            from_element = generator.elements.get(rel.from_element)
+            to_element = generator.elements.get(rel.to_element)
+            
+            from_name = from_element.name if from_element else rel.from_element
+            to_name = to_element.name if to_element else rel.to_element
+            
+            rel_type = rel.relationship_type.value if hasattr(rel.relationship_type, 'value') else str(rel.relationship_type)
+            desc = rel.description or "-"
+            
+            md_content.append(f"| {from_name} | *{rel_type}* | {to_name} | {desc} |")
+        
+        md_content.append("")
+    else:
+        md_content.append("*No relationships defined*")
+        md_content.append("")
+    
+    # Architecture insights
+    md_content.append("## Architecture Insights")
+    md_content.append("")
+    
+    # Layer distribution
+    layer_counts = {}
+    for element in generator.elements.values():
+        layer = element.layer.value
+        layer_counts[layer] = layer_counts.get(layer, 0) + 1
+    
+    md_content.append("### Layer Distribution")
+    md_content.append("")
+    for layer, count in sorted(layer_counts.items()):
+        percentage = (count / generator.get_element_count()) * 100
+        md_content.append(f"- **{layer}**: {count} elements ({percentage:.1f}%)")
+    md_content.append("")
+    
+    # Element types analysis
+    element_types = {}
+    for element in generator.elements.values():
+        elem_type = element.element_type
+        element_types[elem_type] = element_types.get(elem_type, 0) + 1
+    
+    md_content.append("### Element Types")
+    md_content.append("")
+    for elem_type, count in sorted(element_types.items()):
+        md_content.append(f"- {elem_type.replace('_', ' ')}: {count}")
+    md_content.append("")
+    
+    # Relationship analysis
+    if generator.relationships:
+        rel_types = {}
+        for rel in generator.relationships:
+            rel_type = rel.relationship_type.value if hasattr(rel.relationship_type, 'value') else str(rel.relationship_type)
+            rel_types[rel_type] = rel_types.get(rel_type, 0) + 1
+        
+        md_content.append("### Relationship Types")
+        md_content.append("")
+        for rel_type, count in sorted(rel_types.items()):
+            md_content.append(f"- {rel_type}: {count}")
+        md_content.append("")
+    
+    # PlantUML source reference
+    md_content.append("## Source Files")
+    md_content.append("")
+    md_content.append("- [PlantUML Source](diagram.puml)")
+    md_content.append("- [Generation Log](generation.log)")
+    md_content.append("- [Metadata](metadata.json)")
+    md_content.append("")
+    
+    # Footer
+    md_content.append("---")
+    md_content.append("*Generated by ArchiMate MCP Server*")
+    
+    return "\n".join(md_content)
 
 def normalize_element_type(element_type: str) -> str:
     """Normalize element type to correct ArchiMate format."""
@@ -254,20 +459,58 @@ def _validate_plantuml_renders(plantuml_code: str) -> tuple[bool, str]:
 # Core MCP Tools
 @mcp.tool()
 def create_archimate_diagram(diagram: DiagramInput) -> str:
-    """Generate complete ArchiMate diagrams from structured input with elements and relationships."""
+    """Generate complete ArchiMate diagrams from structured input with elements and relationships.
+    
+    Outputs are saved to CWD/exports/YYYYMMDD_HHMMSS/ directory with:
+    - diagram.puml: Validated PlantUML code
+    - diagram.png: Generated PNG (mandatory)
+    - architecture.md: Extended textual architecture representation with PNG link
+    - generation.log: Debug log with detailed generation info
+    - metadata.json: Diagram metadata and statistics
+    """
+    debug_log = []  # Collect debug log entries
+    start_time = time.time()
+    
+    def log_debug(level: str, message: str, details: Optional[Dict] = None):
+        """Add entry to debug log."""
+        entry = {
+            'timestamp': datetime.now().isoformat(),
+            'level': level,
+            'message': message
+        }
+        if details:
+            entry['details'] = details
+        debug_log.append(entry)
+        logger.log(getattr(logging, level.upper(), logging.INFO), message)
+    
     try:
+        # Create export directory
+        export_dir = create_diagram_export_directory()
+        log_debug('INFO', f'Created export directory: {export_dir}')
         # Clear existing diagram
         generator.clear()
+        log_debug('INFO', 'Cleared existing diagram')
         
         # Validate and add elements
+        log_debug('INFO', f'Processing {len(diagram.elements)} elements')
         for element_input in diagram.elements:
             is_valid, error_msg = validate_element_input(element_input)
             if not is_valid:
-                return f"❌ Element validation failed: {error_msg}"
+                log_debug('ERROR', f'Element validation failed: {error_msg}', {'element_id': element_input.id})
+                save_debug_log(export_dir, debug_log)
+                return json.dumps({
+                    "status": "error",
+                    "exports_dir": str(export_dir),
+                    "error_message": f"Element validation failed: {error_msg}",
+                    "files": {
+                        "log": "generation.log"
+                    }
+                }, indent=2)
             
             # Normalize inputs
             normalized_type = normalize_element_type(element_input.element_type)
             normalized_layer = normalize_layer(element_input.layer)
+            log_debug('DEBUG', f'Normalized element type: {element_input.element_type} -> {normalized_type}')
             
             # Create ArchiMate element with proper aspect
             # Determine aspect based on element type
@@ -290,12 +533,23 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
             )
             
             generator.add_element(element)
+        log_debug('INFO', f'Added {generator.get_element_count()} elements successfully')
         
         # Validate and add relationships
+        log_debug('INFO', f'Processing {len(diagram.relationships)} relationships')
         for rel_input in diagram.relationships:
             is_valid, error_msg = validate_relationship_input(rel_input)
             if not is_valid:
-                return f"❌ Relationship validation failed: {error_msg}"
+                log_debug('ERROR', f'Relationship validation failed: {error_msg}', {'relationship_id': rel_input.id})
+                save_debug_log(export_dir, debug_log)
+                return json.dumps({
+                    "status": "error",
+                    "exports_dir": str(export_dir),
+                    "error_message": f"Relationship validation failed: {error_msg}",
+                    "files": {
+                        "log": "generation.log"
+                    }
+                }, indent=2)
             
             # Normalize relationship type
             normalized_rel_type = normalize_relationship_type(rel_input.relationship_type)
@@ -311,75 +565,251 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
             )
             
             generator.add_relationship(relationship)
+        log_debug('INFO', f'Added {generator.get_relationship_count()} relationships successfully')
         
         # Generate PlantUML with proper title
         title = diagram.title or "ArchiMate Diagram"
         description = diagram.description or "Generated ArchiMate diagram"
         
+        log_debug('INFO', 'Generating PlantUML code')
         plantuml_code = generator.generate_plantuml(title=title, description=description)
+        log_debug('INFO', f'Generated PlantUML code: {len(plantuml_code)} characters')
         
-        # MANDATORY: Validate PlantUML before returning
+        # Save PlantUML code to export directory
+        puml_file = export_dir / "diagram.puml"
+        with open(puml_file, 'w', encoding='utf-8') as f:
+            f.write(plantuml_code)
+        log_debug('INFO', f'Saved PlantUML code to {puml_file}')
+        
+        # MANDATORY: Validate PlantUML before proceeding
         renders_ok, error_msg = _validate_plantuml_renders(plantuml_code)
         if not renders_ok:
-            return f"❌ Generated diagram failed validation - {error_msg}"
+            log_debug('ERROR', f'PlantUML validation failed: {error_msg}')
+            save_debug_log(export_dir, debug_log)
+            return json.dumps({
+                "status": "error",
+                "exports_dir": str(export_dir),
+                "error_message": f"Generated diagram failed validation - {error_msg}",
+                "files": {
+                    "plantuml": "diagram.puml",
+                    "log": "generation.log"
+                }
+            }, indent=2)
         
-        # Generate PNG file in /tmp
-        png_file_path = None
+        # Generate PNG and SVG files (MANDATORY - not optional)
+        png_generated = False
+        svg_generated = False
+        png_file = export_dir / "diagram.png"
+        svg_file = export_dir / "diagram.svg"
+        
         try:
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.puml', delete=False) as f:
-                f.write(plantuml_code)
-                temp_puml = f.name
-                
-            # Generate PNG using PlantUML jar if available
+            # Detect Java version
+            java_check = subprocess.run(['java', '-version'], capture_output=True, text=True, timeout=5)
+            java_info = java_check.stderr if java_check.stderr else java_check.stdout
+            log_debug('INFO', 'Java environment detected', {'java_version': java_info.split('\n')[0]})
+            
+            # Try to find PlantUML jar
             possible_jars = [
                 "/Users/patrik/Projects/archi-mcp/plantuml.jar",
                 "./plantuml.jar",
-                "/usr/local/bin/plantuml.jar"
+                "/usr/local/bin/plantuml.jar",
+                "/opt/homebrew/bin/plantuml.jar"
             ]
             
+            plantuml_jar = None
             for jar_path in possible_jars:
                 if os.path.exists(jar_path):
-                    png_output = f"/tmp/archimate_diagram_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
-                    # Use headless mode to prevent GUI on macOS
-                    cmd = [
-                        "java", 
-                        "-Djava.awt.headless=true",  # Headless mode - prevents GUI
-                        "-jar", jar_path, 
-                        "-tpng", 
-                        "-o", "/tmp", 
-                        temp_puml
-                    ]
-                    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+                    plantuml_jar = jar_path
+                    log_debug('INFO', f'Found PlantUML jar at: {jar_path}')
                     
-                    if result.returncode == 0:
-                        png_file_path = png_output
+                    # Check PlantUML version
+                    version_cmd = ['java', '-jar', jar_path, '-version']
+                    version_result = subprocess.run(version_cmd, capture_output=True, text=True, timeout=10)
+                    if version_result.returncode == 0:
+                        log_debug('INFO', 'PlantUML version info', {'version': version_result.stdout.strip()})
                     break
-                    
-            # Clean up temp file
-            if os.path.exists(temp_puml):
-                os.unlink(temp_puml)
+            
+            if not plantuml_jar:
+                raise Exception("PlantUML jar not found in any expected location")
+            
+            # Generate PNG and SVG with comprehensive logging
+            log_debug('INFO', 'Starting PNG and SVG generation')
+            generation_start = time.time()
+            
+            # PNG generation first (MANDATORY)
+            png_cmd = [
+                "java", 
+                "-Djava.awt.headless=true",  # Headless mode
+                "-jar", plantuml_jar, 
+                "-tpng", 
+                "-charset", "UTF-8",
+                str(puml_file)
+            ]
+            
+            log_debug('DEBUG', 'Executing PlantUML PNG command', {'command': ' '.join(png_cmd)})
+            
+            png_result = subprocess.run(png_cmd, capture_output=True, text=True, timeout=60, cwd=str(export_dir))
+            
+            generation_time = time.time() - generation_start
+            log_debug('INFO', f'PNG generation completed in {generation_time:.2f} seconds', {
+                'png_return_code': png_result.returncode,
+                'png_stdout_length': len(png_result.stdout),
+                'png_stderr_length': len(png_result.stderr)
+            })
+            
+            if png_result.stdout:
+                log_debug('DEBUG', 'PlantUML PNG stdout', {'output': png_result.stdout[:500]})
+            if png_result.stderr:
+                log_debug('WARNING', 'PlantUML PNG stderr', {'output': png_result.stderr[:500]})
+            
+            # Check PNG generation first - MUST succeed before continuing
+            if png_result.returncode == 0 and png_file.exists():
+                png_generated = True
+                file_size = png_file.stat().st_size
+                log_debug('INFO', f'PNG generated successfully: {file_size} bytes')
                 
+                # Only generate SVG after PNG success
+                log_debug('INFO', 'PNG successful, now generating SVG')
+                svg_generation_start = time.time()
+                
+                svg_cmd = [
+                    "java", 
+                    "-Djava.awt.headless=true",  # Headless mode
+                    "-jar", plantuml_jar, 
+                    "-tsvg", 
+                    "-charset", "UTF-8",
+                    str(puml_file)
+                ]
+                
+                log_debug('DEBUG', 'Executing PlantUML SVG command', {'command': ' '.join(svg_cmd)})
+                
+                svg_result = subprocess.run(svg_cmd, capture_output=True, text=True, timeout=60, cwd=str(export_dir))
+                
+                svg_generation_time = time.time() - svg_generation_start
+                log_debug('INFO', f'SVG generation completed in {svg_generation_time:.2f} seconds', {
+                    'svg_return_code': svg_result.returncode,
+                    'svg_stdout_length': len(svg_result.stdout),
+                    'svg_stderr_length': len(svg_result.stderr)
+                })
+                
+                if svg_result.stdout:
+                    log_debug('DEBUG', 'PlantUML SVG stdout', {'output': svg_result.stdout[:500]})
+                if svg_result.stderr:
+                    log_debug('WARNING', 'PlantUML SVG stderr', {'output': svg_result.stderr[:500]})
+                
+                # Check SVG generation 
+                if svg_result.returncode == 0 and svg_file.exists():
+                    svg_generated = True
+                    svg_file_size = svg_file.stat().st_size
+                    log_debug('INFO', f'SVG generated successfully: {svg_file_size} bytes')
+                else:
+                    log_debug('WARNING', f'SVG generation failed: return code {svg_result.returncode}, stderr: {svg_result.stderr}')
+            else:
+                raise Exception(f"PNG generation failed: return code {png_result.returncode}, stderr: {png_result.stderr}")
+                
+        except subprocess.TimeoutExpired:
+            log_debug('ERROR', 'PNG and SVG generation timed out after 60 seconds')
         except Exception as png_error:
-            logger.warning(f"PNG generation failed: {png_error}")
+            log_debug('ERROR', f'PNG and SVG generation failed: {str(png_error)}', {
+                'error_type': type(png_error).__name__
+            })
         
-        # Success response
-        result = f"✅ **ArchiMate diagram created successfully!**\n\n"
-        result += f"**Title:** {title}\n"
-        result += f"**Elements:** {generator.get_element_count()}\n"
-        result += f"**Relationships:** {generator.get_relationship_count()}\n" 
-        result += f"**Layers:** {', '.join(generator.get_layers_used())}\n"
-        result += f"**Render Status:** VERIFIED ✅\n\n"
+        # Save debug log
+        log_file = save_debug_log(export_dir, debug_log)
         
-        if png_file_path:
-            result += f"**PNG Generated:** {png_file_path}\n\n"
+        # Create metadata file
+        metadata = {
+            "title": title,
+            "description": description,
+            "generated_at": datetime.now().isoformat(),
+            "generation_time_seconds": round(time.time() - start_time, 2),
+            "statistics": {
+                "elements": generator.get_element_count(),
+                "relationships": generator.get_relationship_count(),
+                "layers": generator.get_layers_used()
+            },
+            "png_generated": png_generated,
+            "svg_generated": svg_generated,
+            "plantuml_validation": {
+                "passed": renders_ok,
+                "message": error_msg
+            }
+        }
         
-        result += f"```plantuml\n{plantuml_code}\n```"
+        metadata_file = export_dir / "metadata.json"
+        with open(metadata_file, 'w', encoding='utf-8') as f:
+            json.dump(metadata, f, indent=2)
         
-        return result
+        # Generate markdown documentation only if PNG was successful
+        markdown_generated = False
+        if png_generated:
+            log_debug('INFO', 'Generating architecture documentation')
+            markdown_content = generate_architecture_markdown(generator, title, description, "diagram.png")
+            markdown_file = export_dir / "architecture.md"
+            with open(markdown_file, 'w', encoding='utf-8') as f:
+                f.write(markdown_content)
+            log_debug('INFO', f'Saved architecture documentation to {markdown_file}')
+            markdown_generated = True
+            
+            # Cleanup failed export attempts after successful generation
+            try:
+                cleanup_failed_exports()
+                log_debug('INFO', 'Cleaned up failed export attempts')
+            except Exception as cleanup_error:
+                log_debug('WARNING', f'Failed to cleanup exports: {str(cleanup_error)}')
+        
+        # Return structured response
+        if not png_generated:
+            return json.dumps({
+                "status": "error",
+                "exports_dir": str(export_dir),
+                "error_message": "PNG generation failed - check generation.log for details. Use analyze_recent_errors tool for diagnostics.",
+                "files": {
+                    "plantuml": "diagram.puml",
+                    "svg": "diagram.svg" if svg_generated else None,
+                    "markdown": "architecture.md" if markdown_generated else None,
+                    "log": "generation.log",
+                    "metadata": "metadata.json"
+                },
+                "statistics": metadata["statistics"]
+            }, indent=2)
+        
+        return json.dumps({
+            "status": "success",
+            "exports_dir": str(export_dir),
+            "files": {
+                "plantuml": "diagram.puml",
+                "png": "diagram.png",
+                "svg": "diagram.svg" if svg_generated else None,
+                "markdown": "architecture.md" if markdown_generated else None,
+                "log": "generation.log",
+                "metadata": "metadata.json"
+            },
+            "statistics": metadata["statistics"],
+            "message": f"✅ ArchiMate diagram created successfully in {export_dir}"
+        }, indent=2)
         
     except Exception as e:
         logger.error(f"Error in create_archimate_diagram: {e}")
-        return f"❌ Error creating diagram: {str(e)}"
+        log_debug('ERROR', f'Unexpected error: {str(e)}', {
+            'error_type': type(e).__name__,
+            'traceback': str(e)
+        })
+        
+        # Save debug log even on error
+        try:
+            save_debug_log(export_dir, debug_log)
+        except:
+            pass  # If export_dir doesn't exist, skip
+        
+        return json.dumps({
+            "status": "error",
+            "exports_dir": str(export_dir) if 'export_dir' in locals() else "N/A",
+            "error_message": str(e),
+            "files": {
+                "log": "generation.log" if 'export_dir' in locals() else None
+            }
+        }, indent=2)
 
 # Removed validate_archimate_model - not needed in simplified API
 

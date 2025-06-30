@@ -305,8 +305,8 @@ class ArchiMateGenerator:
             if not plantuml_jar:
                 raise ArchiMateGenerationError("PlantUML jar not found")
             
-            # Generate PNG
-            cmd = ["java", "-jar", plantuml_jar, "-tpng", temp_puml_path]
+            # Generate PNG (with headless mode to prevent focus stealing)
+            cmd = ["java", "-Djava.awt.headless=true", "-jar", plantuml_jar, "-tpng", temp_puml_path]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
             
             if result.returncode != 0:
