@@ -42,11 +42,12 @@ class ArchiMateRelationship(BaseModel):
     label: Optional[str] = Field(None, description="Relationship label")
     properties: dict = Field(default_factory=dict, description="Additional properties")
     
-    def to_plantuml(self, translator=None) -> str:
+    def to_plantuml(self, translator=None, show_labels: bool = True) -> str:
         """Generate PlantUML code for this relationship.
         
         Args:
             translator: Optional translator for relationship labels
+            show_labels: Whether to display relationship labels and custom names
         
         Returns:
             PlantUML relationship code string
@@ -56,17 +57,22 @@ class ArchiMateRelationship(BaseModel):
         if self.direction:
             rel_type = f"{rel_type}_{self.direction.value}"
         
-        # Build label
-        label = self.label or self.description or ""
-        if label:
-            label = f'"{label}"'
-        else:
-            # Use translated relationship type as default label
-            if translator:
-                translated_rel = translator.translate_relationship(self.relationship_type.value)
-                label = f'"{translated_rel}"'
+        # Build label based on show_labels setting
+        if show_labels:
+            # Show labels - use custom label, description, or translated relationship type
+            label = self.label or self.description or ""
+            if label:
+                label = f'"{label}"'
             else:
-                label = f'"{rel_type.lower()}"'
+                # Use translated relationship type as default label
+                if translator:
+                    translated_rel = translator.translate_relationship(self.relationship_type.value)
+                    label = f'"{translated_rel}"'
+                else:
+                    label = f'"{rel_type.lower()}"'
+        else:
+            # Hide labels - use empty string for clean connections
+            label = '""'
         
         # Generate PlantUML relationship
         plantuml_code = f'Rel_{rel_type}({self.from_element}, {self.to_element}, {label})'

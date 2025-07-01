@@ -104,13 +104,15 @@ def override_relationship_labels_with_translations(diagram, translator: ArchiMat
     if translator.get_current_language() == "en":
         return  # Keep original labels for English
     
-    # For non-English languages, replace custom labels with translated relationship types
+    # For non-English languages, use translated relationship types only if no custom label exists
     for rel in diagram.relationships:
         if rel.relationship_type:
-            # Get translated relationship type
-            translated_label = translator.translate_relationship(rel.relationship_type)
-            # Override the custom label with translation
-            rel.label = translated_label
+            # Only override if no custom label is provided by client
+            if not rel.label:
+                # Get translated relationship type as fallback
+                translated_label = translator.translate_relationship(rel.relationship_type)
+                rel.label = translated_label
+            # If custom label exists, keep it (client knows best)
 
 # Environment variable defaults - only essential layout parameters
 ENV_DEFAULTS = {
@@ -120,6 +122,10 @@ ENV_DEFAULTS = {
     "ARCHI_MCP_DEFAULT_SHOW_TITLE": "false", 
     "ARCHI_MCP_DEFAULT_GROUP_BY_LAYER": "true",
     "ARCHI_MCP_DEFAULT_SPACING": "compact",
+    
+    # Display Settings
+    "ARCHI_MCP_DEFAULT_SHOW_ELEMENT_TYPES": "false",
+    "ARCHI_MCP_DEFAULT_SHOW_RELATIONSHIP_LABELS": "true",
     
     # Logging Settings
     "ARCHI_MCP_LOG_LEVEL": "INFO"
@@ -141,6 +147,72 @@ def get_layout_setting(key: str, client_value=None):
     else:
         # Client can set this value if config doesn't specify it
         return client_value if client_value is not None else get_env_setting(key)
+
+def validate_custom_relationship_name(custom_name: str, formal_relationship_type: str, language: str = "en") -> tuple[bool, str]:
+    """Validate that custom relationship name is appropriate synonym.
+    
+    Args:
+        custom_name: Client-provided custom name for relationship
+        formal_relationship_type: Formal ArchiMate relationship type (e.g. "Realization")
+        language: Language code for validation (en, sk)
+    
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    if not custom_name or not custom_name.strip():
+        return False, "Custom relationship name cannot be empty"
+    
+    # Check length - max 3 words or 30 characters
+    words = custom_name.strip().split()
+    if len(words) > 3:
+        return False, "Custom relationship name must be maximum 3 words"
+    
+    if len(custom_name) > 30:
+        return False, "Custom relationship name must be maximum 30 characters"
+    
+    # Define valid synonyms for each formal relationship type
+    relationship_synonyms = {
+        "en": {
+            "Realization": ["realizes", "implements", "fulfills", "achieves", "delivers"],
+            "Serving": ["serves", "supports", "provides", "offers", "enables"],
+            "Access": ["accesses", "uses", "reads", "writes", "queries"],
+            "Assignment": ["assigned", "allocated", "responsible", "executes"],
+            "Aggregation": ["contains", "includes", "comprises", "groups"],
+            "Composition": ["composed", "consists", "made of", "built from"],
+            "Flow": ["flows", "transfers", "sends", "passes", "moves"],
+            "Influence": ["influences", "affects", "impacts", "drives"],
+            "Triggering": ["triggers", "initiates", "starts", "causes"],
+            "Association": ["associated", "related", "connected", "linked"],
+            "Specialization": ["specializes", "extends", "inherits", "derives"]
+        },
+        "sk": {
+            "Realization": ["realizuje", "implementuje", "plní", "dosahuje", "poskytuje"],
+            "Serving": ["slúži", "podporuje", "poskytuje", "ponúka", "umožňuje"],
+            "Access": ["pristupuje", "používa", "číta", "zapisuje", "dotazuje"],
+            "Assignment": ["priradený", "pridelený", "zodpovedný", "vykonáva"],
+            "Aggregation": ["obsahuje", "zahŕňa", "tvoria", "skupiny"],
+            "Composition": ["skladá sa", "pozostáva", "tvorený z", "budovaný z"],
+            "Flow": ["preteká", "prenáša", "posiela", "prechádza", "pohybuje"],
+            "Influence": ["ovplyvňuje", "pôsobí", "vplýva", "riadi"],
+            "Triggering": ["spúšťa", "inicializuje", "začína", "spôsobuje"],
+            "Association": ["asociovaný", "súvisí", "spojený", "prepojený"],
+            "Specialization": ["špecializuje", "rozširuje", "dedí", "odvodzuje"]
+        }
+    }
+    
+    # Get synonyms for the language and relationship type
+    lang_synonyms = relationship_synonyms.get(language, relationship_synonyms["en"])
+    valid_synonyms = lang_synonyms.get(formal_relationship_type, [])
+    
+    # Check if custom name is a valid synonym (case insensitive)
+    custom_lower = custom_name.lower().strip()
+    if any(synonym.lower() in custom_lower or custom_lower in synonym.lower() 
+           for synonym in valid_synonyms):
+        return True, ""
+    
+    # If not found in predefined synonyms, it might still be acceptable
+    # Allow it but log a warning
+    return True, f"Custom name '{custom_name}' not in predefined synonyms for {formal_relationship_type}, but allowing it"
 
 def generate_layout_parameters_info():
     """Generate information about available layout parameters for the client."""
@@ -194,6 +266,26 @@ def generate_layout_parameters_info():
                 'compact': 'Tight spacing for detailed views',
                 'normal': 'Balanced spacing for general use', 
                 'wide': 'Generous spacing for presentations'
+            }
+        },
+        {
+            'env_var': 'ARCHI_MCP_DEFAULT_SHOW_ELEMENT_TYPES',
+            'param_name': 'show_element_types',
+            'description': 'Whether to display element type names (e.g. Business_Actor, Application_Component)',
+            'options': [True, False],
+            'examples': {
+                True: 'Shows element types for clarity (useful for learning/documentation)',
+                False: 'Clean elements without type labels (better for presentations)'
+            }
+        },
+        {
+            'env_var': 'ARCHI_MCP_DEFAULT_SHOW_RELATIONSHIP_LABELS',
+            'param_name': 'show_relationship_labels',
+            'description': 'Whether to display relationship type names and custom labels',
+            'options': [True, False],
+            'examples': {
+                True: 'Shows relationship names (e.g. "realizes", "serves") for clarity',
+                False: 'Clean connections without labels (minimalist view)'
             }
         }
     ]
@@ -616,12 +708,21 @@ def validate_element_input(element: ElementInput) -> tuple[bool, str]:
     
     return True, ""
 
-def validate_relationship_input(rel: RelationshipInput) -> tuple[bool, str]:
+def validate_relationship_input(rel: RelationshipInput, language: str = "en") -> tuple[bool, str]:
     """Validate relationship input and return (is_valid, error_message)."""
     normalized_type = normalize_relationship_type(rel.relationship_type)
     
     if normalized_type not in VALID_RELATIONSHIPS:
         return False, f"Invalid relationship type '{rel.relationship_type}'. Valid types: {VALID_RELATIONSHIPS}"
+    
+    # Validate custom relationship name if provided
+    if rel.label:
+        is_valid, error_msg = validate_custom_relationship_name(rel.label, normalized_type, language)
+        if not is_valid:
+            return False, f"Invalid custom relationship name: {error_msg}"
+        elif error_msg:  # Warning message
+            # Log warning but continue
+            print(f"Warning: {error_msg}")
     
     return True, ""
 
@@ -757,7 +858,9 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
             show_legend=(get_layout_setting('ARCHI_MCP_DEFAULT_SHOW_LEGEND', layout_config.get('show_legend', 'true')).lower() == 'true'),
             show_title=(get_layout_setting('ARCHI_MCP_DEFAULT_SHOW_TITLE', layout_config.get('show_title', 'true')).lower() == 'true'),
             group_by_layer=(get_layout_setting('ARCHI_MCP_DEFAULT_GROUP_BY_LAYER', layout_config.get('group_by_layer', 'false')).lower() == 'true'),
-            spacing=get_layout_setting('ARCHI_MCP_DEFAULT_SPACING', layout_config.get('spacing'))
+            spacing=get_layout_setting('ARCHI_MCP_DEFAULT_SPACING', layout_config.get('spacing')),
+            show_element_types=(get_layout_setting('ARCHI_MCP_DEFAULT_SHOW_ELEMENT_TYPES', layout_config.get('show_element_types', 'false')).lower() == 'true'),
+            show_relationship_labels=(get_layout_setting('ARCHI_MCP_DEFAULT_SHOW_RELATIONSHIP_LABELS', layout_config.get('show_relationship_labels', 'true')).lower() == 'true')
         )
         
         # Log which parameters are locked by config
@@ -767,7 +870,9 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
             ('ARCHI_MCP_DEFAULT_SHOW_LEGEND', 'show_legend'), 
             ('ARCHI_MCP_DEFAULT_SHOW_TITLE', 'show_title'),
             ('ARCHI_MCP_DEFAULT_GROUP_BY_LAYER', 'group_by_layer'),
-            ('ARCHI_MCP_DEFAULT_SPACING', 'spacing')
+            ('ARCHI_MCP_DEFAULT_SPACING', 'spacing'),
+            ('ARCHI_MCP_DEFAULT_SHOW_ELEMENT_TYPES', 'show_element_types'),
+            ('ARCHI_MCP_DEFAULT_SHOW_RELATIONSHIP_LABELS', 'show_relationship_labels')
         ]
         
         for env_var, param_name in layout_params:
@@ -825,7 +930,7 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
         # Validate and add relationships
         log_debug('INFO', f'Processing {len(diagram.relationships)} relationships')
         for rel_input in diagram.relationships:
-            is_valid, error_msg = validate_relationship_input(rel_input)
+            is_valid, error_msg = validate_relationship_input(rel_input, language)
             if not is_valid:
                 log_debug('ERROR', f'Relationship validation failed: {error_msg}', {'relationship_id': rel_input.id})
                 raise ArchiMateValidationError(f"Relationship validation failed: {error_msg}")
@@ -840,6 +945,7 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
                 to_element=rel_input.to_element,
                 relationship_type=normalized_rel_type,
                 description=rel_input.description,
+                label=rel_input.label,  # Include custom label from client
                 properties={}
             )
             

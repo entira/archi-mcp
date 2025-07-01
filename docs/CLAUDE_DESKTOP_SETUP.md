@@ -77,7 +77,10 @@ Close and restart Claude Desktop to load the new MCP server configuration.
         "ARCHI_MCP_DEFAULT_SHOW_LEGEND": "false",
         "ARCHI_MCP_DEFAULT_SHOW_TITLE": "false", 
         "ARCHI_MCP_DEFAULT_GROUP_BY_LAYER": "true",
-        "ARCHI_MCP_DEFAULT_SPACING": "compact"
+        "ARCHI_MCP_DEFAULT_SPACING": "compact",
+        
+        "ARCHI_MCP_DEFAULT_SHOW_ELEMENT_TYPES": "false",
+        "ARCHI_MCP_DEFAULT_SHOW_RELATIONSHIP_LABELS": "true"
       }
     }
   }
@@ -132,6 +135,8 @@ If you don't have `uv` installed, you can use Python directly:
 | `ARCHI_MCP_DEFAULT_SHOW_TITLE` | Show diagram title | `false` | `true`, `false` |
 | `ARCHI_MCP_DEFAULT_GROUP_BY_LAYER` | Group elements by layer | `true` | `true`, `false` |
 | `ARCHI_MCP_DEFAULT_SPACING` | Element spacing | `compact` | `compact`, `normal`, `wide` |
+| `ARCHI_MCP_DEFAULT_SHOW_ELEMENT_TYPES` | Show element type names | `false` | `true`, `false` |
+| `ARCHI_MCP_DEFAULT_SHOW_RELATIONSHIP_LABELS` | Show relationship labels | `true` | `true`, `false` |
 
 **🔒 Important:** Layout parameters configured here **cannot be overridden** by Claude requests. Your settings are enforced consistently.
 
@@ -140,6 +145,15 @@ If you don't have `uv` installed, you can use Python directly:
 - **PNG/SVG Generation**: Always enabled with high quality
 - **Validation**: Always strict validation
 - **Export Cleanup**: Always enabled
+
+### Custom Relationship Names
+The server supports custom relationship names with intelligent validation:
+- **Maximum length**: 3 words or 30 characters
+- **Language-aware**: Validates synonyms in Slovak and English
+- **Semantic validation**: Ensures custom names are appropriate synonyms of formal relationship types
+- **Examples**: 
+  - "Realization" → "implements", "fulfills", "delivers" (EN) or "realizuje", "plní" (SK)
+  - "Serving" → "supports", "provides" (EN) or "podporuje", "poskytuje" (SK)
 
 ## ✅ Verification
 
@@ -168,6 +182,8 @@ Create an ArchiMate diagram showing:
 **Expected Output:** 
 - PlantUML code with proper ArchiMate syntax
 - Layout follows your configured preferences (vertical, compact spacing, etc.)
+- Element types shown/hidden based on configuration
+- Relationship labels shown/hidden based on configuration  
 - PNG/SVG files automatically generated
 
 ### Test Full Architecture Generation
@@ -316,7 +332,9 @@ You can configure multiple MCP servers:
 
 ### ✅ What's Improved:
 - **Config-First Priority**: Your layout settings cannot be overridden by Claude requests
-- **Simplified Configuration**: Only 6 essential parameters instead of 14
+- **Enhanced Display Control**: Show/hide element types and relationship labels
+- **Custom Relationship Names**: Intelligent validation of client-provided relationship synonyms
+- **Simplified Configuration**: Only essential parameters with smart defaults
 - **Always-On Features**: Language detection, PNG/SVG generation, validation - no configuration needed
 - **Better Performance**: Streamlined parameter handling
 

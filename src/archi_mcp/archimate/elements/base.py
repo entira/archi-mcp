@@ -36,8 +36,11 @@ class ArchiMateElement(BaseModel):
     properties: Dict[str, Any] = Field(default_factory=dict, description="Additional properties")
     documentation: Optional[str] = Field(None, description="Element documentation")
     
-    def to_plantuml(self) -> str:
+    def to_plantuml(self, show_element_type: bool = False) -> str:
         """Generate PlantUML code for this element.
+        
+        Args:
+            show_element_type: Whether to display element type name in diagram
         
         Returns:
             PlantUML code string
@@ -56,7 +59,14 @@ class ArchiMateElement(BaseModel):
         # Generate PlantUML archimate element
         # Ensure proper UTF-8 encoding for names with diacritics
         safe_name = self.name.encode('utf-8').decode('utf-8')
-        plantuml_code = f'{plantuml_element_type}({self.id}, "{safe_name}"{stereotype_str})'
+        
+        # Add element type to name if requested
+        if show_element_type:
+            display_name = f"{safe_name}\\n<<{self.element_type}>>"
+        else:
+            display_name = safe_name
+        
+        plantuml_code = f'{plantuml_element_type}({self.id}, "{display_name}"{stereotype_str})'
         
         return plantuml_code
     

@@ -16,6 +16,8 @@ class DiagramLayout(BaseModel):
     show_title: bool = True
     group_by_layer: bool = False
     spacing: str = "normal"  # compact, normal, wide
+    show_element_types: bool = False  # show element type names (e.g. Business_Actor)
+    show_relationship_labels: bool = True  # show relationship labels and custom names
 
 
 class ArchiMateGenerator:
@@ -148,7 +150,7 @@ class ArchiMateGenerator:
         """Generate elements in sequential order."""
         lines.append("' Elements")
         for element in self.elements.values():
-            lines.append(element.to_plantuml())
+            lines.append(element.to_plantuml(show_element_type=self.layout.show_element_types))
     
     def _generate_elements_by_layer(self, lines: List[str]) -> None:
         """Generate elements grouped by layer."""
@@ -166,7 +168,7 @@ class ArchiMateGenerator:
                 translated_layer = self.translator.translate_layer(layer_name)
                 lines.append(f"package \"{translated_layer}\" {{")
                 for element in layer_elements:
-                    lines.append("  " + element.to_plantuml())
+                    lines.append("  " + element.to_plantuml(show_element_type=self.layout.show_element_types))
                 lines.append("}")
                 lines.append("")
         else:
@@ -175,7 +177,7 @@ class ArchiMateGenerator:
                 translated_layer = self.translator.translate_layer(layer_name)
                 lines.append(f"' {translated_layer}")
                 for element in layer_elements:
-                    lines.append(element.to_plantuml())
+                    lines.append(element.to_plantuml(show_element_type=self.layout.show_element_types))
                 lines.append("")
     
     def _generate_relationships(self, lines: List[str]) -> None:
@@ -185,7 +187,7 @@ class ArchiMateGenerator:
             
         lines.append("' Relationships")
         for relationship in self.relationships:
-            lines.append(relationship.to_plantuml(self.translator))
+            lines.append(relationship.to_plantuml(self.translator, show_labels=self.layout.show_relationship_labels))
     
     def _generate_legend(self, lines: List[str]) -> None:
         """Generate diagram legend."""
