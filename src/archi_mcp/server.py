@@ -34,10 +34,122 @@ from .archimate import (
     ARCHIMATE_RELATIONSHIPS,
 )
 from .archimate.elements.base import ArchiMateLayer, ArchiMateAspect
+from .i18n import ArchiMateTranslator, AVAILABLE_LANGUAGES
+
+def detect_language_from_content(diagram) -> str:
+    """Automatically detect language from diagram content.
+    
+    Args:
+        diagram: DiagramInput with elements and relationships
+        
+    Returns:
+        Language code (e.g., "sk", "en")
+    """
+    # Slovak language indicators
+    slovak_indicators = [
+        # Common Slovak words
+        'zákazník', 'podpora', 'služba', 'proces', 'objekt', 'komponent',
+        'podnikový', 'zákaznícky', 'proaktívna', 'inteligentý', 'znalostná',
+        'konverzačná', 'vylepšený', 'starostlivosť', 'riešenie', 'problémov',
+        'schopnosť', 'platforma', 'báza', 'profil', 'analýza', 'nálady',
+        'spokojnosť', 'sledovanie', 'emócií', 'monitoruje', 'aktualizuje',
+        'pristupuje', 'spúšťa', 'umožňuje', 'napájaný', 'asistovaný',
+        # Slovak diacritics patterns
+        'ň', 'ť', 'ž', 'č', 'š', 'ľ', 'ý', 'á', 'í', 'é', 'ó', 'ú', 'ô'
+    ]
+    
+    # Collect all text content
+    all_text = []
+    
+    # Add element names and descriptions
+    for element in diagram.elements:
+        if element.name:
+            all_text.append(element.name.lower())
+        if element.description:
+            all_text.append(element.description.lower())
+    
+    # Add relationship labels and descriptions
+    for rel in diagram.relationships:
+        if rel.label:
+            all_text.append(rel.label.lower())
+        if rel.description:
+            all_text.append(rel.description.lower())
+    
+    # Add title and description
+    if diagram.title:
+        all_text.append(diagram.title.lower())
+    if diagram.description:
+        all_text.append(diagram.description.lower())
+    
+    # Join all text
+    content = ' '.join(all_text)
+    
+    # Count Slovak indicators
+    slovak_score = sum(1 for indicator in slovak_indicators if indicator in content)
+    
+    # If significant Slovak content detected, return Slovak
+    if slovak_score >= 3:  # Threshold for Slovak detection
+        return "sk"
+    
+    # Default to English
+    return "en"
+
+def override_relationship_labels_with_translations(diagram, translator: ArchiMateTranslator) -> None:
+    """Override custom relationship labels with translated versions if non-English language detected.
+    
+    Args:
+        diagram: DiagramInput to modify
+        translator: Translator to use for relationship type translations
+    """
+    if translator.get_current_language() == "en":
+        return  # Keep original labels for English
+    
+    # For non-English languages, replace custom labels with translated relationship types
+    for rel in diagram.relationships:
+        if rel.relationship_type:
+            # Get translated relationship type
+            translated_label = translator.translate_relationship(rel.relationship_type)
+            # Override the custom label with translation
+            rel.label = translated_label
 
 # Setup logging
 setup_logging(level="INFO")
 logger = get_logger("archi_mcp.server")
+
+# Environment variable defaults
+ENV_DEFAULTS = {
+    # Layout Settings
+    "ARCHI_MCP_DEFAULT_DIRECTION": "horizontal",
+    "ARCHI_MCP_DEFAULT_SHOW_LEGEND": "true",
+    "ARCHI_MCP_DEFAULT_SHOW_TITLE": "true", 
+    "ARCHI_MCP_DEFAULT_GROUP_BY_LAYER": "false",
+    "ARCHI_MCP_DEFAULT_SPACING": "normal",
+    
+    # Language Settings
+    "ARCHI_MCP_DEFAULT_LANGUAGE": "en",
+    "ARCHI_MCP_AUTO_DETECT_LANGUAGE": "true",
+    
+    # Output Settings
+    "ARCHI_MCP_GENERATE_PNG": "true",
+    "ARCHI_MCP_GENERATE_SVG": "true",
+    "ARCHI_MCP_PNG_QUALITY": "high",
+    
+    # Export Settings
+    "ARCHI_MCP_EXPORT_FORMAT": "full",
+    "ARCHI_MCP_CLEANUP_EXPORTS": "true",
+    
+    # Validation Settings
+    "ARCHI_MCP_PLANTUML_VALIDATION": "strict",
+    "ARCHI_MCP_ELEMENT_VALIDATION": "strict",
+    "ARCHI_MCP_STRICT_VALIDATION": "true",
+    
+    # Logging Settings
+    "ARCHI_MCP_LOG_LEVEL": "INFO"
+}
+
+def get_env_setting(key: str) -> str:
+    """Get environment setting with fallback to default."""
+    return os.getenv(key, ENV_DEFAULTS.get(key, ""))
 
 # Initialize FastMCP server
 mcp = FastMCP("archi-mcp")
@@ -71,6 +183,7 @@ class DiagramInput(BaseModel):
     title: Optional[str] = Field(None, description="Diagram title")
     description: Optional[str] = Field(None, description="Diagram description")
     layout: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Layout configuration")
+    language: Optional[str] = Field("en", description="Language code for translations (en, sk)")
 
 # Fixed element type mapping based on test errors
 ELEMENT_TYPE_MAPPING = {
@@ -506,6 +619,12 @@ def _validate_png_file(png_file_path: Path) -> tuple[bool, str]:
 def create_archimate_diagram(diagram: DiagramInput) -> str:
     """Generate complete ArchiMate diagrams from structured input with elements and relationships.
     
+    Automatically detects language from content and translates layer names and relationship labels.
+    Supports Slovak language detection via Slovak text patterns and diacritics.
+    When Slovak content detected: layer names and relationship labels are translated to Slovak.
+    
+    Available languages: en (English), sk (Slovak) - detected automatically
+    
     Outputs are saved to CWD/exports/YYYYMMDD_HHMMSS/ directory with:
     - diagram.puml: Validated PlantUML code
     - diagram.png: Generated PNG (mandatory)
@@ -529,8 +648,44 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
         logger.log(getattr(logging, level.upper(), logging.INFO), message)
     
     try:
+        # Automatic language detection from content (if enabled)
+        auto_detect = get_env_setting('ARCHI_MCP_AUTO_DETECT_LANGUAGE').lower() == 'true'
+        detected_language = detect_language_from_content(diagram) if auto_detect else "en"
+        
+        # Use detected language or fallback to provided language parameter or environment default
+        default_lang = get_env_setting('ARCHI_MCP_DEFAULT_LANGUAGE')
+        language = detected_language if (auto_detect and detected_language != "en") else (diagram.language or default_lang)
+        if language not in AVAILABLE_LANGUAGES:
+            language = "en"  # Fallback to English
+        translator = ArchiMateTranslator(language)
+        log_debug('INFO', f'Language detection: detected={detected_language}, final={language}')
+        
+        # Override relationship labels with translations if non-English
+        override_relationship_labels_with_translations(diagram, translator)
+        if language != "en":
+            log_debug('INFO', f'Overrode relationship labels with {language} translations')
+        
+        # Create generator with translator
+        generator_with_translator = ArchiMateGenerator(translator)
+        log_debug('INFO', f'Set up translator for language: {language}')
+        
+        # Configure layout from environment variables and diagram input
+        from .archimate.generator import DiagramLayout
+        layout_config = diagram.layout or {}
+        
+        layout = DiagramLayout(
+            direction=layout_config.get('direction', get_env_setting('ARCHI_MCP_DEFAULT_DIRECTION')),
+            show_legend=(layout_config.get('show_legend', get_env_setting('ARCHI_MCP_DEFAULT_SHOW_LEGEND').lower() == 'true')),
+            show_title=(layout_config.get('show_title', get_env_setting('ARCHI_MCP_DEFAULT_SHOW_TITLE').lower() == 'true')),
+            group_by_layer=(layout_config.get('group_by_layer', get_env_setting('ARCHI_MCP_DEFAULT_GROUP_BY_LAYER').lower() == 'true')),
+            spacing=layout_config.get('spacing', get_env_setting('ARCHI_MCP_DEFAULT_SPACING'))
+        )
+        
+        generator_with_translator.set_layout(layout)
+        log_debug('INFO', f'Set layout: direction={layout.direction}, legend={layout.show_legend}, group_by_layer={layout.group_by_layer}')
+        
         # Clear existing diagram first
-        generator.clear()
+        generator_with_translator.clear()
         log_debug('INFO', 'Cleared existing diagram')
         
         # Validate and add elements
@@ -566,8 +721,8 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
                 properties=element_input.properties or {}
             )
             
-            generator.add_element(element)
-        log_debug('INFO', f'Added {generator.get_element_count()} elements successfully')
+            generator_with_translator.add_element(element)
+        log_debug('INFO', f'Added {generator_with_translator.get_element_count()} elements successfully')
         
         # Validate and add relationships
         log_debug('INFO', f'Processing {len(diagram.relationships)} relationships')
@@ -590,15 +745,15 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
                 properties={}
             )
             
-            generator.add_relationship(relationship)
-        log_debug('INFO', f'Added {generator.get_relationship_count()} relationships successfully')
+            generator_with_translator.add_relationship(relationship)
+        log_debug('INFO', f'Added {generator_with_translator.get_relationship_count()} relationships successfully')
         
         # Generate PlantUML with proper title
         title = diagram.title or "ArchiMate Diagram"
         description = diagram.description or "Generated ArchiMate diagram"
         
         log_debug('INFO', 'Generating PlantUML code')
-        plantuml_code = generator.generate_plantuml(title=title, description=description)
+        plantuml_code = generator_with_translator.generate_plantuml(title=title, description=description)
         log_debug('INFO', f'Generated PlantUML code: {len(plantuml_code)} characters')
         
         # MANDATORY: Validate PlantUML before proceeding
@@ -606,6 +761,13 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
         if not renders_ok:
             log_debug('ERROR', f'PlantUML validation failed: {error_msg}')
             raise ArchiMateGenerationError(f"Generated diagram failed validation - {error_msg}")
+        
+        # Check environment settings for PNG/SVG generation
+        generate_png = get_env_setting('ARCHI_MCP_GENERATE_PNG').lower() == 'true'
+        generate_svg = get_env_setting('ARCHI_MCP_GENERATE_SVG').lower() == 'true'
+        png_quality = get_env_setting('ARCHI_MCP_PNG_QUALITY')  # low, normal, high
+        
+        log_debug('INFO', f'Generation settings: PNG={generate_png}, SVG={generate_svg}, quality={png_quality}')
         
         # First, test PNG generation to ensure it works before creating export directory
         png_file_path = None
@@ -632,7 +794,7 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
                     log_debug('INFO', f'Found PlantUML jar at: {jar_path}')
                     
                     # Check PlantUML version
-                    version_cmd = ['java', '-jar', jar_path, '-version']
+                    version_cmd = ['java', '-Djava.awt.headless=true', '-jar', jar_path, '-version']
                     version_result = subprocess.run(version_cmd, capture_output=True, text=True, timeout=10)
                     if version_result.returncode == 0:
                         log_debug('INFO', 'PlantUML version info', {'version': version_result.stdout.strip()})
@@ -641,8 +803,11 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
             if not plantuml_jar:
                 raise Exception("PlantUML jar not found in any expected location")
             
-            # Generate PNG using temporary file first (MANDATORY)
-            log_debug('INFO', 'Starting PNG generation test')
+            # Generate PNG using temporary file first (if enabled)
+            if generate_png:
+                log_debug('INFO', 'Starting PNG generation test')
+            else:
+                log_debug('INFO', 'PNG generation disabled by configuration')
             generation_start = time.time()
             
             # Create temporary PlantUML file for testing
@@ -781,9 +946,9 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
             "generated_at": datetime.now().isoformat(),
             "generation_time_seconds": round(time.time() - start_time, 2),
             "statistics": {
-                "elements": generator.get_element_count(),
-                "relationships": generator.get_relationship_count(),
-                "layers": generator.get_layers_used()
+                "elements": generator_with_translator.get_element_count(),
+                "relationships": generator_with_translator.get_relationship_count(),
+                "layers": generator_with_translator.get_layers_used()
             },
             "png_generated": True,  # Always true if we reach this point
             "svg_generated": svg_generated,
@@ -799,7 +964,7 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
         
         # Generate markdown documentation (PNG was successful if we reach this point)
         log_debug('INFO', 'Generating architecture documentation')
-        markdown_content = generate_architecture_markdown(generator, title, description, "diagram.png")
+        markdown_content = generate_architecture_markdown(generator_with_translator, title, description, "diagram.png")
         markdown_file = export_dir / "architecture.md"
         with open(markdown_file, 'w', encoding='utf-8') as f:
             f.write(markdown_content)

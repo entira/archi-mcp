@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from .elements.base import ArchiMateElement
 from .relationships import ArchiMateRelationship
 from ..utils.exceptions import ArchiMateGenerationError
+from ..i18n import ArchiMateTranslator
 
 
 class DiagramLayout(BaseModel):
@@ -20,11 +21,16 @@ class DiagramLayout(BaseModel):
 class ArchiMateGenerator:
     """Generator for PlantUML ArchiMate diagrams."""
     
-    def __init__(self):
-        """Initialize the ArchiMate generator."""
+    def __init__(self, translator: Optional[ArchiMateTranslator] = None):
+        """Initialize the ArchiMate generator.
+        
+        Args:
+            translator: Optional translator for multilingual support
+        """
         self.elements: Dict[str, ArchiMateElement] = {}
         self.relationships: List[ArchiMateRelationship] = []
         self.layout: DiagramLayout = DiagramLayout()
+        self.translator = translator or ArchiMateTranslator("en")
         
     def add_element(self, element: ArchiMateElement) -> None:
         """Add an ArchiMate element to the diagram.
@@ -157,7 +163,8 @@ class ArchiMateGenerator:
         # Generate each layer with grouping for multi-layer diagrams
         if len(layers) > 1:
             for layer_name, layer_elements in layers.items():
-                lines.append(f"package \"{layer_name} Layer\" {{")
+                translated_layer = self.translator.translate_layer(layer_name)
+                lines.append(f"package \"{translated_layer}\" {{")
                 for element in layer_elements:
                     lines.append("  " + element.to_plantuml())
                 lines.append("}")
@@ -165,7 +172,8 @@ class ArchiMateGenerator:
         else:
             # Single layer - no grouping needed
             for layer_name, layer_elements in layers.items():
-                lines.append(f"' {layer_name} Layer")
+                translated_layer = self.translator.translate_layer(layer_name)
+                lines.append(f"' {translated_layer}")
                 for element in layer_elements:
                     lines.append(element.to_plantuml())
                 lines.append("")
@@ -177,7 +185,7 @@ class ArchiMateGenerator:
             
         lines.append("' Relationships")
         for relationship in self.relationships:
-            lines.append(relationship.to_plantuml())
+            lines.append(relationship.to_plantuml(self.translator))
     
     def _generate_legend(self, lines: List[str]) -> None:
         """Generate diagram legend."""
@@ -187,7 +195,8 @@ class ArchiMateGenerator:
         # Show layers present in diagram
         layers_used = set(element.layer.value for element in self.elements.values())
         for layer in sorted(layers_used):
-            lines.append(f"  {layer} Layer")
+            translated_layer = self.translator.translate_layer(layer)
+            lines.append(f"  {translated_layer}")
         
         lines.append("end legend")
     

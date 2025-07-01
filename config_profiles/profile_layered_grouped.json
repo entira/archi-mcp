@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "archi-mcp": {
+      "command": "uv",
+      "args": ["run", "--directory", "/Users/patrik/Projects/archi-mcp", "python", "-m", "archi_mcp.server"],
+      "cwd": "/Users/patrik/Projects/archi-mcp",
+      "env": {
+        "ARCHI_MCP_LOG_LEVEL": "DEBUG",
+        
+        "ARCHI_MCP_DEFAULT_DIRECTION": "layered",
+        "ARCHI_MCP_DEFAULT_SHOW_LEGEND": "true",
+        "ARCHI_MCP_DEFAULT_SHOW_TITLE": "true",
+        "ARCHI_MCP_DEFAULT_GROUP_BY_LAYER": "true",
+        "ARCHI_MCP_DEFAULT_SPACING": "normal",
+        
+        "ARCHI_MCP_AUTO_DETECT_LANGUAGE": "true"
+      }
+    }
+  }
+}

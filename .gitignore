@@ -74,3 +74,10 @@ config.local.json
 *.png
 *.pdf
 diagrams/output/
+
+# Generated exports and examples (temporary files)
+exports/
+examples/*/20*/
+examples/failed_attempts/
+*.puml
+!docs/*.puml

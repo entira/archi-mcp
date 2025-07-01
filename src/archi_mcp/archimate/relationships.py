@@ -42,8 +42,11 @@ class ArchiMateRelationship(BaseModel):
     label: Optional[str] = Field(None, description="Relationship label")
     properties: dict = Field(default_factory=dict, description="Additional properties")
     
-    def to_plantuml(self) -> str:
+    def to_plantuml(self, translator=None) -> str:
         """Generate PlantUML code for this relationship.
+        
+        Args:
+            translator: Optional translator for relationship labels
         
         Returns:
             PlantUML relationship code string
@@ -58,8 +61,12 @@ class ArchiMateRelationship(BaseModel):
         if label:
             label = f'"{label}"'
         else:
-            # Use relationship type as default label
-            label = f'"{rel_type.lower()}"'
+            # Use translated relationship type as default label
+            if translator:
+                translated_rel = translator.translate_relationship(self.relationship_type.value)
+                label = f'"{translated_rel}"'
+            else:
+                label = f'"{rel_type.lower()}"'
         
         # Generate PlantUML relationship
         plantuml_code = f'Rel_{rel_type}({self.from_element}, {self.to_element}, {label})'

@@ -1,0 +1,32 @@
+{
+  "mcpServers": {
+    "archi-mcp": {
+      "command": "uv",
+      "args": ["run", "--directory", "/Users/patrik/Projects/archi-mcp", "python", "-m", "archi_mcp.server"],
+      "cwd": "/Users/patrik/Projects/archi-mcp",
+      "env": {
+        "ARCHI_MCP_LOG_LEVEL": "INFO",
+        "ARCHI_MCP_STRICT_VALIDATION": "true",
+        
+        "ARCHI_MCP_DEFAULT_DIRECTION": "vertical",
+        "ARCHI_MCP_DEFAULT_SHOW_LEGEND": "false",
+        "ARCHI_MCP_DEFAULT_SHOW_TITLE": "false",
+        "ARCHI_MCP_DEFAULT_GROUP_BY_LAYER": "true",
+        "ARCHI_MCP_DEFAULT_SPACING": "wide",
+        
+        "ARCHI_MCP_DEFAULT_LANGUAGE": "sk",
+        "ARCHI_MCP_AUTO_DETECT_LANGUAGE": "false",
+        
+        "ARCHI_MCP_GENERATE_PNG": "true",
+        "ARCHI_MCP_GENERATE_SVG": "true",
+        "ARCHI_MCP_PNG_QUALITY": "high",
+        
+        "ARCHI_MCP_EXPORT_FORMAT": "full",
+        "ARCHI_MCP_CLEANUP_EXPORTS": "true",
+        
+        "ARCHI_MCP_PLANTUML_VALIDATION": "strict",
+        "ARCHI_MCP_ELEMENT_VALIDATION": "strict"
+      }
+    }
+  }
+}
