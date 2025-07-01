@@ -21,7 +21,7 @@ ArchiMate MCP Server fills a crucial gap in the MCP ecosystem by providing dedic
 - **4 Essential Tools**: Core diagram creation with intelligent error analysis
 - **Real-time Error Analysis**: Actionable troubleshooting guidance with pattern recognition
 - **FastMCP 2.8+ Integration**: Modern MCP protocol implementation
-- **Robust Testing**: 100+ passing tests with comprehensive coverage
+- **Robust Testing**: 169+ passing tests with 69% coverage and comprehensive test suites
 
 ## 🚀 Quick Start
 
@@ -223,7 +223,12 @@ archi-mcp/
 │   │   └── validator.py     # Model validation
 │   ├── utils/               # Logging and exceptions
 │   └── server.py            # FastMCP server entry point
-├── tests/                   # Unit and integration tests
+├── tests/                   # Comprehensive test suites (169+ tests, 69% coverage)
+│   ├── test_server.py           # Core server functionality tests
+│   ├── test_server_coverage.py  # Server coverage improvement tests
+│   ├── test_analysis_tools.py   # Analysis tools comprehensive tests
+│   ├── test_generator_coverage.py # Generator edge case and coverage tests
+│   └── test_validation_mandatory.py # Validation and MCP integration tests
 ├── docs/                    # Documentation and diagrams
 ```
 

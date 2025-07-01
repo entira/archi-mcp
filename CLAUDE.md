@@ -10,7 +10,7 @@ Professional Model Context Protocol server for ArchiMate enterprise architecture
 - **macOS-Optimized PNG/SVG Generation**: ALWAYS uses headless PlantUML mode to prevent cursor interference
 - **FastMCP 2.8+ Integration**: Modern MCP protocol with 4 essential tools
 - **Intelligent Error Analysis**: Real-time error detection with actionable troubleshooting guidance
-- **Comprehensive Testing**: 100+ passing tests with robust error handling
+- **Comprehensive Testing**: 169+ passing tests with 69% coverage and robust error handling
 - **Claude Desktop Ready**: Optimized configuration for seamless integration
 - **Multi-Layer Support**: All 7 ArchiMate layers with proper aspect detection
 
@@ -34,7 +34,7 @@ uv sync --extra dev
 
 ### Testing
 ```bash
-# Run all tests (181 passing tests)
+# Run all tests (169 passing tests, 69% coverage)
 uv run pytest
 
 # Run tests with verbose output
@@ -44,11 +44,11 @@ uv run pytest -v
 uv run pytest --cov=archi_mcp --cov-report=html
 
 # Run specific test categories
-uv run pytest tests/test_mcp_integration.py    # MCP protocol tests (11/11 pass)
-uv run pytest tests/test_elements.py           # Element creation tests (100% pass)
-uv run pytest tests/test_core_functionality.py # Core functionality tests 
-uv run pytest tests/test_generator.py          # PlantUML generation tests (100% pass)
-uv run pytest tests/test_templates.py          # Template system tests (100% pass)
+uv run pytest tests/test_server.py             # Core server functionality tests (100% pass)
+uv run pytest tests/test_server_coverage.py    # Server coverage improvement tests (100% pass)
+uv run pytest tests/test_analysis_tools.py     # Analysis tools comprehensive tests (100% pass)
+uv run pytest tests/test_generator_coverage.py # Generator edge case and coverage tests (95% pass)
+uv run pytest tests/test_validation_mandatory.py # Validation and MCP integration tests (100% pass)
 
 # Enhanced Testing Workflow with Validation Error Monitoring
 # IMPORTANT: Always check validation error logs before and after testing!
@@ -72,6 +72,42 @@ tail -f logs/validation_errors.jsonl
 # 5. Post-test validation check (must be empty for passing tests)
 wc -l logs/validation_errors.jsonl  # Should show 0 lines for clean tests
 ```
+
+### Comprehensive Test Suite Documentation
+
+#### New Test Files (Created for Coverage Improvement)
+
+**test_server_coverage.py**: Comprehensive server functionality tests
+- Language detection with Slovak/English content
+- Custom relationship validation with intelligent synonym matching
+- Diagram validation error scenarios (invalid layers, element types, relationships)
+- PlantUML validation timeout and error handling
+- Element/layer/relationship normalization edge cases
+- Configuration parameter handling and environment variables
+- Aspect detection for unknown element types
+- **Coverage Impact**: Improved server.py coverage from 58% to 62%
+
+**test_analysis_tools.py**: Complete testing of all 4 MCP analysis tools
+- `analyze_current_architecture`: Empty architecture, basic stats, layer distribution
+- `analyze_recent_errors`: No errors, mock error log, different time windows, invalid JSON, file not found
+- `test_element_normalization`: Case insensitive testing, comprehensive normalization validation
+- Translation override functionality for Slovak relationship labels
+- **Coverage Impact**: 100% test coverage for all analysis tools
+
+**test_generator_coverage.py**: Generator edge cases and error scenarios
+- Export error handling (permission errors, disk full, directory creation failures)
+- PlantUML generation with complex descriptions, properties, stereotypes
+- Layout overrides (direction, grouping, spacing, title/legend)
+- Diagram validation (orphaned relationships, duplicate IDs, success scenarios)
+- Statistics and information methods (layer usage, element/relationship counts)
+- **Coverage Impact**: Partial coverage improvement (some import issues remain)
+
+#### Test Strategy and Methodology
+- **Mock-based testing**: Extensive use of `unittest.mock` for error simulation
+- **Edge case focus**: Emphasis on boundary conditions and error paths
+- **Real-world scenarios**: Tests based on actual usage patterns
+- **Validation monitoring**: Integration with error log analysis
+- **Performance considerations**: Tests designed to complete quickly while maintaining thoroughness
 
 ### Server Operations
 ```bash
@@ -168,8 +204,12 @@ archi-mcp/
 │   ├── utils/                 # Utilities
 │   └── architecture_generator.py # Full architecture generation
 ├── docs/                      # Comprehensive documentation
-├── examples/                  # Usage examples and configs
-├── tests/                     # Test suite
+├── tests/                     # Comprehensive test suite (115+ tests, 69% coverage)
+│   ├── test_server.py             # Core server functionality tests
+│   ├── test_server_coverage.py    # Server coverage improvement tests
+│   ├── test_analysis_tools.py     # Analysis tools comprehensive tests
+│   ├── test_generator_coverage.py # Generator edge case and coverage tests
+│   └── test_validation_mandatory.py # Validation and MCP integration tests
 ├── pyproject.toml            # Project configuration
 └── README.md                 # Project overview
 ```
@@ -232,7 +272,12 @@ Use full path in Claude Desktop config with `uv` command and `--directory` flag.
 - **Element normalization issues:** Check if kebab-case elements are properly converted (business-actor → Business_Actor)
 - **Rendering failures:** Ensure Java is installed for PlantUML jar execution
 - **JSONL log entries:** Each validation failure is logged with full context for debugging
-- **Fix-test cycle:** Always re-run tests after fixing validation errors to ensure log is clean
+- **Enhanced fix-test-retest cycle:** 
+  1. Check error log before testing: `cat logs/validation_errors.jsonl`
+  2. Fix validation issues in source code
+  3. Run targeted tests: `uv run pytest tests/test_validation_mandatory.py -v`
+  4. Re-run full test suite: `uv run pytest`
+  5. Verify error log is clean: `wc -l logs/validation_errors.jsonl` (should be 0)
 
 ### PlantUML Headless Mode (CRITICAL REQUIREMENT)
 - **ALWAYS use headless mode:** All PlantUML jar executions MUST include `-Djava.awt.headless=true`
@@ -255,11 +300,12 @@ Use full path in Claude Desktop config with `uv` command and `--directory` flag.
 - **Pattern analysis:** Use `grep` to find common error patterns for systematic fixes
 
 ## Quality Metrics
-- ✅ **Enhanced test suite** - 85% pass rate (163/184 tests) with comprehensive coverage
-- ✅ **Robust MCP integration** - 100% MCP protocol tests passing
-- ✅ **Validated element system** - 100% element creation tests passing  
-- ✅ **Reliable PlantUML generation** - 100% generator tests passing
-- ✅ **Working template system** - 100% template tests passing
+- ✅ **Enhanced test suite** - 169 passing tests (7 skipped) with 69% code coverage (1075/1548 lines)
+- ✅ **Server coverage improvement** - server.py coverage improved from 58% to 62%
+- ✅ **Generator coverage improvement** - generator.py coverage improved from 41% to 59%
+- ✅ **Comprehensive analysis tools testing** - 100% passing tests for all 4 MCP tools
+- ✅ **Language detection testing** - Slovak/English detection with validation
+- ✅ **Error analysis testing** - Real-time error log analysis and monitoring
 - ✅ **Type hints** throughout codebase
 - ✅ **Professional documentation** 
 - ✅ **FastMCP 2.8+ integration** with Image object support

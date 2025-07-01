@@ -966,6 +966,8 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
             log_debug('ERROR', f'PlantUML validation failed: {error_msg}')
             raise ArchiMateGenerationError(f"Generated diagram failed validation - {error_msg}")
         
+        log_debug('INFO', f'PlantUML validation VERIFIED ✅: {error_msg}')
+        
         # Always generate PNG/SVG (no configuration needed)
         generate_png = True  # Always generate PNG
         generate_svg = True  # Always generate SVG
