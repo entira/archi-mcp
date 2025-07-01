@@ -12,7 +12,7 @@
         "ARCHI_MCP_DEFAULT_SHOW_LEGEND": "false",
         "ARCHI_MCP_DEFAULT_SHOW_TITLE": "false",
         "ARCHI_MCP_DEFAULT_GROUP_BY_LAYER": "true",
-        "ARCHI_MCP_DEFAULT_SPACING": "wide",
+        "ARCHI_MCP_DEFAULT_SPACING": "compact",
         
         "ARCHI_MCP_DEFAULT_LANGUAGE": "sk",
         "ARCHI_MCP_AUTO_DETECT_LANGUAGE": "false",
