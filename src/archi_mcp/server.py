@@ -112,36 +112,14 @@ def override_relationship_labels_with_translations(diagram, translator: ArchiMat
             # Override the custom label with translation
             rel.label = translated_label
 
-# Setup logging
-setup_logging(level="INFO")
-logger = get_logger("archi_mcp.server")
-
-# Environment variable defaults
+# Environment variable defaults - only essential layout parameters
 ENV_DEFAULTS = {
-    # Layout Settings
-    "ARCHI_MCP_DEFAULT_DIRECTION": "horizontal",
-    "ARCHI_MCP_DEFAULT_SHOW_LEGEND": "true",
-    "ARCHI_MCP_DEFAULT_SHOW_TITLE": "true", 
-    "ARCHI_MCP_DEFAULT_GROUP_BY_LAYER": "false",
-    "ARCHI_MCP_DEFAULT_SPACING": "normal",
-    
-    # Language Settings
-    "ARCHI_MCP_DEFAULT_LANGUAGE": "en",
-    "ARCHI_MCP_AUTO_DETECT_LANGUAGE": "true",
-    
-    # Output Settings
-    "ARCHI_MCP_GENERATE_PNG": "true",
-    "ARCHI_MCP_GENERATE_SVG": "true",
-    "ARCHI_MCP_PNG_QUALITY": "high",
-    
-    # Export Settings
-    "ARCHI_MCP_EXPORT_FORMAT": "full",
-    "ARCHI_MCP_CLEANUP_EXPORTS": "true",
-    
-    # Validation Settings
-    "ARCHI_MCP_PLANTUML_VALIDATION": "strict",
-    "ARCHI_MCP_ELEMENT_VALIDATION": "strict",
-    "ARCHI_MCP_STRICT_VALIDATION": "true",
+    # Layout Settings (these are the only configurable parameters)
+    "ARCHI_MCP_DEFAULT_DIRECTION": "vertical",
+    "ARCHI_MCP_DEFAULT_SHOW_LEGEND": "false",
+    "ARCHI_MCP_DEFAULT_SHOW_TITLE": "false", 
+    "ARCHI_MCP_DEFAULT_GROUP_BY_LAYER": "true",
+    "ARCHI_MCP_DEFAULT_SPACING": "compact",
     
     # Logging Settings
     "ARCHI_MCP_LOG_LEVEL": "INFO"
@@ -150,6 +128,106 @@ ENV_DEFAULTS = {
 def get_env_setting(key: str) -> str:
     """Get environment setting with fallback to default."""
     return os.getenv(key, ENV_DEFAULTS.get(key, ""))
+
+def is_config_locked(key: str) -> bool:
+    """Check if environment variable is locked by config (cannot be overridden by client)."""
+    return os.getenv(key) is not None
+
+def get_layout_setting(key: str, client_value=None):
+    """Get layout setting with config-first priority."""
+    if is_config_locked(key):
+        # Config has priority - client cannot override
+        return get_env_setting(key)
+    else:
+        # Client can set this value if config doesn't specify it
+        return client_value if client_value is not None else get_env_setting(key)
+
+def generate_layout_parameters_info():
+    """Generate information about available layout parameters for the client."""
+    layout_params = [
+        {
+            'env_var': 'ARCHI_MCP_DEFAULT_DIRECTION',
+            'param_name': 'direction',
+            'description': 'Controls the overall diagram flow direction',
+            'options': ['horizontal', 'vertical'],
+            'examples': {
+                'horizontal': 'Elements flow left-to-right (good for process flows)',
+                'vertical': 'Elements flow top-to-bottom (good for layered views)'
+            }
+        },
+        {
+            'env_var': 'ARCHI_MCP_DEFAULT_SHOW_LEGEND',
+            'param_name': 'show_legend', 
+            'description': 'Whether to display the ArchiMate element legend',
+            'options': [True, False],
+            'examples': {
+                True: 'Shows color coding and element types (useful for presentations)',
+                False: 'Clean diagram without legend (better for technical docs)'
+            }
+        },
+        {
+            'env_var': 'ARCHI_MCP_DEFAULT_SHOW_TITLE',
+            'param_name': 'show_title',
+            'description': 'Whether to display the diagram title',
+            'options': [True, False], 
+            'examples': {
+                True: 'Shows diagram title at the top',
+                False: 'No title displayed (for embedding in documents)'
+            }
+        },
+        {
+            'env_var': 'ARCHI_MCP_DEFAULT_GROUP_BY_LAYER',
+            'param_name': 'group_by_layer',
+            'description': 'Whether to visually group elements by ArchiMate layer',
+            'options': [True, False],
+            'examples': {
+                True: 'Elements grouped with layer boundaries (clear layer separation)',
+                False: 'Free-form layout based on relationships (more compact)'
+            }
+        },
+        {
+            'env_var': 'ARCHI_MCP_DEFAULT_SPACING',
+            'param_name': 'spacing',
+            'description': 'Controls spacing between diagram elements',
+            'options': ['compact', 'normal', 'wide'],
+            'examples': {
+                'compact': 'Tight spacing for detailed views',
+                'normal': 'Balanced spacing for general use', 
+                'wide': 'Generous spacing for presentations'
+            }
+        }
+    ]
+    
+    config_locked = []
+    client_configurable = []
+    
+    for param in layout_params:
+        if is_config_locked(param['env_var']):
+            current_value = get_env_setting(param['env_var'])
+            config_locked.append({
+                'parameter': param['param_name'],
+                'current_value': current_value,
+                'description': param['description'],
+                'reason': 'Set by server configuration - cannot be changed by client requests'
+            })
+        else:
+            default_value = get_env_setting(param['env_var'])
+            client_configurable.append({
+                'parameter': param['param_name'],
+                'description': param['description'],
+                'options': param['options'],
+                'default': default_value,
+                'examples': param['examples']
+            })
+    
+    return {
+        'config_locked': config_locked,
+        'client_configurable': client_configurable
+    }
+
+# Setup logging with environment variable support
+setup_logging(level=get_env_setting('ARCHI_MCP_LOG_LEVEL'))
+logger = get_logger("archi_mcp.server")
 
 # Initialize FastMCP server
 mcp = FastMCP("archi-mcp")
@@ -648,12 +726,12 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
         logger.log(getattr(logging, level.upper(), logging.INFO), message)
     
     try:
-        # Automatic language detection from content (if enabled)
-        auto_detect = get_env_setting('ARCHI_MCP_AUTO_DETECT_LANGUAGE').lower() == 'true'
+        # Automatic language detection from content (always enabled)
+        auto_detect = True  # Always auto-detect language
         detected_language = detect_language_from_content(diagram) if auto_detect else "en"
         
-        # Use detected language or fallback to provided language parameter or environment default
-        default_lang = get_env_setting('ARCHI_MCP_DEFAULT_LANGUAGE')
+        # Use detected language or fallback to provided language parameter (default: "en")
+        default_lang = "en"  # Default language is always English
         language = detected_language if (auto_detect and detected_language != "en") else (diagram.language or default_lang)
         if language not in AVAILABLE_LANGUAGES:
             language = "en"  # Fallback to English
@@ -669,17 +747,37 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
         generator_with_translator = ArchiMateGenerator(translator)
         log_debug('INFO', f'Set up translator for language: {language}')
         
-        # Configure layout from environment variables and diagram input
+        # Configure layout with hybrid priority: config-locked vs client-configurable
         from .archimate.generator import DiagramLayout
         layout_config = diagram.layout or {}
         
+        # Hybrid system: config takes priority if set, otherwise client can configure
         layout = DiagramLayout(
-            direction=layout_config.get('direction', get_env_setting('ARCHI_MCP_DEFAULT_DIRECTION')),
-            show_legend=(layout_config.get('show_legend', get_env_setting('ARCHI_MCP_DEFAULT_SHOW_LEGEND').lower() == 'true')),
-            show_title=(layout_config.get('show_title', get_env_setting('ARCHI_MCP_DEFAULT_SHOW_TITLE').lower() == 'true')),
-            group_by_layer=(layout_config.get('group_by_layer', get_env_setting('ARCHI_MCP_DEFAULT_GROUP_BY_LAYER').lower() == 'true')),
-            spacing=layout_config.get('spacing', get_env_setting('ARCHI_MCP_DEFAULT_SPACING'))
+            direction=get_layout_setting('ARCHI_MCP_DEFAULT_DIRECTION', layout_config.get('direction')),
+            show_legend=(get_layout_setting('ARCHI_MCP_DEFAULT_SHOW_LEGEND', layout_config.get('show_legend', 'true')).lower() == 'true'),
+            show_title=(get_layout_setting('ARCHI_MCP_DEFAULT_SHOW_TITLE', layout_config.get('show_title', 'true')).lower() == 'true'),
+            group_by_layer=(get_layout_setting('ARCHI_MCP_DEFAULT_GROUP_BY_LAYER', layout_config.get('group_by_layer', 'false')).lower() == 'true'),
+            spacing=get_layout_setting('ARCHI_MCP_DEFAULT_SPACING', layout_config.get('spacing'))
         )
+        
+        # Log which parameters are locked by config
+        locked_params = []
+        layout_params = [
+            ('ARCHI_MCP_DEFAULT_DIRECTION', 'direction'),
+            ('ARCHI_MCP_DEFAULT_SHOW_LEGEND', 'show_legend'), 
+            ('ARCHI_MCP_DEFAULT_SHOW_TITLE', 'show_title'),
+            ('ARCHI_MCP_DEFAULT_GROUP_BY_LAYER', 'group_by_layer'),
+            ('ARCHI_MCP_DEFAULT_SPACING', 'spacing')
+        ]
+        
+        for env_var, param_name in layout_params:
+            if is_config_locked(env_var):
+                locked_params.append(f"{param_name}={get_env_setting(env_var)}")
+        
+        if locked_params:
+            log_debug('INFO', f'Config-locked parameters: {", ".join(locked_params)}')
+        else:
+            log_debug('INFO', 'No config-locked parameters - client has full layout control')
         
         generator_with_translator.set_layout(layout)
         log_debug('INFO', f'Set layout: direction={layout.direction}, legend={layout.show_legend}, group_by_layer={layout.group_by_layer}')
@@ -762,10 +860,10 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
             log_debug('ERROR', f'PlantUML validation failed: {error_msg}')
             raise ArchiMateGenerationError(f"Generated diagram failed validation - {error_msg}")
         
-        # Check environment settings for PNG/SVG generation
-        generate_png = get_env_setting('ARCHI_MCP_GENERATE_PNG').lower() == 'true'
-        generate_svg = get_env_setting('ARCHI_MCP_GENERATE_SVG').lower() == 'true'
-        png_quality = get_env_setting('ARCHI_MCP_PNG_QUALITY')  # low, normal, high
+        # Always generate PNG/SVG (no configuration needed)
+        generate_png = True  # Always generate PNG
+        generate_svg = True  # Always generate SVG
+        png_quality = "high"  # Always use high quality
         
         log_debug('INFO', f'Generation settings: PNG={generate_png}, SVG={generate_svg}, quality={png_quality}')
         
@@ -977,6 +1075,17 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
         except Exception as cleanup_error:
             log_debug('WARNING', f'Failed to cleanup exports: {str(cleanup_error)}')
         
+        # Generate layout parameters information for the client
+        layout_info = generate_layout_parameters_info()
+        
+        # Prepare layout usage example for client
+        layout_example = {
+            "layout": {
+                param['parameter']: f"<{param['options'][0] if isinstance(param['options'], list) else param['default']}>"
+                for param in layout_info['client_configurable']
+            }
+        } if layout_info['client_configurable'] else None
+        
         return json.dumps({
             "status": "success",
             "exports_dir": str(export_dir),
@@ -989,7 +1098,13 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
                 "metadata": "metadata.json"
             },
             "statistics": metadata["statistics"],
-            "message": f"✅ ArchiMate diagram created successfully in {export_dir}"
+            "message": f"✅ ArchiMate diagram created successfully in {export_dir}",
+            "layout_parameters": {
+                "config_locked": layout_info['config_locked'],
+                "client_configurable": layout_info['client_configurable'],
+                "usage_example": layout_example,
+                "note": "Config-locked parameters cannot be overridden by client requests. Client-configurable parameters can be set in the diagram.layout object."
+            }
         }, indent=2)
         
     except Exception as e:
