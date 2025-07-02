@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides a comprehensive analysis of all MCP tools exposed by the ArchiMate MCP Server, including their JSON schemas, capabilities, and usage patterns. The server implements 4 essential tools via FastMCP 2.8+ protocol for complete enterprise architecture modeling.
+This document provides a comprehensive analysis of all MCP tools exposed by the ArchiMate MCP Server, including their JSON schemas, capabilities, and usage patterns. The server implements 5 essential tools via FastMCP 2.8+ protocol for complete enterprise architecture modeling.
 
 ## Tool Schemas
 
@@ -192,7 +192,80 @@ This document provides a comprehensive analysis of all MCP tools exposed by the 
 
 **Returns**: Comprehensive test results showing all normalization rules and examples.
 
-### 4. `analyze_recent_errors`
+### 4. `create_architecture_views_summary`
+
+**Purpose**: Create comprehensive markdown summary of all architectural views from current session.
+
+**Schema**:
+```json
+{
+  "name": "create_architecture_views_summary",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "summary_filename": {
+        "type": "string",
+        "description": "Name for the summary markdown file (auto-generated if not provided)",
+        "example": "enterprise_architecture_summary.md"
+      },
+      "session_title": {
+        "type": "string",
+        "description": "Title for the session summary",
+        "default": "Architecture Views Summary",
+        "example": "Enterprise Banking Architecture - Sprint 3 Review"
+      },
+      "include_failed_attempts": {
+        "type": "boolean",
+        "description": "Whether to include failed diagram attempts in summary for debugging",
+        "default": false
+      }
+    },
+    "additionalProperties": false
+  }
+}
+```
+
+**Features**:
+- Scans exports directory for all generated diagrams
+- Creates unified summary document with metadata
+- Links to all successful architectural views
+- Session overview with timestamps
+- Optional inclusion of failed attempts for debugging
+
+**Use Cases**:
+- Documentation of complete architecture modeling sessions
+- Portfolio overview of generated views
+- Sharing multiple diagrams with stakeholders
+- Project documentation and handoffs
+- Sprint reviews and architecture presentations
+
+**Example Output Structure**:
+```markdown
+# Enterprise Banking Architecture - Sprint 3 Review
+
+## Session Overview
+- **Generated Views**: 7
+- **Session Date**: 2025-07-02
+- **Total Elements**: 45
+- **Total Relationships**: 32
+
+## Architectural Views
+
+### 1. Motivation Layer
+![Motivation View](20250702_143034/diagram.png)
+- **Elements**: 15 (Stakeholders, Goals, Requirements)
+- **Generated**: 2025-07-02 14:30:34
+- **Description**: Strategic drivers and stakeholder motivations
+
+### 2. Business Layer
+![Business View](20250702_143156/diagram.png)
+- **Elements**: 12 (Actors, Processes, Services)
+- **Generated**: 2025-07-02 14:31:56
+- **Description**: Business architecture and processes
+...
+```
+
+### 5. `analyze_recent_errors`
 
 **Purpose**: Analyze recent diagram generation errors with actionable troubleshooting guidance.
 
@@ -317,7 +390,7 @@ The comprehensive schemas enable:
 
 ## Conclusion
 
-The ArchiMate MCP Server provides a comprehensive, well-documented API through these 4 tools. The detailed schemas enable:
+The ArchiMate MCP Server provides a comprehensive, well-documented API through these 5 tools. The detailed schemas enable:
 - Full capability discovery by clients
 - Type-safe integration
 - Comprehensive validation

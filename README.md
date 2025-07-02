@@ -196,7 +196,7 @@ All 12 ArchiMate relationship types with directional variants:
 
 ## 🛠️ MCP Tools
 
-The server exposes four core tools via FastMCP:
+The server exposes five core tools via FastMCP:
 
 ### 1. **create_archimate_diagram**
 Generate complete ArchiMate diagrams from structured input with:
@@ -220,7 +220,15 @@ Test element type normalization across all ArchiMate layers:
 - Verifies layer and relationship normalization
 - Essential for troubleshooting input issues
 
-### 4. **analyze_recent_errors**
+### 4. **create_architecture_views_summary**
+Create comprehensive markdown summary of all architectural views from current session:
+- Scans exports directory for all generated diagrams
+- Creates unified summary document with metadata and statistics
+- Links to all successful architectural views with timestamps
+- Optional inclusion of failed attempts for debugging
+- Perfect for documentation, stakeholder sharing, and project handoffs
+
+### 5. **analyze_recent_errors**
 Analyze recent diagram generation errors with actionable guidance:
 - Real-time error detection and pattern recognition
 - Categorized error reporting (Empty Model, Orphaned Relationships, System Errors)
