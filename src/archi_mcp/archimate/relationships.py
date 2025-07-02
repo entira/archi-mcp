@@ -52,10 +52,8 @@ class ArchiMateRelationship(BaseModel):
         Returns:
             PlantUML relationship code string
         """
-        # Build relationship type with direction
+        # Build relationship type (direction is layout hint only, not part of PlantUML syntax)
         rel_type = self.relationship_type.value
-        if self.direction:
-            rel_type = f"{rel_type}_{self.direction.value}"
         
         # Build label based on show_labels setting
         if show_labels:

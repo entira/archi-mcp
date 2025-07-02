@@ -88,9 +88,6 @@ pip install archi-mcp
 - **ARCHI_MCP_DEFAULT_GROUP_BY_LAYER**: Group elements by layer by default (`true`/`false`). Default: `false`
 - **ARCHI_MCP_LOCK_***: Lock specific parameters to prevent client override (`true`/`false`). Default: `false`
 
-**Note**: When `LOCK_*` variables are set to `true`, the corresponding parameter will always use the default value and ignore client input.
-
-**📖 Complete Setup Guide**: See [CLAUDE_DESKTOP_SETUP.md](docs/CLAUDE_DESKTOP_SETUP.md) for detailed configuration options and troubleshooting.
 
 ### Basic Usage
 
@@ -314,20 +311,13 @@ archi-mcp/
 - **100% Layer Coverage**: Successfully demonstrates Motivation, Strategy, Business, Application, Technology, Physical, and Implementation layers
 
 ### Setup and Configuration
-- **[CLAUDE_DESKTOP_SETUP.md](docs/CLAUDE_DESKTOP_SETUP.md)**: Complete Claude Desktop configuration guide with troubleshooting
 - **[CLAUDE.md](CLAUDE.md)**: Development instructions and project guidelines for Claude
 
 > **💡 Production Validation**: All architecture diagrams were generated using the ArchiMate MCP Server itself, proving 100% ArchiMate 3.2 layer support and production readiness.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please see the project documentation for details on:
-
-- Code style and standards
-- Submitting pull requests
-- Reporting issues
-- Adding new templates
-- Extending ArchiMate support
+Contributions are welcome! Please see CLAUDE.md for dev/ops/devops documentation.
 
 ## 📄 License
 
@@ -340,31 +330,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) for enabling AI assistant integration
 - [Anthropic](https://www.anthropic.com/) for Claude and MCP development
 
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/entira/archi-mcp/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/entira/archi-mcp/discussions)
-- **Documentation**: [Project Wiki](https://github.com/entira/archi-mcp/wiki)
-
 ## 🗺️ Roadmap
 
-### Near Term (Q1 2025)
-- [ ] Enhanced architecture analysis with pattern detection
 - [ ] Export to ArchiMate Open Exchange Format
-- [ ] Advanced model metrics and KPIs
-- [ ] Architecture compliance checking
-
-### Medium Term (Q2-Q3 2025)
-- [ ] Industry-specific architecture templates (Banking, Healthcare, E-commerce)
-- [ ] AI-powered architecture generation from natural language
-- [ ] Multi-view coordinated architecture documentation
-- [ ] Intelligent optimization recommendations
-
-### Long Term (Q4 2025+)
-- [ ] Collaborative modeling features
-- [ ] Version control integration
-- [ ] Enterprise architecture governance
-- [ ] Architecture pattern library
----
-
-**ArchiMate MCP Server** - Bridging enterprise architecture modeling and AI assistance through the Model Context Protocol.
