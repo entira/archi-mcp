@@ -22,14 +22,16 @@ ArchiMate MCP Server fills a crucial gap in the MCP ecosystem by providing dedic
 ### Key Features
 
 - **Complete ArchiMate 3.2 Support**: All 55+ elements across **100% of 7 layers** (Motivation, Strategy, Business, Application, Technology, Physical, Implementation)
-- **Universal PlantUML Generation**: All layers now supported with proper ArchiMate prefixes (Physical_, Strategy_, Implementation_, Motivation_)
+- **Universal PlantUML Generation**: All layers now supported with official PlantUML ArchiMate sprites and syntax
 - **Intelligent Input Normalization**: Case-insensitive inputs with automatic correction and helpful error messages
-- **Built-in Validation**: Comprehensive PlantUML and ArchiMate validation with real-time error detection
+- **Built-in Validation**: Comprehensive 4-step validation pipeline with real-time error detection
 - **macOS-Optimized PNG/SVG Generation**: Headless mode prevents cursor interference + live HTTP server for instant viewing
-- **4 Essential Tools**: Core diagram creation with intelligent error analysis and architecture health assessment
+- **4 Essential MCP Tools**: Core diagram creation with intelligent error analysis and architecture health assessment
 - **Real-time Error Analysis**: Actionable troubleshooting guidance with pattern recognition and fix suggestions
-- **FastMCP 2.8+ Integration**: Modern MCP protocol implementation with Image object support
+- **FastMCP 2.8+ Integration**: Modern MCP protocol implementation with comprehensive schema discovery
 - **Production-Ready Testing**: 182 passing tests with 70% coverage and comprehensive test suites across all layers
+- **Multi-Language Support**: Automatic language detection (Slovak/English) with customizable relationship labels
+- **Advanced Layout Control**: Configurable direction, spacing, grouping with environment variable defaults
 
 ## 🚀 Quick Start
 
@@ -59,12 +61,34 @@ pip install archi-mcp
       "cwd": "/path/to/your/archi-mcp",
       "env": {
         "ARCHI_MCP_LOG_LEVEL": "INFO",
-        "ARCHI_MCP_STRICT_VALIDATION": "true"
+        "ARCHI_MCP_STRICT_VALIDATION": "true",
+        "ARCHI_MCP_LANGUAGE": "auto",
+        "ARCHI_MCP_DEFAULT_DIRECTION": "top-bottom",
+        "ARCHI_MCP_DEFAULT_SPACING": "comfortable",
+        "ARCHI_MCP_DEFAULT_TITLE": "true",
+        "ARCHI_MCP_DEFAULT_LEGEND": "false",
+        "ARCHI_MCP_DEFAULT_GROUP_BY_LAYER": "false",
+        "ARCHI_MCP_LOCK_DIRECTION": "false",
+        "ARCHI_MCP_LOCK_SPACING": "false",
+        "ARCHI_MCP_LOCK_TITLE": "false",
+        "ARCHI_MCP_LOCK_LEGEND": "false",
+        "ARCHI_MCP_LOCK_GROUP_BY_LAYER": "false"
       }
     }
   }
 }
 ```
+
+**Environment Variables:**
+- **ARCHI_MCP_LANGUAGE**: Language for relationship labels (`auto`, `en`, `sk`). Default: `auto` (detects from content)
+- **ARCHI_MCP_DEFAULT_DIRECTION**: Default layout direction (`top-bottom`, `left-right`, `vertical`, `horizontal`). Default: `top-bottom`
+- **ARCHI_MCP_DEFAULT_SPACING**: Default element spacing (`compact`, `balanced`, `comfortable`). Default: `comfortable`
+- **ARCHI_MCP_DEFAULT_TITLE**: Show title by default (`true`/`false`). Default: `true`
+- **ARCHI_MCP_DEFAULT_LEGEND**: Show legend by default (`true`/`false`). Default: `false`
+- **ARCHI_MCP_DEFAULT_GROUP_BY_LAYER**: Group elements by layer by default (`true`/`false`). Default: `false`
+- **ARCHI_MCP_LOCK_***: Lock specific parameters to prevent client override (`true`/`false`). Default: `false`
+
+**Note**: When `LOCK_*` variables are set to `true`, the corresponding parameter will always use the default value and ignore client input.
 
 **📖 Complete Setup Guide**: See [CLAUDE_DESKTOP_SETUP.md](docs/CLAUDE_DESKTOP_SETUP.md) for detailed configuration options and troubleshooting.
 
@@ -89,49 +113,59 @@ This repository showcases comprehensive architectural documentation of the Archi
 
 ### 🎯 **Complete Layered Architecture Overview**
 ![ArchiMate MCP Server - Enhanced Layered Architecture](docs/diagrams/archi_mcp_layered_architecture_enhanced.svg)
-*Complete enterprise architecture spanning all 7 ArchiMate layers with cross-layer relationships and dependencies*
+*Comprehensive view showing key elements from all 7 ArchiMate layers with cross-layer relationships*
 
 ### 🎯 **Motivation Layer** 
 ![Motivation View](docs/diagrams/archi_mcp_motivation.svg)
+*Stakeholders, drivers, goals, and requirements driving the ArchiMate MCP Server implementation*
 - **Stakeholders**: Enterprise Architect, Software Developer, Claude Desktop User
-- **Drivers**: Architecture Complexity, ArchiMate Compliance, Modeling Automation
-- **Goals**: Enable ArchiMate Modeling, Claude Integration, High Quality Diagrams
-- **Requirements**: MCP Protocol Support, ArchiMate 3.2 Support, PlantUML Generation
+- **Drivers**: Architecture Complexity, ArchiMate Compliance, Modeling Automation, AI Integration Demand
+- **Goals**: Enable ArchiMate Modeling, Claude Integration, High Quality Diagrams, Comprehensive Validation
+- **Requirements**: MCP Protocol Support, ArchiMate 3.2 Support, PlantUML Generation, Real-time Error Analysis
 
 ### 📋 **Strategy Layer**
 ![Strategy View](docs/diagrams/archi_mcp_strategy.svg)
-- **Resources**: ArchiMate IP Knowledge, Development Team, MCP Ecosystem
-- **Capabilities**: Enterprise Architecture Modeling, Automated Diagram Generation, MCP Protocol Integration
-- **Courses of Action**: Open Source Strategy, MCP-First Strategy, Standards Compliance
+*Strategic resources, capabilities, and courses of action for the ArchiMate MCP Server*
+- **Resources**: ArchiMate IP Knowledge, Development Team, MCP Ecosystem, Testing Infrastructure
+- **Capabilities**: Enterprise Architecture Modeling, Automated Diagram Generation, MCP Protocol Integration, Quality Assurance
+- **Courses of Action**: Open Source Strategy, MCP-First Strategy, Standards Compliance Strategy, Continuous Testing Strategy
 
 ### 🏢 **Business Layer**
 ![Business View](docs/diagrams/archi_mcp_business.svg)
-- **Business Layer**: EA Role, Modeling Process, Diagram Service
-- **Actors & Roles**: Enterprise Architect, Architecture Modeling Process
-- **Services**: ArchiMate Diagram Service, Architecture Documentation
+*Business actors, processes, services, and objects for architecture modeling*
+- **Business Actor**: Enterprise Architecture Role (responsible for creating and maintaining enterprise architecture models)
+- **Business Processes**: Architecture Modeling Process, Model Validation Process, Error Analysis Process
+- **Business Services**: ArchiMate Diagram Service, Architecture Analysis Service, Validation Service
+- **Business Objects**: Architecture Model, Diagram Specification, Validation Report
 
 ### 💻 **Application Layer**
 ![Application Structure](docs/diagrams/archi_mcp_application.svg)
-- **Components**: MCP Server Main, Tool Registry, Request Handler, Element Factory, Relationship Manager
-- **Services**: Modeling Service, Validation Service, Generation Service
-- **Data Objects**: Element Model, Relationship Model, PlantUML Code
+*Application components, services, and data objects implementing the MCP server*
+- **Components**: MCP Server Main, ArchiMate Engine, PlantUML Generator, Validation Engine, HTTP Server
+- **Services**: Diagram Generation Service, Architecture Analysis Service, Element Normalization Service, Error Analysis Service
+- **Data Objects**: Element Model, Relationship Model, PlantUML Code, Diagram Metadata
 
 ### ⚙️ **Technology Layer**
 ![Technology Layer](docs/diagrams/archi_mcp_technology.svg)
-- **System Software**: Python Interpreter, Java Runtime, Operating System
+*Technology services, system software, nodes, and artifacts supporting the MCP server*
+- **Technology Services**: MCP Protocol Service, PlantUML Service, Python Runtime Service, HTTP Service
+- **System Software**: Python Interpreter (3.11+), Java Runtime, Operating System
 - **Nodes**: Development Environment, Production Environment, Claude Desktop Environment
-- **Services**: MCP Protocol Service, PlantUML Service, Python Runtime Service
+- **Artifacts**: ArchiMate MCP Server Package, PlantUML JAR, Configuration Files
 
 ### 🏗️ **Physical Layer**
 ![Physical Layer](docs/diagrams/archi_mcp_physical.svg)
+*Physical equipment, facilities, and distribution networks supporting the ArchiMate MCP Server*
 - **Equipment**: Developer Workstation, Cloud Server, User Device
 - **Facilities**: Development Office, Cloud Datacenter, User Location
-- **Distribution Networks**: Development Path, Deployment Path, Distribution Path
+- **Distribution Networks**: Development Network, Internet Distribution, Local Network
 
-### 🚀 **Implementation Layer**
+### 🚀 **Implementation & Migration Layer**
 ![Implementation & Migration](docs/diagrams/archi_mcp_implementation.svg)
-- **Work Packages**: Core Development, Advanced Features, Integration, Release
-- **Deliverables**: MCP Protocol Implementation, ArchiMate Engine, Validation Framework
+*Work packages, deliverables, plateaus, and implementation events for the ArchiMate MCP Server rollout*
+- **Work Packages**: Core MCP Implementation, Advanced Features Package, Integration Package, Production Release Package
+- **Deliverables**: MCP Protocol Implementation, ArchiMate Engine, Validation Framework, HTTP Server Integration, Test Suite
+- **Plateaus**: Development Plateau, Feature Complete Plateau, Integration Plateau, Production Plateau
 - **Events**: Project Start, Core Milestone, Feature Milestone, Release Event
 
 > **💡 Complete ArchiMate 3.2 Coverage**: All 7 layers successfully generated using the ArchiMate MCP Server itself, demonstrating 100% layer support and production readiness.
@@ -164,10 +198,34 @@ All 12 ArchiMate relationship types with directional variants:
 
 The server exposes four core tools via FastMCP:
 
-- **create_archimate_diagram** – generate diagrams from structured input
-- **analyze_current_architecture** – summarize the in-memory model
-- **test_element_normalization** – verify normalization logic
-- **analyze_recent_errors** – inspect recent errors and offer fixes
+### 1. **create_archimate_diagram**
+Generate complete ArchiMate diagrams from structured input with:
+- Support for all 55+ element types across 7 layers
+- All 12 ArchiMate relationship types with directional support
+- Intelligent input normalization and validation
+- PNG/SVG generation with HTTP server URLs
+- Comprehensive layout configuration options
+
+### 2. **analyze_current_architecture**
+Analyze current architecture state and provide insights:
+- Element and relationship statistics by layer
+- Architecture completeness assessment
+- Layer distribution analysis
+- Model health indicators
+
+### 3. **test_element_normalization**
+Test element type normalization across all ArchiMate layers:
+- Validates case-insensitive input handling
+- Tests common element type mappings
+- Verifies layer and relationship normalization
+- Essential for troubleshooting input issues
+
+### 4. **analyze_recent_errors**
+Analyze recent diagram generation errors with actionable guidance:
+- Real-time error detection and pattern recognition
+- Categorized error reporting (Empty Model, Orphaned Relationships, System Errors)
+- Contextual troubleshooting recommendations
+- Configurable time window analysis (1-60 minutes)
 
 ### ArchiMate Viewpoints
 - **Layered**: Cross-layer relationships and dependencies

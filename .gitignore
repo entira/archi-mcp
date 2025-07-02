@@ -80,4 +80,4 @@ exports/
 examples/*/20*/
 examples/failed_attempts/
 *.puml
-!docs/*.puml
+!docs/*.pumltemp/plantuml/
