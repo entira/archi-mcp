@@ -170,45 +170,99 @@ class ArchiMateElement(BaseModel):
         return f"{self.element_type}({self.id}): {self.name}"
     
     def _normalize_for_plantuml(self, element_type: str, layer: str) -> str:
-        """Normalize element type for PlantUML with layer-specific handling.
+        """Normalize element type for PlantUML ArchiMate with official syntax mapping.
+        
+        Based on official PlantUML ArchiMate documentation and sprite repository.
+        Syntax: Category_ElementName(nameOfElement, "description")
         
         Args:
             element_type: ArchiMate element type
             layer: ArchiMate layer
             
         Returns:
-            PlantUML-compatible element type
+            Official PlantUML ArchiMate element type
         """
-        # Handle layer-specific element prefixes for PlantUML
-        if element_type == "Function" and layer == "Business":
-            return "Business_Function"
-        elif element_type == "Function" and layer == "Application":
-            return "Application_Function"
-        elif element_type == "Function" and layer == "Technology":
-            return "Technology_Function"
+        # Complete mapping based on official PlantUML sprites and documentation
+        plantuml_mapping = {
+            # Business Layer - verified with PlantUML sprites
+            "Business_Actor": "Business_Actor",
+            "Business_Role": "Business_Role",
+            "Business_Collaboration": "Business_Collaboration", 
+            "Business_Interface": "Business_Interface",
+            "Business_Function": "Business_Function",
+            "Business_Process": "Business_Process",
+            "Business_Event": "Business_Event",
+            "Business_Service": "Business_Service",
+            "Business_Object": "Business_Object",
+            "Business_Contract": "Business_Contract",
+            "Business_Representation": "Business_Representation",
+            "Location": "Business_Location",
+            
+            # Application Layer - verified with PlantUML sprites
+            "Application_Component": "Application_Component",
+            "Application_Collaboration": "Application_Collaboration",
+            "Application_Interface": "Application_Interface", 
+            "Application_Function": "Application_Function",
+            "Application_Interaction": "Application_Interaction",
+            "Application_Process": "Application_Process",
+            "Application_Event": "Application_Event",
+            "Application_Service": "Application_Service",
+            "Data_Object": "Application_DataObject",
+            
+            # Technology Layer - verified with PlantUML sprites
+            "Node": "Technology_Node",
+            "Device": "Technology_Device",
+            "System_Software": "Technology_SystemSoftware",
+            "Technology_Collaboration": "Technology_Collaboration",
+            "Technology_Interface": "Technology_Interface",
+            "Path": "Technology_Path",
+            "Communication_Network": "Technology_CommunicationNetwork",
+            "Technology_Function": "Technology_Function",
+            "Technology_Process": "Technology_Process",
+            "Technology_Interaction": "Technology_Interaction",
+            "Technology_Event": "Technology_Event",
+            "Technology_Service": "Technology_Service",
+            "Artifact": "Technology_Artifact",
+            
+            # Physical Layer - verified with official sprites (physical-equipment.png, etc.)
+            "Equipment": "Physical_Equipment",
+            "Facility": "Physical_Facility",
+            "Distribution_Network": "Physical_DistributionNetwork",
+            "Material": "Physical_Material",
+            
+            # Motivation Layer - verified with official sprites (motivation-stakeholder.png, etc.)
+            "Stakeholder": "Motivation_Stakeholder",
+            "Driver": "Motivation_Driver",
+            "Assessment": "Motivation_Assessment",
+            "Goal": "Motivation_Goal",
+            "Outcome": "Motivation_Outcome",
+            "Principle": "Motivation_Principle",
+            "Requirement": "Motivation_Requirement",
+            "Constraint": "Motivation_Constraint",
+            "Meaning": "Motivation_Meaning",
+            "Value": "Motivation_Value",
+            
+            # Strategy Layer - verified with official sprites (strategy-capability.png, etc.)
+            "Resource": "Strategy_Resource",
+            "Capability": "Strategy_Capability",
+            "Course_of_Action": "Strategy_CourseOfAction",  # Note: CamelCase, not underscore
+            "Value_Stream": "Strategy_ValueStream",         # Note: CamelCase, not underscore
+            
+            # Implementation Layer - verified with official sprites (implementation-workpackage.png, etc.)
+            "Work_Package": "Implementation_WorkPackage",   # Note: CamelCase, not underscore
+            "Deliverable": "Implementation_Deliverable",
+            "Implementation_Event": "Implementation_Event",
+            "Plateau": "Implementation_Plateau",
+            "Gap": "Implementation_Gap"
+        }
         
-        # Motivation layer elements need Motivation_ prefix for PlantUML
-        motivation_elements = ["Stakeholder", "Driver", "Goal", "Outcome", "Principle", "Requirement", "Constraint", "Meaning", "Value", "Assessment"]
-        if element_type in motivation_elements:
-            return f"Motivation_{element_type}"
-        
-        # Strategy layer elements need Strategy_ prefix for PlantUML
-        strategy_elements = ["Resource", "Capability", "Course_of_Action", "Value_Stream"]
-        if element_type in strategy_elements:
-            return f"Strategy_{element_type}"
-        
-        # Physical layer elements need Physical_ prefix for PlantUML
-        physical_elements = ["Equipment", "Facility", "Distribution_Network", "Material"]
-        if element_type in physical_elements:
-            return f"Physical_{element_type}"
-        
-        # Implementation layer elements need Implementation_ prefix for PlantUML
-        implementation_elements = ["Work_Package", "Deliverable", "Implementation_Event", "Plateau", "Gap"]
-        if element_type in implementation_elements:
-            return f"Implementation_{element_type}"
-        
-        # Direct mapping for most elements
-        return element_type
+        # Return official PlantUML element type or fallback
+        official_type = plantuml_mapping.get(element_type)
+        if official_type:
+            return official_type
+            
+        # Fallback: try with layer prefix for unknown elements
+        return f"{layer}_{element_type}" if layer != "Physical" else element_type
     
     def __repr__(self) -> str:
         return f"ArchiMateElement(id='{self.id}', name='{self.name}', type='{self.element_type}')"
