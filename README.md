@@ -301,6 +301,7 @@ archi-mcp/
 
 ### Architecture Documentation
 - **[EA.md](docs/EA.md)**: Complete Enterprise Architecture across all 7 ArchiMate layers
+- **[ARCHITECTURE_GENERATOR.md](docs/ARCHITECTURE_GENERATOR.md)**: Architecture generation and analysis tool documentation
 - **Live Architecture Demonstration**: All layers shown above with interactive HTTP server URLs
 - **100% Layer Coverage**: Successfully demonstrates Motivation, Strategy, Business, Application, Technology, Physical, and Implementation layers
 
@@ -339,10 +340,23 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ Roadmap
 
+### Near Term (Q1 2025)
+- [ ] Enhanced architecture analysis with pattern detection
 - [ ] Export to ArchiMate Open Exchange Format
-- [ ] Advanced model analysis and metrics
+- [ ] Advanced model metrics and KPIs
+- [ ] Architecture compliance checking
+
+### Medium Term (Q2-Q3 2025)
+- [ ] Industry-specific architecture templates (Banking, Healthcare, E-commerce)
+- [ ] AI-powered architecture generation from natural language
+- [ ] Multi-view coordinated architecture documentation
+- [ ] Intelligent optimization recommendations
+
+### Long Term (Q4 2025+)
 - [ ] Collaborative modeling features
-- [ ] Industry templates will be provided as build-in prompts to streamline common architectures like Banking, E-commerce, Healthcare
+- [ ] Version control integration
+- [ ] Enterprise architecture governance
+- [ ] Architecture pattern library
 ---
 
 **ArchiMate MCP Server** - Bridging enterprise architecture modeling and AI assistance through the Model Context Protocol.
