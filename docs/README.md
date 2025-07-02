@@ -5,36 +5,28 @@ This directory contains comprehensive documentation for the ArchiMate MCP Server
 ## 📋 Available Documentation
 
 ### Core Documentation
-- **[MCP Tools Documentation](../MCP_TOOLS_DOCUMENTATION.md)** - Complete reference for all 11 MCP tools
 - **[CLAUDE.md](../CLAUDE.md)** - Claude Code Assistant configuration and development commands
 - **[README.md](../README.md)** - Main project overview and getting started guide
 
 ### Architecture & Design
-- **[ARCHITECTURE.md](../ARCHITECTURE.md)** - System architecture overview
-- **[ARCHITECTURE_OVERVIEW.md](../ARCHITECTURE_OVERVIEW.md)** - Detailed architectural documentation
-- **[DEVELOPER_GUIDE.md](../DEVELOPER_GUIDE.md)** - Development guidelines and patterns
+- **[EA.md](EA.md)** - Complete Enterprise Architecture across all 7 ArchiMate layers
+- **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)** - Development guidelines and patterns (migrated to CLAUDE.md)
 
 ### Setup & Configuration
 - **[CLAUDE_DESKTOP_SETUP.md](../CLAUDE_DESKTOP_SETUP.md)** - Claude Desktop integration setup
-- **[VIEWING_GUIDE.md](../VIEWING_GUIDE.md)** - Guide for viewing generated diagrams
-
-### Enhanced Features
-- **[ENHANCED_VALIDATION_SUMMARY.md](../ENHANCED_VALIDATION_SUMMARY.md)** - Enhanced validation system documentation
 
 ### Testing
-- **[testing/](../testing/)** - Complete testing documentation and prompts
-  - **COMPREHENSIVE_MCP_TEST_PROMPT.md** - Enhanced testing scenarios
-  - **VALIDATION_TEST_SUMMARY.md** - Validation testing results
+- **[tests/](../tests/)** - Complete test suite with 182 passing tests (70% coverage)
+  - Test coverage includes server functionality, HTTP server, analysis tools, and validation
 
 ## 🔍 Quick Navigation
 
 | Topic | Documentation File |
 |-------|-------------------|
 | **Getting Started** | [README.md](../README.md) |
-| **MCP Tools Reference** | [MCP_TOOLS_DOCUMENTATION.md](../MCP_TOOLS_DOCUMENTATION.md) |
 | **Development Setup** | [CLAUDE.md](../CLAUDE.md) |
-| **Testing Guide** | [testing/COMPREHENSIVE_MCP_TEST_PROMPT.md](../testing/COMPREHENSIVE_MCP_TEST_PROMPT.md) |
-| **Architecture Details** | [ARCHITECTURE.md](../ARCHITECTURE.md) |
+| **Testing Guide** | [tests/](../tests/) |
+| **Architecture Details** | [EA.md](EA.md) |
 
 ## 🏗️ ArchiMate Enterprise Architecture
 

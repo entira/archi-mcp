@@ -11,13 +11,17 @@ import zlib
 import time
 import platform
 import logging
+import threading
+import socket
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 from pathlib import Path
 import glob
 
-from fastmcp import FastMCP
+from fastmcp import FastMCP, utilities
 from pydantic import BaseModel, Field
+from PIL import Image
+import io
 
 from .utils.logging import setup_logging, get_logger
 from .utils.exceptions import (
@@ -327,6 +331,58 @@ mcp = FastMCP("archi-mcp")
 # Initialize components
 generator = ArchiMateGenerator()
 validator = ArchiMateValidator()
+
+# HTTP Server for serving SVG files
+http_server_port = None
+http_server_thread = None
+http_server_running = False
+
+def find_free_port():
+    """Find a free port for the HTTP server."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('', 0))
+        s.listen(1)
+        port = s.getsockname()[1]
+    return port
+
+def start_http_server():
+    """Start HTTP server for serving static files from exports directory."""
+    global http_server_port, http_server_thread, http_server_running
+    
+    if http_server_running:
+        return http_server_port
+    
+    # Find free port
+    http_server_port = find_free_port()
+    
+    # Create Starlette app for static files
+    try:
+        from starlette.applications import Starlette
+        from starlette.routing import Mount
+        from starlette.staticfiles import StaticFiles
+        import uvicorn
+        
+        # Ensure exports directory exists
+        exports_dir = os.path.join(os.getcwd(), "exports")
+        os.makedirs(exports_dir, exist_ok=True)
+        
+        app = Starlette(routes=[
+            Mount("/exports", StaticFiles(directory=exports_dir), name="exports"),
+        ])
+        
+        def run_server():
+            uvicorn.run(app, host="127.0.0.1", port=http_server_port, log_level="warning")
+        
+        http_server_thread = threading.Thread(target=run_server, daemon=True)
+        http_server_thread.start()
+        http_server_running = True
+        
+        logger.info(f"HTTP server started on http://127.0.0.1:{http_server_port}")
+        return http_server_port
+        
+    except ImportError as e:
+        logger.error(f"Failed to start HTTP server: {e}. Install starlette and uvicorn.")
+        return None
 
 # Pydantic models for input validation
 class ElementInput(BaseModel):
@@ -1194,6 +1250,29 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
             }
         } if layout_info['client_configurable'] else None
         
+        # Start HTTP server and generate URLs for diagram viewing
+        diagram_urls = {}
+        try:
+            port = start_http_server()
+            if port and svg_generated:
+                svg_relative_path = os.path.relpath(export_dir / "diagram.svg", os.getcwd())
+                diagram_urls["svg"] = f"http://127.0.0.1:{port}/{svg_relative_path}"
+                log_debug('INFO', f'HTTP server running on port {port}, SVG URL: {diagram_urls["svg"]}')
+            elif port:
+                png_relative_path = os.path.relpath(export_dir / "diagram.png", os.getcwd()) 
+                diagram_urls["png"] = f"http://127.0.0.1:{port}/{png_relative_path}"
+                log_debug('INFO', f'HTTP server running on port {port}, PNG URL: {diagram_urls["png"]}')
+        except Exception as http_error:
+            log_debug('WARNING', f'Failed to start HTTP server: {http_error}')
+        
+        # Enhanced success message with URL
+        success_message = f"✅ ArchiMate diagram created successfully in {export_dir}"
+        if diagram_urls:
+            if "svg" in diagram_urls:
+                success_message += f"\n\n🔗 **View SVG diagram:** {diagram_urls['svg']}"
+            elif "png" in diagram_urls:
+                success_message += f"\n\n🔗 **View PNG diagram:** {diagram_urls['png']}"
+        
         return json.dumps({
             "status": "success",
             "exports_dir": str(export_dir),
@@ -1205,8 +1284,9 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
                 "log": "generation.log",
                 "metadata": "metadata.json"
             },
+            "diagram_urls": diagram_urls,
             "statistics": metadata["statistics"],
-            "message": f"✅ ArchiMate diagram created successfully in {export_dir}",
+            "message": success_message,
             "layout_parameters": {
                 "config_locked": layout_info['config_locked'],
                 "client_configurable": layout_info['client_configurable'],
@@ -1732,6 +1812,8 @@ def _generate_troubleshooting_recommendations(analysis: Dict[str, Any]) -> List[
         ]
     
     return recommendations
+
+
 
 # Server startup
 def main():

@@ -187,6 +187,16 @@ class ArchiMateElement(BaseModel):
         elif element_type == "Function" and layer == "Technology":
             return "Technology_Function"
         
+        # Motivation layer elements need Motivation_ prefix for PlantUML
+        motivation_elements = ["Stakeholder", "Driver", "Goal", "Outcome", "Principle", "Requirement", "Constraint", "Meaning", "Value", "Assessment"]
+        if element_type in motivation_elements:
+            return f"Motivation_{element_type}"
+        
+        # Strategy layer elements need Strategy_ prefix for PlantUML
+        strategy_elements = ["Resource", "Capability", "Course_of_Action", "Value_Stream"]
+        if element_type in strategy_elements:
+            return f"Strategy_{element_type}"
+        
         # Direct mapping for most elements
         return element_type
     

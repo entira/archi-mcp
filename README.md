@@ -3,6 +3,13 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
+[![FastMCP](https://img.shields.io/badge/FastMCP-2.8+-green.svg)](https://github.com/jlowin/fastmcp)
+[![ArchiMate](https://img.shields.io/badge/ArchiMate-3.2-orange.svg)](https://www.opengroup.org/archimate-forum/archimate-overview)
+[![PlantUML](https://img.shields.io/badge/PlantUML-Compatible-lightblue.svg)](https://plantuml.com/)
+[![MCP Protocol](https://img.shields.io/badge/MCP-Protocol-purple.svg)](https://modelcontextprotocol.io/)
+[![Tests](https://img.shields.io/badge/Tests-182%20Passing-brightgreen.svg)](#-development)
+[![Coverage](https://img.shields.io/badge/Coverage-70%25-success.svg)](#-development)
+[![Production Ready](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)](#-overview)
 
 A specialized MCP (Model Context Protocol) server for generating PlantUML ArchiMate diagrams with comprehensive enterprise architecture modeling support.
 
@@ -21,7 +28,7 @@ ArchiMate MCP Server fills a crucial gap in the MCP ecosystem by providing dedic
 - **4 Essential Tools**: Core diagram creation with intelligent error analysis
 - **Real-time Error Analysis**: Actionable troubleshooting guidance with pattern recognition
 - **FastMCP 2.8+ Integration**: Modern MCP protocol implementation
-- **Robust Testing**: 169+ passing tests with 69% coverage and comprehensive test suites
+- **Robust Testing**: 182 passing tests with 70% coverage and comprehensive test suites
 
 ## 🚀 Quick Start
 
@@ -75,59 +82,20 @@ Show how the layers interact.
 
 The full architecture generator follows the **ArchiMate Cookbook methodology** and automatically creates multiple coordinated views with proper element relationships and business domain context.
 
-## 🏛️ Complete Architecture Demonstration
+## 🏛️ Enterprise Architecture Documentation
 
-This repository showcases a comprehensive architectural blueprint of the ArchiMate MCP Server itself, demonstrating all 7 ArchiMate layers across 8 coordinated views:
+This repository includes comprehensive architectural documentation of the ArchiMate MCP Server itself, spanning all 7 ArchiMate layers. The complete architecture documentation is available in **[EA.md](docs/EA.md)** which demonstrates real-world application of the tool's capabilities.
 
-### 🎯 **Motivation Layer** 
-![Motivation View](docs/diagrams/archi_mcp_motivation.svg)
-- **Stakeholders**: Enterprise Architect, Software Developer, Claude Desktop User
-- **Drivers**: Architecture Complexity, ArchiMate Compliance, Modeling Automation
-- **Goals**: Enable ArchiMate Modeling, Claude Integration, High Quality Diagrams
-- **Requirements**: MCP Protocol Support, ArchiMate 3.2 Support, PlantUML Generation
+### Architecture Coverage
+- **Motivation Layer**: Stakeholders, drivers, goals, and requirements
+- **Strategy Layer**: Resources, capabilities, and strategic approaches
+- **Business Layer**: Roles, processes, and services
+- **Application Layer**: Components, services, and data models
+- **Technology Layer**: Infrastructure, platforms, and runtime environments
+- **Physical Layer**: Equipment, facilities, and distribution networks
+- **Implementation Layer**: Work packages, deliverables, and migration phases
 
-### 📋 **Strategy Layer**
-![Strategy View](docs/diagrams/archi_mcp_strategy_layer.svg)
-- **Resources**: ArchiMate IP Knowledge, Development Team, MCP Ecosystem
-- **Capabilities**: Enterprise Architecture Modeling, Automated Diagram Generation, MCP Protocol Integration
-- **Courses of Action**: Open Source Strategy, MCP-First Strategy, Standards Compliance
-
-### 🏗️ **Layered Architecture**
-![Layered Architecture](docs/diagrams/archi_mcp_layered_architecture.svg)
-- **Business Layer**: EA Role, Modeling Process, Diagram Service
-- **Application Layer**: MCP Server, ArchiMate Engine, PlantUML Generator, Validator
-- **Technology Layer**: Python Runtime, PlantUML JAR, Claude Desktop
-
-### 💻 **Application Structure**
-![Application Structure](docs/diagrams/archi_mcp_application_structure.svg)
-- **Components**: MCP Server Main, Tool Registry, Request Handler, Element Factory, Relationship Manager
-- **Services**: Modeling Service, Validation Service, Generation Service
-- **Data Objects**: Element Model, Relationship Model, PlantUML Code
-
-### ⚙️ **Technology Infrastructure**
-![Technology Layer](docs/diagrams/archi_mcp_technology_layer.svg)
-- **System Software**: Python Interpreter, Java Runtime, Operating System
-- **Nodes**: Development Environment, Production Environment, Claude Desktop Environment
-- **Services**: MCP Protocol Service, PlantUML Service, Python Runtime Service
-
-### 🏗️ **Physical Infrastructure**
-![Physical Layer](docs/diagrams/archi_mcp_physical_layer.svg)
-- **Equipment**: Developer Workstation, Cloud Server, User Device
-- **Facilities**: Development Office, Cloud Datacenter, User Location
-- **Distribution Networks**: Development Path, Deployment Path, Distribution Path
-
-### 🚀 **Implementation Roadmap**
-![Implementation & Migration](docs/diagrams/archi_mcp_implementation_migration.svg)
-- **4 Development Phases**: Core Development, Advanced Features, Integration, Release
-- **Key Deliverables**: MCP Protocol Implementation, ArchiMate Engine, Validation Framework
-- **Milestone Events**: Project Start, Core Milestone, Feature Milestone, Release Event
-
-### 🔗 **Multi-Layer Integration**
-![Multi-Layer Integration](docs/diagrams/archi_mcp_multi_layer_integration.svg)
-- **Cross-layer Relationships**: End-to-end traceability from stakeholder goals to technical implementation
-- **Integration Points**: How motivation drives strategy, which shapes business processes, realized by applications, running on technology
-
-> **💡 Architecture Generation**: All these diagrams were generated using the ArchiMate MCP Server itself, demonstrating real-world application of the tool's capabilities and validating its production readiness.
+> **💡 Self-Generated Architecture**: The complete architecture was generated using the ArchiMate MCP Server itself, validating its production readiness and real-world capabilities.
 
 ## 🏛️ ArchiMate Support
 
@@ -223,7 +191,7 @@ archi-mcp/
 │   │   └── validator.py     # Model validation
 │   ├── utils/               # Logging and exceptions
 │   └── server.py            # FastMCP server entry point
-├── tests/                   # Comprehensive test suites (169+ tests, 69% coverage)
+├── tests/                   # Comprehensive test suites (182 tests, 70% coverage)
 │   ├── test_server.py           # Core server functionality tests
 │   ├── test_server_coverage.py  # Server coverage improvement tests
 │   ├── test_analysis_tools.py   # Analysis tools comprehensive tests
@@ -235,30 +203,22 @@ archi-mcp/
 ## 📁 Complete Documentation
 
 ### Architecture Documentation
-- **[ARCHITECTURE_OVERVIEW.md](docs/ARCHITECTURE_OVERVIEW.md)**: Executive summary and high-level architectural vision
-- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)**: Complete architectural analysis across all 7 ArchiMate layers
-- **[VIEWING_GUIDE.md](docs/VIEWING_GUIDE.md)**: Comprehensive guide for viewing and working with generated diagrams
+- **[EA.md](docs/EA.md)**: Complete Enterprise Architecture across all 7 ArchiMate layers
 
 ### Setup and Configuration
 - **[CLAUDE_DESKTOP_SETUP.md](docs/CLAUDE_DESKTOP_SETUP.md)**: Complete Claude Desktop configuration guide with troubleshooting
 - **[CLAUDE.md](CLAUDE.md)**: Development instructions and project guidelines for Claude
 
-### Generated Diagrams
-Pre-generated SVG diagrams are available in the `docs/diagrams` directory. PlantUML sources will be added in a future update.
-- `docs/diagrams/archi_mcp_motivation.svg` - Motivation Layer
-- `docs/diagrams/archi_mcp_strategy_layer.svg` - Strategy Layer
-- `docs/diagrams/archi_mcp_layered_architecture.svg` - Layered Architecture
-- `docs/diagrams/archi_mcp_application_structure.svg` - Application Structure
-- `docs/diagrams/archi_mcp_technology_layer.svg` - Technology Infrastructure
-- `docs/diagrams/archi_mcp_physical_layer.svg` - Physical Infrastructure
-- `docs/diagrams/archi_mcp_implementation_migration.svg` - Implementation Roadmap
-- `docs/diagrams/archi_mcp_multi_layer_integration.svg` - Multi-Layer Integration
+### Architecture Documentation
+- **[EA.md](docs/EA.md)**: Complete Enterprise Architecture documentation with PlantUML source code
+- **Generated Diagrams**: Available via the MCP server's diagram generation capabilities
+- **Self-Validation**: Architecture documentation was created using the tool itself
 
-> **💡 Self-Generated**: All these diagrams were created using the ArchiMate MCP Server itself, proving the tool's real-world capabilities and production readiness.
+> **💡 Live Generation**: All architecture diagrams can be regenerated using the ArchiMate MCP Server itself, demonstrating the tool's real-world capabilities and production readiness.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on:
+Contributions are welcome! Please see the project documentation for details on:
 
 - Code style and standards
 - Submitting pull requests

@@ -310,6 +310,8 @@ class TestGeneratorValidation:
         from archi_mcp.archimate.generator import ArchiMateGenerator
         from archi_mcp.archimate import ArchiMateElement, ArchiMateRelationship
         from archi_mcp.archimate.elements.base import ArchiMateLayer, ArchiMateAspect
+        from archi_mcp.utils.exceptions import ArchiMateGenerationError
+        import pytest
         
         generator = ArchiMateGenerator()
         
@@ -323,19 +325,20 @@ class TestGeneratorValidation:
         )
         generator.add_element(element)
         
-        # Add relationship referencing non-existent element
+        # Try to add relationship referencing non-existent element
         orphaned_relationship = ArchiMateRelationship(
             id="orphan",
             from_element="elem1",
             to_element="nonexistent",  # This element doesn't exist
             relationship_type="Access"
         )
-        generator.add_relationship(orphaned_relationship)
         
-        # Validation should fail
-        errors = generator.validate_diagram()
-        assert len(errors) > 0
-        assert any("orphaned" in error.lower() or "nonexistent" in error.lower() for error in errors)
+        # Adding orphaned relationship should raise ArchiMateGenerationError
+        with pytest.raises(ArchiMateGenerationError) as exc_info:
+            generator.add_relationship(orphaned_relationship)
+        
+        # Verify error message contains information about the orphaned relationship
+        assert "nonexistent" in str(exc_info.value)
     
     def test_validate_diagram_with_duplicate_ids(self):
         """Test validation with duplicate element IDs."""

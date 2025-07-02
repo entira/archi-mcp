@@ -3,12 +3,12 @@
 ## Project Overview
 Professional Model Context Protocol server for ArchiMate enterprise architecture modeling with AI-powered diagram generation and PlantUML integration.
 
-## Key Features (4-Tool Focused API)
+## Key Features
 - **Complete ArchiMate 3.2 Support**: All 55+ elements across 7 layers
 - **Intelligent Input Normalization**: Case-insensitive inputs ("function" → "Business_Function", "motivation" → "Motivation")
 - **Built-in PlantUML Validation**: Automatic syntax and rendering validation before returning results
 - **macOS-Optimized PNG/SVG Generation**: ALWAYS uses headless PlantUML mode to prevent cursor interference
-- **FastMCP 2.8+ Integration**: Modern MCP protocol with 4 essential tools
+- **FastMCP 2.8+ Integration**: Modern MCP protocol with image support
 - **Intelligent Error Analysis**: Real-time error detection with actionable troubleshooting guidance
 - **Comprehensive Testing**: 169+ passing tests with 69% coverage and robust error handling
 - **Claude Desktop Ready**: Optimized configuration for seamless integration
@@ -154,7 +154,7 @@ uv run ruff check src/ tests/
 uv run mypy src/
 ```
 
-## Available MCP Tools (4-Tool Focused API)
+## Available MCP Tools
 
 ### 1. `create_archimate_diagram(diagram: DiagramInput) -> str`
 **Core diagram creation tool** - Generate complete ArchiMate diagrams from structured input.
@@ -162,7 +162,9 @@ uv run mypy src/
 - Automatic element type and layer normalization (case-insensitive)
 - Built-in PlantUML validation before returning results
 - PNG/SVG generation with headless Java PlantUML integration (macOS-optimized, prevents focus stealing)
-- Returns validated PlantUML code with statistics
+- **Automatic HTTP server** - Starts web server for serving diagrams
+- **Direct viewing URLs** - Returns HTTP URLs for immediate diagram viewing
+- Returns validated PlantUML code with statistics and viewing URLs
 
 ### 2. `analyze_current_architecture() -> str`
 **Architecture health assessment tool** - Analyze current architecture state and provide insights.
@@ -184,7 +186,8 @@ uv run mypy src/
 - Categorized error reporting (Empty Model, Orphaned Relationships, System Errors)
 - Contextual troubleshooting recommendations
 - Configurable time window analysis (1-60 minutes)
-- Comprehensive documentation: [analyze_recent_errors.md](analyze_recent_errors.md)
+- Monitors validation error log: `logs/validation_errors.jsonl`
+
 
 ## Project Structure
 ```
@@ -298,6 +301,177 @@ Use full path in Claude Desktop config with `uv` command and `--directory` flag.
 - **During development:** Use `tail -f logs/validation_errors.jsonl` to monitor real-time errors
 - **After fixes:** Verify log is clean with `wc -l logs/validation_errors.jsonl` (should be 0)
 - **Pattern analysis:** Use `grep` to find common error patterns for systematic fixes
+
+## Development Guidelines
+
+### Adding New MCP Tools
+
+```python
+@mcp.tool()
+def your_new_archimate_tool(param1: str, param2: Optional[ElementInput] = None) -> str:
+    """
+    Tool description for MCP protocol.
+    
+    Args:
+        param1: Required string parameter
+        param2: Optional ArchiMate element parameter
+        
+    Returns:
+        Formatted string response with PlantUML code
+        
+    Raises:
+        ArchiMateValidationError: If param1 is invalid
+        ArchiMateGenerationError: If generation fails
+    """
+    # 1. Input validation
+    if not param1.strip():
+        return "❌ Error: param1 cannot be empty"
+    
+    # 2. ArchiMate-specific logic
+    try:
+        if param2:
+            element = _create_element_from_data(param2)
+            generator.add_element(element)
+        
+        result = generator.generate_plantuml(title=param1)
+        
+    except ArchiMateValidationError as e:
+        return f"❌ Validation Error: {str(e)}"
+    except Exception as e:
+        logger.error(f"Tool error: {e}")
+        return f"❌ Error: {str(e)}"
+    
+    # 3. Format response with statistics
+    stats = {
+        "elements": generator.get_element_count(),
+        "relationships": generator.get_relationship_count()
+    }
+    
+    return f"✅ Success: {param1}\n\nStatistics:\n- Elements: {stats['elements']}\n- Relationships: {stats['relationships']}\n\nPlantUML Code:\n```plantuml\n{result}\n```"
+```
+
+### Testing New Features
+
+```python
+# tests/test_new_feature.py
+import pytest
+from archi_mcp.server import your_new_archimate_tool
+from archi_mcp.server import ElementInput
+
+class TestNewArchiMateTool:
+    def test_basic_functionality(self):
+        """Test basic tool functionality."""
+        result = your_new_archimate_tool("test input")
+        
+        assert isinstance(result, str)
+        assert "✅ Success" in result
+        assert "```plantuml" in result
+    
+    def test_with_element_input(self):
+        """Test with ArchiMate element input."""
+        element_input = ElementInput(
+            id="test_element",
+            name="Test Element",
+            element_type="Business_Actor",
+            layer="Business"
+        )
+        
+        result = your_new_archimate_tool("test", element_input)
+        
+        assert "Business_Actor" in result
+        assert "Test Element" in result
+    
+    def test_error_handling(self):
+        """Test error handling."""
+        result = your_new_archimate_tool("")  # Empty input
+        
+        assert "❌ Error" in result
+        assert "cannot be empty" in result
+```
+
+### Custom ArchiMate Elements
+
+```python
+# src/archi_mcp/archimate/elements/custom.py
+from .base import ArchiMateElement, ArchiMateLayer, ArchiMateAspect
+
+class CustomElement(ArchiMateElement):
+    """Custom ArchiMate element for specialized use cases."""
+    
+    def __init__(self, id: str, name: str, custom_property: str = None, **kwargs):
+        super().__init__(
+            id=id,
+            name=name,
+            element_type="Custom_Element",
+            layer=ArchiMateLayer.BUSINESS,
+            aspect=ArchiMateAspect.BEHAVIOR,
+            **kwargs
+        )
+        self.custom_property = custom_property
+    
+    def to_plantuml(self) -> str:
+        """Generate custom PlantUML syntax."""
+        return f"Business_Element({self.id}, \"{self.name}\")"
+```
+
+### Code Style Requirements
+
+```python
+# Type hints are REQUIRED for all ArchiMate functions
+def create_business_element(element_type: str, 
+                          id: str, 
+                          name: str,
+                          description: Optional[str] = None) -> ArchiMateElement:
+    """
+    Create business layer ArchiMate element.
+    
+    Args:
+        element_type: Valid business element type (Business_Actor, Business_Process, etc.)
+        id: Unique element identifier
+        name: Human-readable element name
+        description: Optional element description
+        
+    Returns:
+        Configured ArchiMateElement instance
+        
+    Raises:
+        ArchiMateValidationError: If element_type is not valid for business layer
+    """
+    # Validate business layer element types
+    valid_business_types = ["Business_Actor", "Business_Role", "Business_Process", "Business_Service"]
+    if element_type not in valid_business_types:
+        raise ArchiMateValidationError(f"Invalid business element type: {element_type}")
+    
+    return ArchiMateElement(
+        id=id,
+        name=name,
+        element_type=element_type,
+        layer=ArchiMateLayer.BUSINESS,
+        aspect=_get_aspect_for_element_type(element_type),
+        description=description
+    )
+
+# Error handling is MANDATORY for all ArchiMate operations
+try:
+    plantuml_result = generator.generate_plantuml()
+    validation_result = validator.validate_model(elements, relationships)
+except ArchiMateGenerationError as e:
+    logger.error(f"PlantUML generation failed: {e}")
+    return f"❌ Generation Error: {str(e)}"
+except ArchiMateValidationError as e:
+    logger.error(f"Model validation failed: {e}")
+    return f"❌ Validation Error: {str(e)}"
+```
+
+### ArchiMate Compliance Checklist
+
+- [ ] **Element Types**: Only use valid ArchiMate 3.2 element types
+- [ ] **Layer Assignment**: Elements assigned to correct layers
+- [ ] **Relationship Rules**: Follow ArchiMate relationship matrix
+- [ ] **PlantUML Syntax**: Generate valid PlantUML with ArchiMate includes
+- [ ] **Documentation**: Include ArchiMate view descriptions
+- [ ] **Testing**: Test with all 7 layers and relationship types
+- [ ] **Examples**: Provide real-world architecture examples
 
 ## Quality Metrics
 - ✅ **Enhanced test suite** - 169 passing tests (7 skipped) with 69% code coverage (1075/1548 lines)
