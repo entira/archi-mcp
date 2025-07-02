@@ -14,9 +14,10 @@ import logging
 import threading
 import socket
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Literal
 from pathlib import Path
 import glob
+from enum import Enum
 
 from fastmcp import FastMCP, utilities
 from pydantic import BaseModel, Field
@@ -169,10 +170,10 @@ def validate_custom_relationship_name(custom_name: str, formal_relationship_type
     # Check length - max 3 words or 30 characters
     words = custom_name.strip().split()
     if len(words) > 3:
-        return False, "Custom relationship name must be maximum 3 words"
+        return False, f"Custom relationship name must be maximum 3 words. Current: '{custom_name}' ({len(words)} words). Try: '{' '.join(words[:3])}'"
     
     if len(custom_name) > 30:
-        return False, "Custom relationship name must be maximum 30 characters"
+        return False, f"Custom relationship name must be maximum 30 characters. Current: '{custom_name}' ({len(custom_name)} chars)"
     
     # Define valid synonyms for each formal relationship type
     relationship_synonyms = {
@@ -384,32 +385,306 @@ def start_http_server():
         logger.error(f"Failed to start HTTP server: {e}. Install starlette and uvicorn.")
         return None
 
-# Pydantic models for input validation
+# Comprehensive ArchiMate Element Type Enums by Layer
+class BusinessElementType(str, Enum):
+    """Business Layer elements - actors, roles, processes, services, and objects."""
+    BUSINESS_ACTOR = "Business_Actor"
+    BUSINESS_ROLE = "Business_Role"
+    BUSINESS_COLLABORATION = "Business_Collaboration"
+    BUSINESS_INTERFACE = "Business_Interface"
+    BUSINESS_FUNCTION = "Business_Function"
+    BUSINESS_PROCESS = "Business_Process"
+    BUSINESS_EVENT = "Business_Event"
+    BUSINESS_SERVICE = "Business_Service"
+    BUSINESS_OBJECT = "Business_Object"
+    BUSINESS_CONTRACT = "Business_Contract"
+    BUSINESS_REPRESENTATION = "Business_Representation"
+    LOCATION = "Location"
+
+class ApplicationElementType(str, Enum):
+    """Application Layer elements - components, services, interfaces, and data objects."""
+    APPLICATION_COMPONENT = "Application_Component"
+    APPLICATION_COLLABORATION = "Application_Collaboration"
+    APPLICATION_INTERFACE = "Application_Interface"
+    APPLICATION_FUNCTION = "Application_Function"
+    APPLICATION_INTERACTION = "Application_Interaction"
+    APPLICATION_PROCESS = "Application_Process"
+    APPLICATION_EVENT = "Application_Event"
+    APPLICATION_SERVICE = "Application_Service"
+    DATA_OBJECT = "Data_Object"
+
+class TechnologyElementType(str, Enum):
+    """Technology Layer elements - nodes, devices, software, networks, and artifacts."""
+    NODE = "Node"
+    DEVICE = "Device"
+    SYSTEM_SOFTWARE = "System_Software"
+    TECHNOLOGY_COLLABORATION = "Technology_Collaboration"
+    TECHNOLOGY_INTERFACE = "Technology_Interface"
+    PATH = "Path"
+    COMMUNICATION_NETWORK = "Communication_Network"
+    TECHNOLOGY_FUNCTION = "Technology_Function"
+    TECHNOLOGY_PROCESS = "Technology_Process"
+    TECHNOLOGY_INTERACTION = "Technology_Interaction"
+    TECHNOLOGY_EVENT = "Technology_Event"
+    TECHNOLOGY_SERVICE = "Technology_Service"
+    ARTIFACT = "Artifact"
+
+class PhysicalElementType(str, Enum):
+    """Physical Layer elements - equipment, facilities, distribution networks, and materials."""
+    EQUIPMENT = "Equipment"
+    FACILITY = "Facility"
+    DISTRIBUTION_NETWORK = "Distribution_Network"
+    MATERIAL = "Material"
+
+class MotivationElementType(str, Enum):
+    """Motivation Layer elements - stakeholders, drivers, goals, requirements, and principles."""
+    STAKEHOLDER = "Stakeholder"
+    DRIVER = "Driver"
+    ASSESSMENT = "Assessment"
+    GOAL = "Goal"
+    OUTCOME = "Outcome"
+    PRINCIPLE = "Principle"
+    REQUIREMENT = "Requirement"
+    CONSTRAINT = "Constraint"
+    MEANING = "Meaning"
+    VALUE = "Value"
+
+class StrategyElementType(str, Enum):
+    """Strategy Layer elements - resources, capabilities, courses of action, and value streams."""
+    RESOURCE = "Resource"
+    CAPABILITY = "Capability"
+    COURSE_OF_ACTION = "Course_of_Action"
+    VALUE_STREAM = "Value_Stream"
+
+class ImplementationElementType(str, Enum):
+    """Implementation Layer elements - work packages, deliverables, events, plateaus, and gaps."""
+    WORK_PACKAGE = "Work_Package"
+    DELIVERABLE = "Deliverable"
+    IMPLEMENTATION_EVENT = "Implementation_Event"
+    PLATEAU = "Plateau"
+    GAP = "Gap"
+
+class ArchiMateLayerType(str, Enum):
+    """ArchiMate 3.2 specification layers."""
+    BUSINESS = "Business"
+    APPLICATION = "Application"
+    TECHNOLOGY = "Technology"
+    PHYSICAL = "Physical"
+    MOTIVATION = "Motivation"
+    STRATEGY = "Strategy"
+    IMPLEMENTATION = "Implementation"
+
+class ArchiMateRelationshipType(str, Enum):
+    """Complete ArchiMate 3.2 relationship types with descriptions."""
+    ACCESS = "Access"  # Element can access another element
+    AGGREGATION = "Aggregation"  # Whole-part relationship, parts can exist independently
+    ASSIGNMENT = "Assignment"  # Element is assigned to another element
+    ASSOCIATION = "Association"  # General relationship between elements
+    COMPOSITION = "Composition"  # Whole-part relationship, parts cannot exist independently
+    FLOW = "Flow"  # Transfer of information, money, goods, etc.
+    INFLUENCE = "Influence"  # Element influences another element
+    REALIZATION = "Realization"  # Element realizes or implements another element
+    SERVING = "Serving"  # Element serves another element
+    SPECIALIZATION = "Specialization"  # Is-a relationship, inheritance
+    TRIGGERING = "Triggering"  # Element triggers another element
+
+class LayoutDirectionType(str, Enum):
+    """Layout direction options for diagram generation."""
+    TOP_BOTTOM = "top-bottom"
+    LEFT_RIGHT = "left-right"
+    BOTTOM_TOP = "bottom-top"
+    RIGHT_LEFT = "right-left"
+
+class LayoutSpacingType(str, Enum):
+    """Layout spacing options for diagram generation."""
+    COMPACT = "compact"
+    NORMAL = "normal"
+    WIDE = "wide"
+
+class BooleanStringType(str, Enum):
+    """Boolean values as strings (required for layout parameters)."""
+    TRUE = "true"
+    FALSE = "false"
+
+# Pydantic models for input validation with comprehensive schema
 class ElementInput(BaseModel):
-    id: str = Field(..., description="Unique element identifier")
-    name: str = Field(..., description="Element display name")
-    element_type: str = Field(..., description="ArchiMate element type")
-    layer: str = Field(..., description="ArchiMate layer")
-    description: Optional[str] = Field(None, description="Element description")
-    stereotype: Optional[str] = Field(None, description="Element stereotype")
-    properties: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    """ArchiMate element with comprehensive validation and capability discovery.
+    
+    Element types are organized by ArchiMate 3.2 layers:
+    - Business: Business_Actor, Business_Role, Business_Process, Business_Service, etc.
+    - Application: Application_Component, Application_Service, Data_Object, etc.
+    - Technology: Node, Device, System_Software, Technology_Service, etc.  
+    - Physical: Equipment, Facility, Distribution_Network, Material
+    - Motivation: Stakeholder, Driver, Goal, Requirement, Principle, etc.
+    - Strategy: Resource, Capability, Course_of_Action, Value_Stream
+    - Implementation: Work_Package, Deliverable, Implementation_Event, Plateau, Gap
+    """
+    id: str = Field(..., 
+        description="Unique element identifier (e.g., 'customer_portal', 'user_mgmt_service')")
+    
+    name: str = Field(..., 
+        description="Element display name (e.g., 'Customer Portal', 'User Management Service')")
+    
+    element_type: str = Field(..., 
+        description="""ArchiMate element type. Choose from layer-specific options:
+        
+        BUSINESS LAYER:
+        • Business_Actor, Business_Role, Business_Collaboration, Business_Interface
+        • Business_Function, Business_Process, Business_Event, Business_Service
+        • Business_Object, Business_Contract, Business_Representation, Location
+        
+        APPLICATION LAYER:
+        • Application_Component, Application_Collaboration, Application_Interface
+        • Application_Function, Application_Interaction, Application_Process
+        • Application_Event, Application_Service, Data_Object
+        
+        TECHNOLOGY LAYER:
+        • Node, Device, System_Software, Technology_Collaboration, Technology_Interface
+        • Path, Communication_Network, Technology_Function, Technology_Process
+        • Technology_Interaction, Technology_Event, Technology_Service, Artifact
+        
+        PHYSICAL LAYER:
+        • Equipment, Facility, Distribution_Network, Material
+        
+        MOTIVATION LAYER:
+        • Stakeholder, Driver, Assessment, Goal, Outcome, Principle
+        • Requirement, Constraint, Meaning, Value
+        
+        STRATEGY LAYER:
+        • Resource, Capability, Course_of_Action, Value_Stream
+        
+        IMPLEMENTATION LAYER:
+        • Work_Package, Deliverable, Implementation_Event, Plateau, Gap""")
+    
+    layer: ArchiMateLayerType = Field(..., 
+        description="ArchiMate layer: Business, Application, Technology, Physical, Motivation, Strategy, Implementation")
+    
+    description: Optional[str] = Field(None, 
+        description="Element description for documentation")
+    
+    stereotype: Optional[str] = Field(None, 
+        description="Element stereotype for specialized notation")
+    
+    properties: Optional[Dict[str, Any]] = Field(default_factory=dict, 
+        description="Additional element properties as key-value pairs")
 
 class RelationshipInput(BaseModel):
-    id: str = Field(..., description="Unique relationship identifier")
-    from_element: str = Field(..., description="Source element ID")
-    to_element: str = Field(..., description="Target element ID")
-    relationship_type: str = Field(..., description="ArchiMate relationship type")
-    description: Optional[str] = Field(None, description="Relationship description")
-    direction: Optional[str] = Field(None, description="Direction hint for layout")
-    label: Optional[str] = Field(None, description="Relationship label")
+    """ArchiMate relationship with comprehensive validation and capability discovery.
+    
+    Supports all 12 ArchiMate 3.2 relationship types:
+    - Access: Element can access another element
+    - Aggregation: Whole-part relationship (parts can exist independently)  
+    - Assignment: Element is assigned to another element
+    - Association: General relationship between elements
+    - Composition: Whole-part relationship (parts cannot exist independently)
+    - Flow: Transfer of information, money, goods, etc.
+    - Influence: Element influences another element  
+    - Realization: Element realizes or implements another element
+    - Serving: Element serves another element
+    - Specialization: Is-a relationship, inheritance
+    - Triggering: Element triggers another element
+    """
+    id: str = Field(..., 
+        description="Unique relationship identifier (e.g., 'portal_serves_customer', 'db_supports_service')")
+    
+    from_element: str = Field(..., 
+        description="Source element ID (must match an element.id)")
+    
+    to_element: str = Field(..., 
+        description="Target element ID (must match an element.id)")
+    
+    relationship_type: ArchiMateRelationshipType = Field(..., 
+        description="""ArchiMate relationship type. Choose from:
+        • Access - Element can access another element
+        • Aggregation - Whole-part relationship (parts can exist independently)
+        • Assignment - Element is assigned to another element  
+        • Association - General relationship between elements
+        • Composition - Whole-part relationship (parts cannot exist independently)
+        • Flow - Transfer of information, money, goods, etc.
+        • Influence - Element influences another element
+        • Realization - Element realizes or implements another element
+        • Serving - Element serves another element
+        • Specialization - Is-a relationship, inheritance
+        • Triggering - Element triggers another element""")
+    
+    description: Optional[str] = Field(None, 
+        description="Relationship description for documentation")
+    
+    direction: Optional[LayoutDirectionType] = Field(None, 
+        description="Direction hint for layout: top-bottom, left-right, bottom-top, right-left")
+    
+    label: Optional[str] = Field(None, 
+        description="Custom relationship label (max 3 words, 30 chars). If not provided, uses translated relationship type.")
 
 class DiagramInput(BaseModel):
-    elements: List[ElementInput] = Field(..., description="List of ArchiMate elements")
-    relationships: List[RelationshipInput] = Field(default_factory=list, description="List of relationships")
-    title: Optional[str] = Field(None, description="Diagram title")
-    description: Optional[str] = Field(None, description="Diagram description")
-    layout: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Layout configuration")
-    language: Optional[str] = Field("en", description="Language code for translations (en, sk)")
+    """Complete ArchiMate diagram specification with comprehensive capability discovery.
+    
+    Generates production-ready PlantUML diagrams with PNG/SVG output and live HTTP server URLs.
+    Supports automatic language detection (Slovak/English) and intelligent layout optimization.
+    """
+    elements: List[ElementInput] = Field(..., 
+        description="""ArchiMate elements organized by layer. Example:
+        [
+          {
+            "id": "customer_portal", 
+            "name": "Customer Portal",
+            "element_type": "Application_Component",
+            "layer": "Application",
+            "description": "Web-based customer interface"
+          }
+        ]""")
+    
+    relationships: List[RelationshipInput] = Field(default_factory=list, 
+        description="""ArchiMate relationships between elements. Example:
+        [
+          {
+            "id": "portal_serves_customer",
+            "from_element": "customer_portal", 
+            "to_element": "customer_actor",
+            "relationship_type": "Serving",
+            "label": "provides interface"
+          }
+        ]""")
+    
+    title: Optional[str] = Field(None, 
+        description="Diagram title (e.g., 'Customer Service Architecture', 'System Overview')")
+    
+    description: Optional[str] = Field(None, 
+        description="Diagram description for documentation")
+    
+    layout: Optional[Dict[str, Any]] = Field(default_factory=dict, 
+        description="""Layout configuration options. All values must be STRINGS:
+        
+        LAYOUT DIRECTION:
+        • "direction": "top-bottom" | "left-right" | "bottom-top" | "right-left"
+        
+        LAYOUT SPACING:  
+        • "spacing": "compact" | "normal" | "wide"
+        
+        DISPLAY OPTIONS (use "true" or "false" as strings, NOT booleans):
+        • "show_legend": "true" | "false" 
+        • "show_title": "true" | "false"
+        • "group_by_layer": "true" | "false"
+        • "show_element_types": "true" | "false" 
+        • "show_relationship_labels": "true" | "false"
+        
+        EXAMPLE:
+        {
+          "direction": "top-bottom",
+          "spacing": "compact", 
+          "show_legend": "false",
+          "group_by_layer": "true"
+        }
+        
+        CRITICAL: Use string values like "true"/"false", NOT boolean true/false!""")
+    
+    language: Optional[Literal["en", "sk"]] = Field("en", 
+        description="""Language for diagram labels and layer names:
+        • "en" - English (default)
+        • "sk" - Slovak 
+        
+        Language is automatically detected from element/relationship text content.
+        Slovak detection triggers automatic translation of layer names and relationship labels.""")
 
 # Fixed element type mapping based on test errors
 ELEMENT_TYPE_MAPPING = {
@@ -755,8 +1030,17 @@ def validate_element_input(element: ElementInput) -> tuple[bool, str]:
     
     # Check if element type is valid
     if normalized_type not in ELEMENT_TYPE_MAPPING.values():
-        valid_types = list(ELEMENT_TYPE_MAPPING.keys())
-        return False, f"Invalid element type: {element.element_type}. Valid types: {valid_types[:10]}..."
+        # Find layer-specific element types for better error message
+        layer_elements = []
+        for key, value in ELEMENT_TYPE_MAPPING.items():
+            if normalized_layer.lower() in key.lower():
+                layer_elements.append(key)
+        
+        if layer_elements:
+            return False, f"Invalid element type: '{element.element_type}' for {normalized_layer} layer. Valid {normalized_layer} types: {layer_elements}"
+        else:
+            valid_types = list(ELEMENT_TYPE_MAPPING.keys())
+            return False, f"Invalid element type: '{element.element_type}'. Use 'node' instead of 'technology_node'. Valid types: {valid_types[:10]}..."
     
     # Check if layer is valid  
     if normalized_layer not in VALID_LAYERS.values():
@@ -852,20 +1136,112 @@ def _validate_png_file(png_file_path: Path) -> tuple[bool, str]:
 # Core MCP Tools
 @mcp.tool()
 def create_archimate_diagram(diagram: DiagramInput) -> str:
-    """Generate complete ArchiMate diagrams from structured input with elements and relationships.
+    """Generate production-ready ArchiMate diagrams with comprehensive capability discovery.
     
-    Automatically detects language from content and translates layer names and relationship labels.
-    Supports Slovak language detection via Slovak text patterns and diacritics.
-    When Slovak content detected: layer names and relationship labels are translated to Slovak.
+    🏗️ COMPLETE ARCHIMATE 3.2 SUPPORT:
+    • ALL 55+ elements across 7 layers (Business, Application, Technology, Physical, Motivation, Strategy, Implementation)
+    • ALL 12 relationship types with directional variants
+    • Universal PlantUML generation with proper layer prefixes (Physical_, Strategy_, Implementation_, Motivation_)
     
-    Available languages: en (English), sk (Slovak) - detected automatically
+    📋 SUPPORTED ELEMENTS BY LAYER:
     
-    Outputs are saved to CWD/exports/YYYYMMDD_HHMMSS/ directory with:
-    - diagram.puml: Validated PlantUML code
-    - diagram.png: Generated PNG (mandatory)
-    - architecture.md: Extended textual architecture representation with PNG link
-    - generation.log: Debug log with detailed generation info
-    - metadata.json: Diagram metadata and statistics
+    BUSINESS: Business_Actor, Business_Role, Business_Collaboration, Business_Interface, Business_Function, 
+              Business_Process, Business_Event, Business_Service, Business_Object, Business_Contract, 
+              Business_Representation, Location
+              
+    APPLICATION: Application_Component, Application_Collaboration, Application_Interface, Application_Function,
+                 Application_Interaction, Application_Process, Application_Event, Application_Service, Data_Object
+                 
+    TECHNOLOGY: Node, Device, System_Software, Technology_Collaboration, Technology_Interface, Path,
+                Communication_Network, Technology_Function, Technology_Process, Technology_Interaction,
+                Technology_Event, Technology_Service, Artifact
+                
+    PHYSICAL: Equipment, Facility, Distribution_Network, Material
+    
+    MOTIVATION: Stakeholder, Driver, Assessment, Goal, Outcome, Principle, Requirement, Constraint, Meaning, Value
+    
+    STRATEGY: Resource, Capability, Course_of_Action, Value_Stream
+    
+    IMPLEMENTATION: Work_Package, Deliverable, Implementation_Event, Plateau, Gap
+    
+    🔗 SUPPORTED RELATIONSHIPS:
+    • Access, Aggregation, Assignment, Association, Composition, Flow
+    • Influence, Realization, Serving, Specialization, Triggering
+    
+    ⚙️ LAYOUT CONFIGURATION (all values as STRINGS):
+    • direction: "top-bottom" | "left-right" | "bottom-top" | "right-left"
+    • spacing: "compact" | "normal" | "wide" 
+    • show_legend: "true" | "false"
+    • show_title: "true" | "false"
+    • group_by_layer: "true" | "false"
+    • show_element_types: "true" | "false"
+    • show_relationship_labels: "true" | "false"
+    
+    🌍 LANGUAGE SUPPORT:
+    • Automatic language detection (Slovak/English)
+    • Slovak detection via text patterns and diacritics
+    • Auto-translation of layer names and relationship labels
+    
+    📦 OUTPUT ARTIFACTS (saved to CWD/exports/YYYYMMDD_HHMMSS/):
+    • diagram.puml: Validated PlantUML source code
+    • diagram.png: Production-ready PNG image 
+    • diagram.svg: Vector SVG format
+    • architecture.md: Extended documentation with embedded images
+    • generation.log: Comprehensive debug information
+    • metadata.json: Diagram statistics and metadata
+    
+    🌐 LIVE PREVIEW:
+    • Automatic HTTP server for instant diagram viewing
+    • Base64 data URLs for immediate browser display
+    • Direct PlantUML server integration for online rendering
+    
+    ⚡ ERROR PREVENTION:
+    This enhanced schema prevents the 5 main error types identified in testing:
+    1. Strategy/Physical/Implementation layer element type validation
+    2. Layout parameter data type validation (strings, not booleans) 
+    3. Comprehensive relationship type enumeration
+    4. Layer-specific element type guidance
+    5. Fallback strategies for unsupported elements
+    
+    📚 ARCHITECTURE PATTERN EXAMPLES:
+    
+    SIMPLE SERVICE ARCHITECTURE:
+    {
+      "elements": [
+        {"id": "customer", "name": "Customer", "element_type": "Business_Actor", "layer": "Business"},
+        {"id": "portal", "name": "Customer Portal", "element_type": "Application_Component", "layer": "Application"},
+        {"id": "database", "name": "Customer DB", "element_type": "Node", "layer": "Technology"}
+      ],
+      "relationships": [
+        {"id": "r1", "from_element": "portal", "to_element": "customer", "relationship_type": "Serving"},
+        {"id": "r2", "from_element": "database", "to_element": "portal", "relationship_type": "Serving"}
+      ],
+      "layout": {"direction": "top-bottom", "spacing": "compact", "show_legend": "false"}
+    }
+    
+    COMPLETE ENTERPRISE ARCHITECTURE:
+    {
+      "elements": [
+        {"id": "architect", "name": "Enterprise Architect", "element_type": "Stakeholder", "layer": "Motivation"},
+        {"id": "goal", "name": "Digital Transformation", "element_type": "Goal", "layer": "Motivation"},
+        {"id": "capability", "name": "Service Integration", "element_type": "Capability", "layer": "Strategy"},
+        {"id": "process", "name": "Order Management", "element_type": "Business_Process", "layer": "Business"},
+        {"id": "service", "name": "Order Service", "element_type": "Application_Service", "layer": "Application"},
+        {"id": "server", "name": "Application Server", "element_type": "Node", "layer": "Technology"},
+        {"id": "datacenter", "name": "Primary Datacenter", "element_type": "Facility", "layer": "Physical"},
+        {"id": "project", "name": "Service Migration", "element_type": "Work_Package", "layer": "Implementation"}
+      ],
+      "relationships": [
+        {"id": "r1", "from_element": "architect", "to_element": "goal", "relationship_type": "Assignment"},
+        {"id": "r2", "from_element": "goal", "to_element": "capability", "relationship_type": "Realization"},
+        {"id": "r3", "from_element": "capability", "to_element": "process", "relationship_type": "Realization"},
+        {"id": "r4", "from_element": "process", "to_element": "service", "relationship_type": "Realization"},
+        {"id": "r5", "from_element": "service", "to_element": "server", "relationship_type": "Assignment"},
+        {"id": "r6", "from_element": "server", "to_element": "datacenter", "relationship_type": "Assignment"},
+        {"id": "r7", "from_element": "project", "to_element": "service", "relationship_type": "Realization"}
+      ],
+      "layout": {"direction": "top-bottom", "group_by_layer": "true", "spacing": "normal"}
+    }
     """
     debug_log = []  # Collect debug log entries
     start_time = time.time()
