@@ -21,14 +21,15 @@ ArchiMate MCP Server fills a crucial gap in the MCP ecosystem by providing dedic
 
 ### Key Features
 
-- **Complete ArchiMate 3.2 Support**: All 55+ elements across 7 layers
-- **Intelligent Input Normalization**: Case-insensitive inputs with automatic correction
-- **Built-in Validation**: Comprehensive PlantUML and ArchiMate validation
-- **macOS-Optimized PNG Generation**: Headless mode prevents cursor interference
-- **4 Essential Tools**: Core diagram creation with intelligent error analysis
-- **Real-time Error Analysis**: Actionable troubleshooting guidance with pattern recognition
-- **FastMCP 2.8+ Integration**: Modern MCP protocol implementation
-- **Robust Testing**: 182 passing tests with 70% coverage and comprehensive test suites
+- **Complete ArchiMate 3.2 Support**: All 55+ elements across **100% of 7 layers** (Motivation, Strategy, Business, Application, Technology, Physical, Implementation)
+- **Universal PlantUML Generation**: All layers now supported with proper ArchiMate prefixes (Physical_, Strategy_, Implementation_, Motivation_)
+- **Intelligent Input Normalization**: Case-insensitive inputs with automatic correction and helpful error messages
+- **Built-in Validation**: Comprehensive PlantUML and ArchiMate validation with real-time error detection
+- **macOS-Optimized PNG/SVG Generation**: Headless mode prevents cursor interference + live HTTP server for instant viewing
+- **4 Essential Tools**: Core diagram creation with intelligent error analysis and architecture health assessment
+- **Real-time Error Analysis**: Actionable troubleshooting guidance with pattern recognition and fix suggestions
+- **FastMCP 2.8+ Integration**: Modern MCP protocol implementation with Image object support
+- **Production-Ready Testing**: 182 passing tests with 70% coverage and comprehensive test suites across all layers
 
 ## 🚀 Quick Start
 
@@ -82,20 +83,58 @@ Show how the layers interact.
 
 The full architecture generator follows the **ArchiMate Cookbook methodology** and automatically creates multiple coordinated views with proper element relationships and business domain context.
 
-## 🏛️ Enterprise Architecture Documentation
+## 🏛️ Complete Architecture Demonstration
 
-This repository includes comprehensive architectural documentation of the ArchiMate MCP Server itself, spanning all 7 ArchiMate layers. The complete architecture documentation is available in **[EA.md](docs/EA.md)** which demonstrates real-world application of the tool's capabilities.
+This repository showcases comprehensive architectural documentation of the ArchiMate MCP Server itself, spanning all 7 ArchiMate layers with **production-ready diagrams**. Each layer is fully supported with complete PlantUML generation:
 
-### Architecture Coverage
-- **Motivation Layer**: Stakeholders, drivers, goals, and requirements
-- **Strategy Layer**: Resources, capabilities, and strategic approaches
-- **Business Layer**: Roles, processes, and services
-- **Application Layer**: Components, services, and data models
-- **Technology Layer**: Infrastructure, platforms, and runtime environments
-- **Physical Layer**: Equipment, facilities, and distribution networks
-- **Implementation Layer**: Work packages, deliverables, and migration phases
+### 🎯 **Complete Layered Architecture Overview**
+![ArchiMate MCP Server - Enhanced Layered Architecture](docs/diagrams/archi_mcp_layered_architecture_enhanced.svg)
+*Complete enterprise architecture spanning all 7 ArchiMate layers with cross-layer relationships and dependencies*
 
-> **💡 Self-Generated Architecture**: The complete architecture was generated using the ArchiMate MCP Server itself, validating its production readiness and real-world capabilities.
+### 🎯 **Motivation Layer** 
+![Motivation View](docs/diagrams/archi_mcp_motivation.svg)
+- **Stakeholders**: Enterprise Architect, Software Developer, Claude Desktop User
+- **Drivers**: Architecture Complexity, ArchiMate Compliance, Modeling Automation
+- **Goals**: Enable ArchiMate Modeling, Claude Integration, High Quality Diagrams
+- **Requirements**: MCP Protocol Support, ArchiMate 3.2 Support, PlantUML Generation
+
+### 📋 **Strategy Layer**
+![Strategy View](docs/diagrams/archi_mcp_strategy.svg)
+- **Resources**: ArchiMate IP Knowledge, Development Team, MCP Ecosystem
+- **Capabilities**: Enterprise Architecture Modeling, Automated Diagram Generation, MCP Protocol Integration
+- **Courses of Action**: Open Source Strategy, MCP-First Strategy, Standards Compliance
+
+### 🏢 **Business Layer**
+![Business View](docs/diagrams/archi_mcp_business.svg)
+- **Business Layer**: EA Role, Modeling Process, Diagram Service
+- **Actors & Roles**: Enterprise Architect, Architecture Modeling Process
+- **Services**: ArchiMate Diagram Service, Architecture Documentation
+
+### 💻 **Application Layer**
+![Application Structure](docs/diagrams/archi_mcp_application.svg)
+- **Components**: MCP Server Main, Tool Registry, Request Handler, Element Factory, Relationship Manager
+- **Services**: Modeling Service, Validation Service, Generation Service
+- **Data Objects**: Element Model, Relationship Model, PlantUML Code
+
+### ⚙️ **Technology Layer**
+![Technology Layer](docs/diagrams/archi_mcp_technology.svg)
+- **System Software**: Python Interpreter, Java Runtime, Operating System
+- **Nodes**: Development Environment, Production Environment, Claude Desktop Environment
+- **Services**: MCP Protocol Service, PlantUML Service, Python Runtime Service
+
+### 🏗️ **Physical Layer**
+![Physical Layer](docs/diagrams/archi_mcp_physical.svg)
+- **Equipment**: Developer Workstation, Cloud Server, User Device
+- **Facilities**: Development Office, Cloud Datacenter, User Location
+- **Distribution Networks**: Development Path, Deployment Path, Distribution Path
+
+### 🚀 **Implementation Layer**
+![Implementation & Migration](docs/diagrams/archi_mcp_implementation.svg)
+- **Work Packages**: Core Development, Advanced Features, Integration, Release
+- **Deliverables**: MCP Protocol Implementation, ArchiMate Engine, Validation Framework
+- **Events**: Project Start, Core Milestone, Feature Milestone, Release Event
+
+> **💡 Complete ArchiMate 3.2 Coverage**: All 7 layers successfully generated using the ArchiMate MCP Server itself, demonstrating 100% layer support and production readiness.
 
 ## 🏛️ ArchiMate Support
 
@@ -204,17 +243,14 @@ archi-mcp/
 
 ### Architecture Documentation
 - **[EA.md](docs/EA.md)**: Complete Enterprise Architecture across all 7 ArchiMate layers
+- **Live Architecture Demonstration**: All layers shown above with interactive HTTP server URLs
+- **100% Layer Coverage**: Successfully demonstrates Motivation, Strategy, Business, Application, Technology, Physical, and Implementation layers
 
 ### Setup and Configuration
 - **[CLAUDE_DESKTOP_SETUP.md](docs/CLAUDE_DESKTOP_SETUP.md)**: Complete Claude Desktop configuration guide with troubleshooting
 - **[CLAUDE.md](CLAUDE.md)**: Development instructions and project guidelines for Claude
 
-### Architecture Documentation
-- **[EA.md](docs/EA.md)**: Complete Enterprise Architecture documentation with PlantUML source code
-- **Generated Diagrams**: Available via the MCP server's diagram generation capabilities
-- **Self-Validation**: Architecture documentation was created using the tool itself
-
-> **💡 Live Generation**: All architecture diagrams can be regenerated using the ArchiMate MCP Server itself, demonstrating the tool's real-world capabilities and production readiness.
+> **💡 Production Validation**: All architecture diagrams were generated using the ArchiMate MCP Server itself, proving 100% ArchiMate 3.2 layer support and production readiness.
 
 ## 🤝 Contributing
 
