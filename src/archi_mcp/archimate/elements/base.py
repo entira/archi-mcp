@@ -170,99 +170,45 @@ class ArchiMateElement(BaseModel):
         return f"{self.element_type}({self.id}): {self.name}"
     
     def _normalize_for_plantuml(self, element_type: str, layer: str) -> str:
-        """Normalize element type for PlantUML with correct sprite names.
-        
-        Maps ArchiMate element types to exact PlantUML sprite names as supported
-        by PlantUML ArchiMate extension. Uses kebab-case naming convention.
+        """Normalize element type for PlantUML with layer-specific handling.
         
         Args:
             element_type: ArchiMate element type
             layer: ArchiMate layer
             
         Returns:
-            PlantUML-compatible sprite name
+            PlantUML-compatible element type
         """
-        # Complete mapping to PlantUML sprite names (kebab-case format)
-        plantuml_sprite_mapping = {
-            # Business Layer
-            "Business_Actor": "business-actor",
-            "Business_Role": "business-role", 
-            "Business_Collaboration": "business-collaboration",
-            "Business_Interface": "business-interface",
-            "Business_Function": "business-function",
-            "Business_Process": "business-process",
-            "Business_Event": "business-event",
-            "Business_Service": "business-service",
-            "Business_Object": "business-object",
-            "Business_Contract": "contract",
-            "Business_Representation": "business-representation",
-            "Location": "location",
-            
-            # Application Layer
-            "Application_Component": "application-component",
-            "Application_Collaboration": "application-collaboration",
-            "Application_Interface": "application-interface",
-            "Application_Function": "application-function",
-            "Application_Interaction": "application-interaction",
-            "Application_Process": "application-process",
-            "Application_Event": "application-event",
-            "Application_Service": "application-service",
-            "Data_Object": "application-object",
-            
-            # Technology Layer
-            "Node": "node",
-            "Device": "technology-device",
-            "System_Software": "technology-system-software",
-            "Technology_Collaboration": "technology-collaboration",
-            "Technology_Interface": "technology-interface",
-            "Path": "technology-path",
-            "Communication_Network": "technology-communication-network",
-            "Technology_Function": "technology-function",
-            "Technology_Process": "technology-process",
-            "Technology_Interaction": "technology-interaction",
-            "Technology_Event": "technology-event",
-            "Technology_Service": "technology-service",
-            "Artifact": "technology-artifact",
-            
-            # Physical Layer - FIXED with correct sprites
-            "Equipment": "physical-equipment",
-            "Facility": "physical-facility", 
-            "Distribution_Network": "physical-distribution-network",
-            "Material": "physical-material",
-            
-            # Motivation Layer - FIXED with correct sprites
-            "Stakeholder": "motivation-stakeholder",
-            "Driver": "motivation-driver",
-            "Assessment": "motivation-assessment",
-            "Goal": "motivation-goal",
-            "Outcome": "motivation-outcome", 
-            "Principle": "motivation-principle",
-            "Requirement": "motivation-requirement",
-            "Constraint": "motivation-constraint",
-            "Meaning": "motivation-meaning",
-            "Value": "motivation-value",
-            
-            # Strategy Layer - FIXED with correct sprites
-            "Resource": "strategy-resource",
-            "Capability": "strategy-capability",
-            "Course_of_Action": "strategy-course-of-action",
-            "Value_Stream": "strategy-value-stream",
-            
-            # Implementation Layer - FIXED with correct sprites
-            "Work_Package": "implementation-workpackage",
-            "Deliverable": "implementation-deliverable",
-            "Implementation_Event": "implementation-event",
-            "Plateau": "implementation-plateau",
-            "Gap": "implementation-gap"
-        }
+        # Handle layer-specific element prefixes for PlantUML
+        if element_type == "Function" and layer == "Business":
+            return "Business_Function"
+        elif element_type == "Function" and layer == "Application":
+            return "Application_Function"
+        elif element_type == "Function" and layer == "Technology":
+            return "Technology_Function"
         
-        # Return exact PlantUML sprite name or fallback
-        sprite_name = plantuml_sprite_mapping.get(element_type)
-        if sprite_name:
-            return sprite_name
+        # Motivation layer elements need Motivation_ prefix for PlantUML
+        motivation_elements = ["Stakeholder", "Driver", "Goal", "Outcome", "Principle", "Requirement", "Constraint", "Meaning", "Value", "Assessment"]
+        if element_type in motivation_elements:
+            return f"Motivation_{element_type}"
         
-        # Fallback for unknown element types - convert to kebab-case
-        return element_type.lower().replace('_', '-')
+        # Strategy layer elements need Strategy_ prefix for PlantUML
+        strategy_elements = ["Resource", "Capability", "Course_of_Action", "Value_Stream"]
+        if element_type in strategy_elements:
+            return f"Strategy_{element_type}"
+        
+        # Physical layer elements need Physical_ prefix for PlantUML
+        physical_elements = ["Equipment", "Facility", "Distribution_Network", "Material"]
+        if element_type in physical_elements:
+            return f"Physical_{element_type}"
+        
+        # Implementation layer elements need Implementation_ prefix for PlantUML
+        implementation_elements = ["Work_Package", "Deliverable", "Implementation_Event", "Plateau", "Gap"]
+        if element_type in implementation_elements:
+            return f"Implementation_{element_type}"
+        
+        # Direct mapping for most elements
+        return element_type
     
     def __repr__(self) -> str:
         return f"ArchiMateElement(id='{self.id}', name='{self.name}', type='{self.element_type}')"
