@@ -812,6 +812,140 @@ def save_debug_log(export_dir: Path, log_entries: List[Dict[str, Any]]) -> Path:
     
     return log_file
 
+def _build_enhanced_error_response(original_error: Exception, debug_log: list, error_export_dir, plantuml_code: str = None) -> str:
+    """Build comprehensive error response with debugging information for MCP tool."""
+    try:
+        # Extract Java PlantUML output from debug log
+        plantuml_return_code = None
+        plantuml_stderr = None
+        plantuml_command = None
+        error_line = None
+        
+        for entry in debug_log:
+            if 'details' in entry:
+                details = entry['details']
+                # Extract PlantUML execution details
+                if 'png_return_code' in details:
+                    plantuml_return_code = details['png_return_code']
+                if 'command' in details and 'plantuml.jar' in details['command']:
+                    plantuml_command = details['command']
+                if 'output' in details and ('Error line' in details['output'] or 'Some diagram description contains errors' in details['output']):
+                    plantuml_stderr = details['output']
+                    # Extract line number from error
+                    if 'Error line' in details['output']:
+                        import re
+                        line_match = re.search(r'Error line (\d+)', details['output'])
+                        if line_match:
+                            error_line = int(line_match.group(1))
+        
+        # Build enhanced error message
+        error_parts = []
+        error_parts.append(f"❌ **PNG Generation Failed**")
+        
+        if plantuml_return_code:
+            error_parts.append(f"**PlantUML Return Code:** {plantuml_return_code}")
+        
+        if plantuml_stderr:
+            error_parts.append(f"**PlantUML Error:** {plantuml_stderr.strip()}")
+        
+        # Add problematic PlantUML line if available
+        if plantuml_code and error_line:
+            lines = plantuml_code.split('\n')
+            if 1 <= error_line <= len(lines):
+                problematic_line = lines[error_line - 1].strip()
+                error_parts.append(f"**Problematic Line {error_line}:** `{problematic_line}`")
+                
+                # Add context (line before and after)
+                context_lines = []
+                if error_line > 1:
+                    context_lines.append(f"{error_line-1:2d}: {lines[error_line-2].strip()}")
+                context_lines.append(f"{error_line:2d}: {problematic_line} ⚠️")
+                if error_line < len(lines):
+                    context_lines.append(f"{error_line+1:2d}: {lines[error_line].strip()}")
+                
+                error_parts.append("**Context:**")
+                error_parts.append("```")
+                error_parts.extend(context_lines)
+                error_parts.append("```")
+        
+        # Add debugging information
+        if error_export_dir:
+            error_parts.append(f"**🔍 Debug Files:** {error_export_dir}")
+            error_parts.append("- `generation.log` - Complete debug trace")
+            if plantuml_code:
+                error_parts.append("- `diagram.puml` - Generated PlantUML code")
+                error_parts.append("- `input.json` - Original input data")
+        
+        # Add troubleshooting suggestions
+        error_parts.append("**🛠️ Troubleshooting:**")
+        if error_line and plantuml_code:
+            lines = plantuml_code.split('\n')
+            if 1 <= error_line <= len(lines):
+                problematic_line = lines[error_line - 1].strip()
+                if "Application_Application_" in problematic_line:
+                    error_parts.append("- **Duplicate layer prefix detected** - This is a known issue being fixed")
+                elif "_" not in problematic_line and "(" in problematic_line:
+                    error_parts.append("- **Missing element type prefix** - Check element type normalization")
+                else:
+                    error_parts.append("- Check PlantUML syntax on the problematic line")
+                    error_parts.append("- Verify element types and relationship syntax")
+        
+        if plantuml_command:
+            error_parts.append(f"- **Test PlantUML directly:** `{plantuml_command.replace('/tmp/tmp', 'path/to/diagram')}`")
+        
+        return "\n".join(error_parts)
+        
+    except Exception as build_error:
+        # Fallback to simple error if enhancement fails
+        return f"Failed to create diagram: {str(original_error)}\n\nNote: Enhanced error details unavailable due to: {str(build_error)}"
+
+def _save_failed_attempt(plantuml_code: str, diagram_input: DiagramInput, debug_log: list, error_message: str) -> None:
+    """Save complete failure context for debugging: PlantUML code, input JSON, and debug logs."""
+    try:
+        import json
+        from datetime import datetime
+        
+        # Create failed_attempts directory
+        exports_dir = get_exports_directory()
+        failed_attempts_dir = exports_dir / "failed_attempts" 
+        failed_attempts_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Create timestamped failure directory
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]  # Include milliseconds
+        failure_dir = failed_attempts_dir / timestamp
+        failure_dir.mkdir(exist_ok=True)
+        
+        # Save PlantUML code
+        puml_file = failure_dir / "diagram.puml"
+        with open(puml_file, 'w', encoding='utf-8') as f:
+            f.write(plantuml_code)
+        
+        # Save input JSON (convert DiagramInput to dict for serialization)
+        input_file = failure_dir / "input.json"
+        with open(input_file, 'w', encoding='utf-8') as f:
+            # Convert Pydantic model to dict for JSON serialization
+            input_dict = diagram_input.model_dump() if hasattr(diagram_input, 'model_dump') else diagram_input.dict()
+            json.dump(input_dict, f, indent=2, ensure_ascii=False)
+        
+        # Save debug log with error message
+        log_file = failure_dir / "generation.log"
+        with open(log_file, 'w', encoding='utf-8') as f:
+            f.write(f"FAILURE: {error_message}\n")
+            f.write(f"Timestamp: {datetime.now().isoformat()}\n")
+            f.write("=" * 60 + "\n\n")
+            
+            # Write debug log entries
+            for entry in debug_log:
+                f.write(f"[{entry['timestamp']}] {entry['level']}: {entry['message']}\n")
+                if 'details' in entry:
+                    f.write(f"  Details: {entry['details']}\n")
+                f.write("\n")
+        
+        logger.info(f"Saved failed attempt context to: {failure_dir}")
+        
+    except Exception as save_error:
+        logger.error(f"Failed to save failure context: {save_error}")
+
 def cleanup_failed_exports() -> None:
     """Move failed export attempts to failed_attempts subdirectory after successful PNG generation."""
     exports_dir = get_exports_directory()
@@ -1492,6 +1626,8 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
                     log_debug('INFO', f'PNG test generation successful: {file_size} bytes')
                     png_file_path = str(temp_png_path)  # Store path for later use
                 else:
+                    # Save failure context before raising error
+                    _save_failed_attempt(plantuml_code, diagram, debug_log, f"PNG validation failed: {png_validation_error}, file size: {file_size} bytes")
                     raise Exception(f"PNG validation failed: {png_validation_error}, file size: {file_size} bytes")
                 
                 # Only generate SVG after PNG success
@@ -1532,6 +1668,8 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
                 else:
                     log_debug('WARNING', f'SVG generation failed: return code {svg_result.returncode}, stderr: {svg_result.stderr}')
             else:
+                # Save failure context before raising error
+                _save_failed_attempt(plantuml_code, diagram, debug_log, f"PNG generation failed: return code {png_result.returncode}, stderr: {png_result.stderr}")
                 raise Exception(f"PNG generation failed: return code {png_result.returncode}, stderr: {png_result.stderr}")
                 
             # Cleanup temporary files
@@ -1542,11 +1680,15 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
                 
         except subprocess.TimeoutExpired:
             log_debug('ERROR', 'PNG and SVG generation timed out after 60 seconds')
+            # Save failure context before raising error
+            _save_failed_attempt(plantuml_code, diagram, debug_log, "PNG generation timed out after 60 seconds")
             raise ArchiMateGenerationError("PNG generation timed out after 60 seconds")
         except Exception as png_error:
             log_debug('ERROR', f'PNG and SVG generation failed: {str(png_error)}', {
                 'error_type': type(png_error).__name__
             })
+            # Save failure context before raising error
+            _save_failed_attempt(plantuml_code, diagram, debug_log, f"PNG generation failed: {str(png_error)}")
             raise ArchiMateGenerationError(f"PNG generation failed: {str(png_error)}")
         
         # PNG generation successful! Now create export directory and move files
@@ -1675,6 +1817,7 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
         logger.error(f"Error in create_archimate_diagram: {e}")
         
         # Always save debug log for troubleshooting, even on errors
+        error_export_dir = None
         try:
             # Create minimal export directory just for the log
             error_export_dir = create_diagram_export_directory()
@@ -1692,8 +1835,11 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
         except Exception as log_error:
             logger.warning(f"Could not save debug log: {log_error}")
         
-        # Raise the original error (no other files saved)
-        raise ArchiMateGenerationError(f"Failed to create diagram: {str(e)}")
+        # Extract detailed error information from debug log and original error
+        enhanced_error_info = _build_enhanced_error_response(e, debug_log, error_export_dir, locals().get('plantuml_code'))
+        
+        # Raise enhanced error with comprehensive debugging information
+        raise ArchiMateGenerationError(enhanced_error_info)
 
 # Removed validate_archimate_model - not needed in simplified API
 

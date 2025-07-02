@@ -142,6 +142,42 @@ uv run python examples/generate_sample_diagrams.py
 > logs/validation_errors.jsonl
 ```
 
+### Comprehensive Failed Attempts Debugging (NEW)
+```bash
+# CRITICAL DEBUG LOCATION: Complete failure context saved automatically
+# When PNG generation fails, comprehensive debugging data is saved to:
+# exports/failed_attempts/YYYYMMDD_HHMMSS_mmm/
+
+# Check all failed attempts
+ls exports/failed_attempts/
+
+# Examine specific failure (replace timestamp with actual directory)
+# Each failure directory contains 3 critical files:
+cd exports/failed_attempts/20250702_191045_123/
+
+# 1. INPUT.JSON - Complete user request that caused the failure
+cat input.json  # Full DiagramInput with elements, relationships, layout
+
+# 2. DIAGRAM.PUML - Generated PlantUML code that failed PNG rendering  
+cat diagram.puml  # Exact PlantUML code sent to PlantUML jar
+
+# 3. GENERATION.LOG - Complete debug trace with error context
+cat generation.log  # Full debug log with timestamps, error details, PlantUML output
+
+# Debug workflow for failures:
+# 1. Find latest failure: ls -la exports/failed_attempts/ | tail -1
+# 2. Examine input: cat exports/failed_attempts/TIMESTAMP/input.json
+# 3. Test PlantUML: java -Djava.awt.headless=true -jar plantuml.jar -tpng exports/failed_attempts/TIMESTAMP/diagram.puml
+# 4. Check logs: cat exports/failed_attempts/TIMESTAMP/generation.log
+
+# Reproduce failure locally using saved context:
+# Copy input.json content and use create_archimate_diagram MCP tool
+# with exact same input to reproduce the issue
+
+# Pattern Analysis across multiple failures
+find exports/failed_attempts/ -name "generation.log" -exec grep -l "specific_error" {} \;
+```
+
 ### Code Quality
 ```bash
 # Format code
@@ -287,8 +323,26 @@ Use full path in Claude Desktop config with `uv` command and `--directory` flag.
 - **Focus stealing prevention:** Without headless mode, PlantUML steals desktop focus during PNG/SVG generation
 - **Implemented everywhere:** Both server.py and generator.py use headless mode consistently
 - **Test compatibility:** All tests and development commands use headless mode
+- **Manual testing:** When testing PlantUML manually, ALWAYS use headless mode
+- **Debug commands:** All debugging commands in CLAUDE.md use headless mode
 - **Example command:** `java -Djava.awt.headless=true -jar plantuml.jar -tpng diagram.puml`
 - **Never remove this flag:** Removing headless mode will cause desktop focus interruption
+
+#### All PlantUML Testing Commands (MANDATORY HEADLESS)
+```bash
+# Manual PlantUML testing (ALWAYS use headless mode)
+java -Djava.awt.headless=true -jar plantuml.jar -tpng diagram.puml
+java -Djava.awt.headless=true -jar plantuml.jar -tsvg diagram.puml
+
+# Test PlantUML syntax validation
+java -Djava.awt.headless=true -jar plantuml.jar -checkonly diagram.puml
+
+# Debug failed attempts
+java -Djava.awt.headless=true -jar plantuml.jar -tpng exports/failed_attempts/TIMESTAMP/diagram.puml
+
+# Test with verbose output
+java -Djava.awt.headless=true -jar plantuml.jar -tpng -v diagram.puml
+```
 
 ### Image generation not working in Claude Desktop
 - **Multi-format approach:** Server generates PNG files + Base64 URLs + Online preview URLs

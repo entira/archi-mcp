@@ -208,11 +208,15 @@ class ArchiMateElement(BaseModel):
             "Application_Event": "Application_Event",
             "Application_Service": "Application_Service",
             "Data_Object": "Application_DataObject",
+            "Application_DataObject": "Application_DataObject",  # Handle already normalized types
             
             # Technology Layer - verified with PlantUML sprites
             "Node": "Technology_Node",
-            "Device": "Technology_Device",
+            "Technology_Node": "Technology_Node",  # Handle already normalized types
+            "Device": "Technology_Device", 
+            "Technology_Device": "Technology_Device",  # Handle already normalized types
             "System_Software": "Technology_SystemSoftware",
+            "Technology_SystemSoftware": "Technology_SystemSoftware",  # Handle already normalized types
             "Technology_Collaboration": "Technology_Collaboration",
             "Technology_Interface": "Technology_Interface",
             "Path": "Technology_Path",
@@ -223,6 +227,7 @@ class ArchiMateElement(BaseModel):
             "Technology_Event": "Technology_Event",
             "Technology_Service": "Technology_Service",
             "Artifact": "Technology_Artifact",
+            "Technology_Artifact": "Technology_Artifact",  # Handle already normalized types
             
             # Physical Layer - verified with official sprites (physical-equipment.png, etc.)
             "Equipment": "Physical_Equipment",
@@ -244,16 +249,24 @@ class ArchiMateElement(BaseModel):
             
             # Strategy Layer - verified with official sprites (strategy-capability.png, etc.)
             "Resource": "Strategy_Resource",
+            "Strategy_Resource": "Strategy_Resource",  # Handle already normalized types
             "Capability": "Strategy_Capability",
+            "Strategy_Capability": "Strategy_Capability",  # Handle already normalized types
             "Course_of_Action": "Strategy_CourseOfAction",  # Note: CamelCase, not underscore
+            "Strategy_CourseOfAction": "Strategy_CourseOfAction",  # Handle already normalized types
             "Value_Stream": "Strategy_ValueStream",         # Note: CamelCase, not underscore
+            "Strategy_ValueStream": "Strategy_ValueStream",  # Handle already normalized types
             
             # Implementation Layer - verified with official sprites (implementation-workpackage.png, etc.)
             "Work_Package": "Implementation_WorkPackage",   # Note: CamelCase, not underscore
+            "Implementation_WorkPackage": "Implementation_WorkPackage",  # Handle already normalized types
             "Deliverable": "Implementation_Deliverable",
+            "Implementation_Deliverable": "Implementation_Deliverable",  # Handle already normalized types
             "Implementation_Event": "Implementation_Event",
             "Plateau": "Implementation_Plateau",
-            "Gap": "Implementation_Gap"
+            "Implementation_Plateau": "Implementation_Plateau",  # Handle already normalized types
+            "Gap": "Implementation_Gap",
+            "Implementation_Gap": "Implementation_Gap"  # Handle already normalized types
         }
         
         # Return official PlantUML element type or fallback
