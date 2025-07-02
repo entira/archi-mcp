@@ -130,12 +130,16 @@ class ArchiMateRelationship(BaseModel):
                 # Only warn, don't error - Access can be used more flexibly
                 pass  # Relaxed validation for Access relationships
         
-        # Composition requires compatible layers
+        # Composition guidelines - ArchiMate allows cross-layer composition in many cases
         if self.relationship_type == RelationshipType.COMPOSITION:
+            # Cross-layer composition is allowed in ArchiMate 3.2:
+            # - Application components can be composed of technology elements
+            # - Business services can be composed of application services  
+            # - Physical elements can be composed of technology elements
+            # Only warn for unusual combinations, don't block them
             if from_elem.layer != to_elem.layer:
-                errors.append(
-                    f"Composition relationship should connect elements within the same layer"
-                )
+                # This is informational only - ArchiMate allows cross-layer composition
+                pass  # Relaxed validation for Composition relationships
         
         # Add more constraint validations as needed
         

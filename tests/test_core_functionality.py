@@ -175,17 +175,20 @@ def test_invalid_layer_handling():
     """Test handling of invalid layers."""
     from archi_mcp.server import ElementInput
     from archi_mcp.archimate.elements.base import ArchiMateLayer
+    import pytest
+    from pydantic import ValidationError
     
-    element_input = ElementInput(
-        id="test_element",
-        name="Test Element",
-        element_type="Business_Actor",
-        layer="InvalidLayer"
-    )
+    # Test Pydantic validation catches invalid layer
+    with pytest.raises(ValidationError) as exc_info:
+        element_input = ElementInput(
+            id="test_element",
+            name="Test Element",
+            element_type="Business_Actor",
+            layer="InvalidLayer"
+        )
     
-    # Test that invalid layer raises ValueError
-    with pytest.raises(ValueError):
-        ArchiMateLayer(element_input.layer)
+    assert "Input should be" in str(exc_info.value)
+    assert "InvalidLayer" in str(exc_info.value)
 
 def test_archimate_layers():
     """Test ArchiMate layer enumeration."""

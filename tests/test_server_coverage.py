@@ -163,17 +163,20 @@ class TestDiagramValidation:
     def test_validate_element_input_invalid_layer(self):
         """Test element validation with invalid layer."""
         from archi_mcp.server import ElementInput, validate_element_input
+        import pytest
+        from pydantic import ValidationError
         
-        element = ElementInput(
-            id="test",
-            name="Test Element",
-            element_type="Business_Actor",
-            layer="InvalidLayer"
-        )
+        # Test Pydantic validation catches invalid layer
+        with pytest.raises(ValidationError) as exc_info:
+            element = ElementInput(
+                id="test",
+                name="Test Element",
+                element_type="Business_Actor",
+                layer="InvalidLayer"
+            )
         
-        is_valid, error_msg = validate_element_input(element)
-        assert not is_valid
-        assert len(error_msg) > 0  # Should return some error message
+        assert "Input should be" in str(exc_info.value)
+        assert "InvalidLayer" in str(exc_info.value)
     
     def test_validate_element_input_invalid_element_type(self):
         """Test element validation with invalid element type."""
@@ -193,17 +196,20 @@ class TestDiagramValidation:
     def test_validate_relationship_input_invalid_type(self):
         """Test relationship validation with invalid type."""
         from archi_mcp.server import RelationshipInput, validate_relationship_input
+        import pytest
+        from pydantic import ValidationError
         
-        relationship = RelationshipInput(
-            id="test",
-            from_element="elem1",
-            to_element="elem2", 
-            relationship_type="Invalid_Relationship"
-        )
+        # Test Pydantic validation catches invalid relationship type
+        with pytest.raises(ValidationError) as exc_info:
+            relationship = RelationshipInput(
+                id="test",
+                from_element="elem1",
+                to_element="elem2", 
+                relationship_type="Invalid_Relationship"
+            )
         
-        is_valid, error_msg = validate_relationship_input(relationship)
-        assert not is_valid
-        assert len(error_msg) > 0
+        assert "Input should be" in str(exc_info.value)
+        assert "Invalid_Relationship" in str(exc_info.value)
     
     def test_validate_diagram_basic(self):
         """Test basic diagram validation functions exist."""

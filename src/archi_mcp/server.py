@@ -868,13 +868,29 @@ def _build_enhanced_error_response(original_error: Exception, debug_log: list, e
                 error_parts.extend(context_lines)
                 error_parts.append("```")
         
-        # Add debugging information
+        # Add debugging information with actual log contents
         if error_export_dir:
-            error_parts.append(f"**🔍 Debug Files:** {error_export_dir}")
-            error_parts.append("- `generation.log` - Complete debug trace")
+            # Try to read and include generation.log contents
+            try:
+                log_file_path = os.path.join(error_export_dir, "generation.log")
+                if os.path.exists(log_file_path):
+                    with open(log_file_path, 'r', encoding='utf-8') as f:
+                        log_contents = f.read()
+                    error_parts.append("**🔍 Debug Log:**")
+                    error_parts.append("```")
+                    error_parts.append(log_contents)
+                    error_parts.append("```")
+                else:
+                    error_parts.append(f"**🔍 Debug Files:** {error_export_dir}")
+                    error_parts.append("- `generation.log` - Complete debug trace")
+            except Exception as log_read_error:
+                error_parts.append(f"**🔍 Debug Files:** {error_export_dir} (log read error: {log_read_error})")
+                error_parts.append("- `generation.log` - Complete debug trace")
+            
             if plantuml_code:
-                error_parts.append("- `diagram.puml` - Generated PlantUML code")
-                error_parts.append("- `input.json` - Original input data")
+                error_parts.append("**📄 Debug Files Available:**")
+                error_parts.append(f"- `{error_export_dir}/diagram.puml` - Generated PlantUML code")
+                error_parts.append(f"- `{error_export_dir}/input.json` - Original input data")
         
         # Add troubleshooting suggestions
         error_parts.append("**🛠️ Troubleshooting:**")
