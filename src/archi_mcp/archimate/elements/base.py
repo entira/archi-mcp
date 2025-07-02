@@ -197,6 +197,16 @@ class ArchiMateElement(BaseModel):
         if element_type in strategy_elements:
             return f"Strategy_{element_type}"
         
+        # Physical layer elements need Physical_ prefix for PlantUML
+        physical_elements = ["Equipment", "Facility", "Distribution_Network", "Material"]
+        if element_type in physical_elements:
+            return f"Physical_{element_type}"
+        
+        # Implementation layer elements need Implementation_ prefix for PlantUML
+        implementation_elements = ["Work_Package", "Deliverable", "Implementation_Event", "Plateau", "Gap"]
+        if element_type in implementation_elements:
+            return f"Implementation_{element_type}"
+        
         # Direct mapping for most elements
         return element_type
     
