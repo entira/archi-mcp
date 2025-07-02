@@ -1,106 +1,72 @@
 {
   "name": "create_archimate_diagram",
-  "description": "Generate complete ArchiMate diagrams from structured input with elements and relationships.\n\nAutomatically detects language from content and translates layer names and relationship labels.\nSupports Slovak language detection via Slovak text patterns and diacritics.\nWhen Slovak content detected: layer names and relationship labels are translated to Slovak.\n\nAvailable languages: en (English), sk (Slovak) - detected automatically\n\nOutputs are saved to CWD/exports/YYYYMMDD_HHMMSS/ directory with:\n- diagram.puml: Validated PlantUML code\n- diagram.png: Generated PNG (mandatory)\n- architecture.md: Extended textual architecture representation with PNG link\n- generation.log: Debug log with detailed generation info\n- metadata.json: Diagram metadata and statistics",
+  "description": "Generate complete ArchiMate diagrams from structured input with comprehensive enterprise architecture modeling support.\n\nSupports all 7 ArchiMate 3.2 layers with 55+ element types and 12 relationship types.\nFeatures automatic language detection (Slovak/English) and intelligent layout optimization.\nGenerates PNG/SVG files with live HTTP server URLs for instant viewing.\n\nOutputs saved to exports/YYYYMMDD_HHMMSS/ directory:\n- diagram.puml: Validated PlantUML code\n- diagram.png: Generated PNG image  \n- diagram.svg: Generated SVG image\n- architecture.md: Extended textual representation\n- generation.log: Detailed generation log\n- metadata.json: Diagram statistics and metadata",
   "inputSchema": {
+    "type": "object",
+    "properties": {
+      "diagram": {
+        "$ref": "#/$defs/DiagramInput",
+        "title": "Diagram",
+        "description": "Complete ArchiMate diagram specification"
+      }
+    },
+    "required": [
+      "diagram"
+    ],
     "$defs": {
-      "DiagramInput": {
-        "properties": {
-          "elements": {
-            "description": "List of ArchiMate elements",
-            "items": {
-              "$ref": "#/$defs/ElementInput"
-            },
-            "title": "Elements",
-            "type": "array"
-          },
-          "relationships": {
-            "description": "List of relationships",
-            "items": {
-              "$ref": "#/$defs/RelationshipInput"
-            },
-            "title": "Relationships",
-            "type": "array"
-          },
-          "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Diagram title",
-            "title": "Title"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Diagram description",
-            "title": "Description"
-          },
-          "layout": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Layout configuration",
-            "title": "Layout"
-          },
-          "language": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": "en",
-            "description": "Language code for translations (en, sk)",
-            "title": "Language"
-          }
-        },
-        "required": [
-          "elements"
+      "ArchiMateLayerType": {
+        "description": "ArchiMate 3.2 specification layers.",
+        "enum": [
+          "Business",
+          "Application",
+          "Technology",
+          "Physical",
+          "Motivation",
+          "Strategy",
+          "Implementation"
         ],
-        "title": "DiagramInput",
-        "type": "object"
+        "title": "ArchiMateLayerType",
+        "type": "string"
+      },
+      "ArchiMateRelationshipType": {
+        "description": "Complete ArchiMate 3.2 relationship types with descriptions.",
+        "enum": [
+          "Access",
+          "Aggregation",
+          "Assignment",
+          "Association",
+          "Composition",
+          "Flow",
+          "Influence",
+          "Realization",
+          "Serving",
+          "Specialization",
+          "Triggering"
+        ],
+        "title": "ArchiMateRelationshipType",
+        "type": "string"
       },
       "ElementInput": {
+        "description": "ArchiMate element with comprehensive validation and capability discovery.\n\nElement types are organized by ArchiMate 3.2 layers:\n- Business: Business_Actor, Business_Role, Business_Process, Business_Service, etc.\n- Application: Application_Component, Application_Service, Data_Object, etc.\n- Technology: Node, Device, System_Software, Technology_Service, etc.  \n- Physical: Equipment, Facility, Distribution_Network, Material\n- Motivation: Stakeholder, Driver, Goal, Requirement, Principle, etc.\n- Strategy: Resource, Capability, Course_of_Action, Value_Stream\n- Implementation: Work_Package, Deliverable, Implementation_Event, Plateau, Gap",
         "properties": {
           "id": {
-            "description": "Unique element identifier",
+            "description": "Unique element identifier (e.g., 'customer_portal', 'user_mgmt_service')",
             "title": "Id",
             "type": "string"
           },
           "name": {
-            "description": "Element display name",
+            "description": "Element display name (e.g., 'Customer Portal', 'User Management Service')",
             "title": "Name",
             "type": "string"
           },
           "element_type": {
-            "description": "ArchiMate element type",
+            "description": "ArchiMate element type. Choose from layer-specific options:\n        \n        BUSINESS LAYER:\n        • Business_Actor, Business_Role, Business_Collaboration, Business_Interface\n        • Business_Function, Business_Process, Business_Event, Business_Service\n        • Business_Object, Business_Contract, Business_Representation, Location\n        \n        APPLICATION LAYER:\n        • Application_Component, Application_Collaboration, Application_Interface\n        • Application_Function, Application_Interaction, Application_Process\n        • Application_Event, Application_Service, Data_Object\n        \n        TECHNOLOGY LAYER:\n        • Node, Device, System_Software, Technology_Collaboration, Technology_Interface\n        • Path, Communication_Network, Technology_Function, Technology_Process\n        • Technology_Interaction, Technology_Event, Technology_Service, Artifact\n        \n        PHYSICAL LAYER:\n        • Equipment, Facility, Distribution_Network, Material\n        \n        MOTIVATION LAYER:\n        • Stakeholder, Driver, Assessment, Goal, Outcome, Principle\n        • Requirement, Constraint, Meaning, Value\n        \n        STRATEGY LAYER:\n        • Resource, Capability, Course_of_Action, Value_Stream\n        \n        IMPLEMENTATION LAYER:\n        • Work_Package, Deliverable, Implementation_Event, Plateau, Gap",
             "title": "Element Type",
             "type": "string"
           },
           "layer": {
-            "description": "ArchiMate layer",
-            "title": "Layer",
-            "type": "string"
+            "$ref": "#/$defs/ArchiMateLayerType",
+            "description": "ArchiMate layer: Business, Application, Technology, Physical, Motivation, Strategy, Implementation"
           },
           "description": {
             "anyOf": [
@@ -112,7 +78,7 @@
               }
             ],
             "default": null,
-            "description": "Element description",
+            "description": "Element description for documentation",
             "title": "Description"
           },
           "stereotype": {
@@ -125,7 +91,7 @@
               }
             ],
             "default": null,
-            "description": "Element stereotype",
+            "description": "Element stereotype for specialized notation",
             "title": "Stereotype"
           },
           "properties": {
@@ -138,6 +104,7 @@
                 "type": "null"
               }
             ],
+            "description": "Additional element properties as key-value pairs",
             "title": "Properties"
           }
         },
@@ -150,27 +117,38 @@
         "title": "ElementInput",
         "type": "object"
       },
+      "LayoutDirectionType": {
+        "description": "Layout direction options for diagram generation.",
+        "enum": [
+          "top-bottom",
+          "left-right",
+          "bottom-top",
+          "right-left"
+        ],
+        "title": "LayoutDirectionType",
+        "type": "string"
+      },
       "RelationshipInput": {
+        "description": "ArchiMate relationship with comprehensive validation and capability discovery.\n\nSupports all 12 ArchiMate 3.2 relationship types:\n- Access: Element can access another element\n- Aggregation: Whole-part relationship (parts can exist independently)  \n- Assignment: Element is assigned to another element\n- Association: General relationship between elements\n- Composition: Whole-part relationship (parts cannot exist independently)\n- Flow: Transfer of information, money, goods, etc.\n- Influence: Element influences another element  \n- Realization: Element realizes or implements another element\n- Serving: Element serves another element\n- Specialization: Is-a relationship, inheritance\n- Triggering: Element triggers another element",
         "properties": {
           "id": {
-            "description": "Unique relationship identifier",
+            "description": "Unique relationship identifier (e.g., 'portal_serves_customer', 'db_supports_service')",
             "title": "Id",
             "type": "string"
           },
           "from_element": {
-            "description": "Source element ID",
+            "description": "Source element ID (must match an element.id)",
             "title": "From Element",
             "type": "string"
           },
           "to_element": {
-            "description": "Target element ID",
+            "description": "Target element ID (must match an element.id)",
             "title": "To Element",
             "type": "string"
           },
           "relationship_type": {
-            "description": "ArchiMate relationship type",
-            "title": "Relationship Type",
-            "type": "string"
+            "$ref": "#/$defs/ArchiMateRelationshipType",
+            "description": "ArchiMate relationship type. Choose from:\n        • Access - Element can access another element\n        • Aggregation - Whole-part relationship (parts can exist independently)\n        • Assignment - Element is assigned to another element  \n        • Association - General relationship between elements\n        • Composition - Whole-part relationship (parts cannot exist independently)\n        • Flow - Transfer of information, money, goods, etc.\n        • Influence - Element influences another element\n        • Realization - Element realizes or implements another element\n        • Serving - Element serves another element\n        • Specialization - Is-a relationship, inheritance\n        • Triggering - Element triggers another element"
           },
           "description": {
             "anyOf": [
@@ -182,21 +160,20 @@
               }
             ],
             "default": null,
-            "description": "Relationship description",
+            "description": "Relationship description for documentation",
             "title": "Description"
           },
           "direction": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/$defs/LayoutDirectionType"
               },
               {
                 "type": "null"
               }
             ],
             "default": null,
-            "description": "Direction hint for layout",
-            "title": "Direction"
+            "description": "Direction hint for layout: top-bottom, left-right, bottom-top, right-left"
           },
           "label": {
             "anyOf": [
@@ -208,7 +185,7 @@
               }
             ],
             "default": null,
-            "description": "Relationship label",
+            "description": "Custom relationship label (max 3 words, 30 chars). If not provided, uses translated relationship type.",
             "title": "Label"
           }
         },
@@ -221,17 +198,6 @@
         "title": "RelationshipInput",
         "type": "object"
       }
-    },
-    "properties": {
-      "diagram": {
-        "$ref": "#/$defs/DiagramInput",
-        "title": "Diagram"
-      }
-    },
-    "required": [
-      "diagram"
-    ],
-    "type": "object"
-  },
-  "annotations": null
+    }
+  }
 }

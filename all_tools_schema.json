@@ -1,0 +1,240 @@
+{
+  "create_archimate_diagram": {
+    "name": "create_archimate_diagram",
+    "description": "Generate complete ArchiMate diagrams from structured input with comprehensive enterprise architecture modeling support.\n\nSupports all 7 ArchiMate 3.2 layers with 55+ element types and 12 relationship types.\nFeatures automatic language detection (Slovak/English) and intelligent layout optimization.\nGenerates PNG/SVG files with live HTTP server URLs for instant viewing.\n\nOutputs saved to exports/YYYYMMDD_HHMMSS/ directory:\n- diagram.puml: Validated PlantUML code\n- diagram.png: Generated PNG image  \n- diagram.svg: Generated SVG image\n- architecture.md: Extended textual representation\n- generation.log: Detailed generation log\n- metadata.json: Diagram statistics and metadata",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "diagram": {
+          "$ref": "#/$defs/DiagramInput",
+          "title": "Diagram",
+          "description": "Complete ArchiMate diagram specification"
+        }
+      },
+      "required": [
+        "diagram"
+      ],
+      "$defs": {
+        "ArchiMateLayerType": {
+          "description": "ArchiMate 3.2 specification layers.",
+          "enum": [
+            "Business",
+            "Application",
+            "Technology",
+            "Physical",
+            "Motivation",
+            "Strategy",
+            "Implementation"
+          ],
+          "title": "ArchiMateLayerType",
+          "type": "string"
+        },
+        "ArchiMateRelationshipType": {
+          "description": "Complete ArchiMate 3.2 relationship types with descriptions.",
+          "enum": [
+            "Access",
+            "Aggregation",
+            "Assignment",
+            "Association",
+            "Composition",
+            "Flow",
+            "Influence",
+            "Realization",
+            "Serving",
+            "Specialization",
+            "Triggering"
+          ],
+          "title": "ArchiMateRelationshipType",
+          "type": "string"
+        },
+        "ElementInput": {
+          "description": "ArchiMate element with comprehensive validation and capability discovery.\n\nElement types are organized by ArchiMate 3.2 layers:\n- Business: Business_Actor, Business_Role, Business_Process, Business_Service, etc.\n- Application: Application_Component, Application_Service, Data_Object, etc.\n- Technology: Node, Device, System_Software, Technology_Service, etc.  \n- Physical: Equipment, Facility, Distribution_Network, Material\n- Motivation: Stakeholder, Driver, Goal, Requirement, Principle, etc.\n- Strategy: Resource, Capability, Course_of_Action, Value_Stream\n- Implementation: Work_Package, Deliverable, Implementation_Event, Plateau, Gap",
+          "properties": {
+            "id": {
+              "description": "Unique element identifier (e.g., 'customer_portal', 'user_mgmt_service')",
+              "title": "Id",
+              "type": "string"
+            },
+            "name": {
+              "description": "Element display name (e.g., 'Customer Portal', 'User Management Service')",
+              "title": "Name",
+              "type": "string"
+            },
+            "element_type": {
+              "description": "ArchiMate element type. Choose from layer-specific options:\n        \n        BUSINESS LAYER:\n        • Business_Actor, Business_Role, Business_Collaboration, Business_Interface\n        • Business_Function, Business_Process, Business_Event, Business_Service\n        • Business_Object, Business_Contract, Business_Representation, Location\n        \n        APPLICATION LAYER:\n        • Application_Component, Application_Collaboration, Application_Interface\n        • Application_Function, Application_Interaction, Application_Process\n        • Application_Event, Application_Service, Data_Object\n        \n        TECHNOLOGY LAYER:\n        • Node, Device, System_Software, Technology_Collaboration, Technology_Interface\n        • Path, Communication_Network, Technology_Function, Technology_Process\n        • Technology_Interaction, Technology_Event, Technology_Service, Artifact\n        \n        PHYSICAL LAYER:\n        • Equipment, Facility, Distribution_Network, Material\n        \n        MOTIVATION LAYER:\n        • Stakeholder, Driver, Assessment, Goal, Outcome, Principle\n        • Requirement, Constraint, Meaning, Value\n        \n        STRATEGY LAYER:\n        • Resource, Capability, Course_of_Action, Value_Stream\n        \n        IMPLEMENTATION LAYER:\n        • Work_Package, Deliverable, Implementation_Event, Plateau, Gap",
+              "title": "Element Type",
+              "type": "string"
+            },
+            "layer": {
+              "$ref": "#/$defs/ArchiMateLayerType",
+              "description": "ArchiMate layer: Business, Application, Technology, Physical, Motivation, Strategy, Implementation"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Element description for documentation",
+              "title": "Description"
+            },
+            "stereotype": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Element stereotype for specialized notation",
+              "title": "Stereotype"
+            },
+            "properties": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Additional element properties as key-value pairs",
+              "title": "Properties"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "element_type",
+            "layer"
+          ],
+          "title": "ElementInput",
+          "type": "object"
+        },
+        "LayoutDirectionType": {
+          "description": "Layout direction options for diagram generation.",
+          "enum": [
+            "top-bottom",
+            "left-right",
+            "bottom-top",
+            "right-left"
+          ],
+          "title": "LayoutDirectionType",
+          "type": "string"
+        },
+        "RelationshipInput": {
+          "description": "ArchiMate relationship with comprehensive validation and capability discovery.\n\nSupports all 12 ArchiMate 3.2 relationship types:\n- Access: Element can access another element\n- Aggregation: Whole-part relationship (parts can exist independently)  \n- Assignment: Element is assigned to another element\n- Association: General relationship between elements\n- Composition: Whole-part relationship (parts cannot exist independently)\n- Flow: Transfer of information, money, goods, etc.\n- Influence: Element influences another element  \n- Realization: Element realizes or implements another element\n- Serving: Element serves another element\n- Specialization: Is-a relationship, inheritance\n- Triggering: Element triggers another element",
+          "properties": {
+            "id": {
+              "description": "Unique relationship identifier (e.g., 'portal_serves_customer', 'db_supports_service')",
+              "title": "Id",
+              "type": "string"
+            },
+            "from_element": {
+              "description": "Source element ID (must match an element.id)",
+              "title": "From Element",
+              "type": "string"
+            },
+            "to_element": {
+              "description": "Target element ID (must match an element.id)",
+              "title": "To Element",
+              "type": "string"
+            },
+            "relationship_type": {
+              "$ref": "#/$defs/ArchiMateRelationshipType",
+              "description": "ArchiMate relationship type. Choose from:\n        • Access - Element can access another element\n        • Aggregation - Whole-part relationship (parts can exist independently)\n        • Assignment - Element is assigned to another element  \n        • Association - General relationship between elements\n        • Composition - Whole-part relationship (parts cannot exist independently)\n        • Flow - Transfer of information, money, goods, etc.\n        • Influence - Element influences another element\n        • Realization - Element realizes or implements another element\n        • Serving - Element serves another element\n        • Specialization - Is-a relationship, inheritance\n        • Triggering - Element triggers another element"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Relationship description for documentation",
+              "title": "Description"
+            },
+            "direction": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/LayoutDirectionType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Direction hint for layout: top-bottom, left-right, bottom-top, right-left"
+            },
+            "label": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Custom relationship label (max 3 words, 30 chars). If not provided, uses translated relationship type.",
+              "title": "Label"
+            }
+          },
+          "required": [
+            "id",
+            "from_element",
+            "to_element",
+            "relationship_type"
+          ],
+          "title": "RelationshipInput",
+          "type": "object"
+        }
+      }
+    }
+  },
+  "analyze_current_architecture": {
+    "name": "analyze_current_architecture",
+    "description": "Analyze the current in-memory architecture model and generate insights.\n\nReturns comprehensive analysis including:\n- Element and relationship statistics by layer\n- Architecture completeness assessment  \n- Layer distribution analysis\n- Model health indicators\n- Element type breakdown\n- Relationship type usage\n\nUseful for understanding model complexity and identifying areas for improvement.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  "test_element_normalization": {
+    "name": "test_element_normalization",
+    "description": "Test element type normalization across all ArchiMate layers.\n\nValidates the input normalization system that handles:\n- Case-insensitive element types (e.g., \"function\" → \"Business_Function\")\n- Common naming variations and abbreviations\n- Layer-specific element prefixes\n- Relationship type normalization\n\nReturns comprehensive test results showing normalization rules and examples.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  "analyze_recent_errors": {
+    "name": "analyze_recent_errors",
+    "description": "Analyze recent diagram generation errors with actionable troubleshooting guidance.\n\nFeatures:\n- Real-time error detection from validation logs\n- Pattern recognition and error categorization\n- Contextual troubleshooting recommendations\n- Time window analysis (configurable 1-60 minutes)\n\nError categories:\n- Empty Model: No elements defined\n- Orphaned Relationships: References to non-existent elements\n- Validation Errors: ArchiMate compliance issues\n- System Errors: PlantUML generation failures",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "minutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60,
+          "default": 10,
+          "description": "Time window in minutes to analyze errors (default: 10)"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

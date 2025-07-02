@@ -1,0 +1,9 @@
+{
+  "name": "test_element_normalization",
+  "description": "Test element type normalization across all ArchiMate layers.\n\nValidates the input normalization system that handles:\n- Case-insensitive element types (e.g., \"function\" → \"Business_Function\")\n- Common naming variations and abbreviations\n- Layer-specific element prefixes\n- Relationship type normalization\n\nReturns comprehensive test results showing normalization rules and examples.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

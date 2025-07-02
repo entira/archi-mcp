@@ -1,0 +1,17 @@
+{
+  "name": "analyze_recent_errors",
+  "description": "Analyze recent diagram generation errors with actionable troubleshooting guidance.\n\nFeatures:\n- Real-time error detection from validation logs\n- Pattern recognition and error categorization\n- Contextual troubleshooting recommendations\n- Time window analysis (configurable 1-60 minutes)\n\nError categories:\n- Empty Model: No elements defined\n- Orphaned Relationships: References to non-existent elements\n- Validation Errors: ArchiMate compliance issues\n- System Errors: PlantUML generation failures",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "minutes": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 60,
+        "default": 10,
+        "description": "Time window in minutes to analyze errors (default: 10)"
+      }
+    },
+    "additionalProperties": false
+  }
+}
