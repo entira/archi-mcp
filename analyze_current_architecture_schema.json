@@ -1,9 +1,0 @@
-{
-  "name": "analyze_current_architecture",
-  "description": "Analyze the current in-memory architecture model and generate insights.\n\nReturns comprehensive analysis including:\n- Element and relationship statistics by layer\n- Architecture completeness assessment  \n- Layer distribution analysis\n- Model health indicators\n- Element type breakdown\n- Relationship type usage\n\nUseful for understanding model complexity and identifying areas for improvement.",
-  "inputSchema": {
-    "type": "object",
-    "properties": {},
-    "additionalProperties": false
-  }
-}
