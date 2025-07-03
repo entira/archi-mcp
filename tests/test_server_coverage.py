@@ -122,11 +122,11 @@ class TestCustomRelationshipValidation:
         """Test custom relationship name with too many words.""" 
         from archi_mcp.server import validate_custom_relationship_name
         
-        # Test name with more than 3 words
-        is_valid, error_msg = validate_custom_relationship_name("one two three four", "Access")
+        # Test name with more than 4 words (limit is now 4)
+        is_valid, error_msg = validate_custom_relationship_name("one two three four five", "Access")
         # This should fail validation
-        assert isinstance(is_valid, bool)
-        assert isinstance(error_msg, str)
+        assert not is_valid
+        assert "maximum 4 words" in error_msg
     
     def test_validate_custom_relationship_invalid_synonym(self):
         """Test invalid synonym for relationship type."""

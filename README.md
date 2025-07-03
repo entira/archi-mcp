@@ -68,11 +68,13 @@ pip install archi-mcp
         "ARCHI_MCP_DEFAULT_TITLE": "true",
         "ARCHI_MCP_DEFAULT_LEGEND": "false",
         "ARCHI_MCP_DEFAULT_GROUP_BY_LAYER": "false",
+        "ARCHI_MCP_DEFAULT_SHOW_RELATIONSHIP_LABELS": "true",
         "ARCHI_MCP_LOCK_DIRECTION": "false",
         "ARCHI_MCP_LOCK_SPACING": "false",
         "ARCHI_MCP_LOCK_TITLE": "false",
         "ARCHI_MCP_LOCK_LEGEND": "false",
-        "ARCHI_MCP_LOCK_GROUP_BY_LAYER": "false"
+        "ARCHI_MCP_LOCK_GROUP_BY_LAYER": "false",
+        "ARCHI_MCP_LOCK_SHOW_RELATIONSHIP_LABELS": "false"
       }
     }
   }
@@ -86,6 +88,7 @@ pip install archi-mcp
 - **ARCHI_MCP_DEFAULT_TITLE**: Show title by default (`true`/`false`). Default: `true`
 - **ARCHI_MCP_DEFAULT_LEGEND**: Show legend by default (`true`/`false`). Default: `false`
 - **ARCHI_MCP_DEFAULT_GROUP_BY_LAYER**: Group elements by layer by default (`true`/`false`). Default: `false`
+- **ARCHI_MCP_DEFAULT_SHOW_RELATIONSHIP_LABELS**: Show enhanced relationship labels (`true`/`false`). Default: `true`
 - **ARCHI_MCP_LOCK_***: Lock specific parameters to prevent client override (`true`/`false`). Default: `false`
 
 

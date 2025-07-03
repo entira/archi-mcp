@@ -220,6 +220,7 @@ class ArchiMateElement(BaseModel):
             "Technology_Collaboration": "Technology_Collaboration",
             "Technology_Interface": "Technology_Interface",
             "Path": "Technology_Path",
+            "Technology_Path": "Technology_Path",  # Handle already normalized types
             "Communication_Network": "Technology_CommunicationNetwork",
             "Technology_CommunicationNetwork": "Technology_CommunicationNetwork",  # Handle already normalized types
             "Technology_Function": "Technology_Function",

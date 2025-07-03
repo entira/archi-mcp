@@ -265,7 +265,9 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
       "cwd": "/Users/patrik/Projects/archi-mcp",
       "env": {
         "ARCHI_MCP_LOG_LEVEL": "INFO",
-        "ARCHI_MCP_STRICT_VALIDATION": "true"
+        "ARCHI_MCP_STRICT_VALIDATION": "true",
+        "ARCHI_MCP_DEFAULT_SHOW_RELATIONSHIP_LABELS": "true",
+        "ARCHI_MCP_LOCK_SHOW_RELATIONSHIP_LABELS": "true"
       }
     }
   }
