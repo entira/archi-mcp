@@ -49,9 +49,7 @@ def test_fastmcp_tools_registration():
     # Check expected core tools are registered (4-tool focused API)
     expected_tools = [
         'create_archimate_diagram',
-        'analyze_current_architecture',
-        'test_element_normalization',
-        'analyze_recent_errors'
+        'test_element_normalization'
     ]
     
     registered_tools = list(mcp._tool_manager._tools.keys())
@@ -205,7 +203,7 @@ class TestMCPProtocolCompliance:
 def test_end_to_end_diagram_creation():
     """Integration test for complete diagram creation workflow using simplified API."""
     from archi_mcp.server import (
-        create_archimate_diagram, analyze_current_architecture,
+        create_archimate_diagram,
         DiagramInput
     )
     
@@ -244,12 +242,9 @@ def test_end_to_end_diagram_creation():
     assert "ArchiMate diagram created successfully" in result1 or "Test" in result1
     
     # Step 2: Analyze current architecture
-    result2 = analyze_current_architecture.fn()
-    assert "Architecture Analysis Report" in result2 or "analysis" in result2.lower()
-    
-    # Both steps should complete without errors
-    assert all(result is not None for result in [result1, result2])
-    assert all(isinstance(result, str) for result in [result1, result2])
+    # Diagram creation should complete without errors
+    assert result1 is not None
+    assert isinstance(result1, str)
 
 def test_performance_basic():
     """Basic performance test for tool execution."""

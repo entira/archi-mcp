@@ -994,34 +994,51 @@ def generate_architecture_markdown(generator, title: str, description: str, png_
     """Generate markdown documentation for the architecture."""
     md_content = []
     
-    # Header
+    # Extract translator from generator if available
+    translator = getattr(generator, 'translator', None)
+    
+    # Header - diagram name
     md_content.append(f"# {title}")
     md_content.append("")
     
+    # Slovný popis diagramu
     if description:
-        md_content.append(f"*{description}*")
+        md_content.append(description)
         md_content.append("")
     
-    # Generation info
-    md_content.append(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    # Generated timestamp
+    md_content.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     md_content.append("")
     
-    # Architecture diagram
-    md_content.append("## Architecture Diagram")
-    md_content.append("")
+    # Samotný diagram
     md_content.append(f"![{title}]({png_filename})")
     md_content.append("")
     
-    # Statistics overview
-    md_content.append("## Overview")
-    md_content.append("")
-    md_content.append(f"- **Total Elements:** {generator.get_element_count()}")
-    md_content.append(f"- **Total Relationships:** {generator.get_relationship_count()}")
-    md_content.append(f"- **Layers Used:** {', '.join(generator.get_layers_used())}")
+    # Detailný popis diagramu (niekoľko viet až odstavcov)
+    md_content.append(_generate_detailed_description(generator, title, translator))
     md_content.append("")
     
-    # Elements by layer
-    md_content.append("## Architecture Elements by Layer")
+    # Overview sekcia s podporou slovenčiny
+    if translator and translator.language == 'sk':
+        md_content.append("## Prehľad")
+        md_content.append("")
+        md_content.append(f"- **Celkom prvkov:** {generator.get_element_count()}")
+        md_content.append(f"- **Celkom vzťahov:** {generator.get_relationship_count()}")
+        md_content.append(f"- **Používané vrstvy:** {', '.join(generator.get_layers_used())}")
+        md_content.append("")
+        
+        # Elements by layer (slovensky)
+        md_content.append("## Architektonické prvky podľa vrstiev")
+    else:
+        md_content.append("## Overview")
+        md_content.append("")
+        md_content.append(f"- **Total Elements:** {generator.get_element_count()}")
+        md_content.append(f"- **Total Relationships:** {generator.get_relationship_count()}")
+        md_content.append(f"- **Layers Used:** {', '.join(generator.get_layers_used())}")
+        md_content.append("")
+        
+        # Elements by layer (anglicky)
+        md_content.append("## Architecture Elements by Layer")
     md_content.append("")
     
     # Group elements by layer
@@ -1034,12 +1051,18 @@ def generate_architecture_markdown(generator, title: str, description: str, png_
     
     # Document each layer
     for layer_name in sorted(elements_by_layer.keys()):
-        md_content.append(f"### {layer_name} Layer")
+        if translator and translator.language == 'sk':
+            md_content.append(f"### {layer_name} vrstva")
+        else:
+            md_content.append(f"### {layer_name} Layer")
         md_content.append("")
         
         elements = elements_by_layer[layer_name]
         if elements:
-            md_content.append("| ID | Name | Type | Description |")
+            if translator and translator.language == 'sk':
+                md_content.append("| ID | Názov | Typ | Popis |")
+            else:
+                md_content.append("| ID | Name | Type | Description |")
             md_content.append("|---|---|---|---|")
             
             for element in sorted(elements, key=lambda e: e.id):
@@ -1050,11 +1073,17 @@ def generate_architecture_markdown(generator, title: str, description: str, png_
             md_content.append("")
     
     # Relationships
-    md_content.append("## Relationships")
+    if translator and translator.language == 'sk':
+        md_content.append("## Vzťahy")
+    else:
+        md_content.append("## Relationships")
     md_content.append("")
     
     if generator.relationships:
-        md_content.append("| From | Relationship | To | Description |")
+        if translator and translator.language == 'sk':
+            md_content.append("| Od | Vzťah | Do | Popis |")
+        else:
+            md_content.append("| From | Relationship | To | Description |")
         md_content.append("|---|---|---|---|")
         
         for rel in generator.relationships:
@@ -1072,11 +1101,17 @@ def generate_architecture_markdown(generator, title: str, description: str, png_
         
         md_content.append("")
     else:
-        md_content.append("*No relationships defined*")
+        if translator and translator.language == 'sk':
+            md_content.append("*Žiadne vzťahy nedefinované*")
+        else:
+            md_content.append("*No relationships defined*")
         md_content.append("")
     
-    # Architecture insights
-    md_content.append("## Architecture Insights")
+    # Architecture insights s podporou slovenčiny
+    if translator and translator.language == 'sk':
+        md_content.append("## Architektonické poznatky")
+    else:
+        md_content.append("## Architecture Insights")
     md_content.append("")
     
     # Layer distribution
@@ -1085,11 +1120,18 @@ def generate_architecture_markdown(generator, title: str, description: str, png_
         layer = element.layer.value
         layer_counts[layer] = layer_counts.get(layer, 0) + 1
     
-    md_content.append("### Layer Distribution")
-    md_content.append("")
-    for layer, count in sorted(layer_counts.items()):
-        percentage = (count / generator.get_element_count()) * 100
-        md_content.append(f"- **{layer}**: {count} elements ({percentage:.1f}%)")
+    if translator and translator.language == 'sk':
+        md_content.append("### Rozdelenie vrstiev")
+        md_content.append("")
+        for layer, count in sorted(layer_counts.items()):
+            percentage = (count / generator.get_element_count()) * 100
+            md_content.append(f"- **{layer}**: {count} prvkov ({percentage:.1f}%)")
+    else:
+        md_content.append("### Layer Distribution")
+        md_content.append("")
+        for layer, count in sorted(layer_counts.items()):
+            percentage = (count / generator.get_element_count()) * 100
+            md_content.append(f"- **{layer}**: {count} elements ({percentage:.1f}%)")
     md_content.append("")
     
     # Element types analysis
@@ -1098,7 +1140,10 @@ def generate_architecture_markdown(generator, title: str, description: str, png_
         elem_type = element.element_type
         element_types[elem_type] = element_types.get(elem_type, 0) + 1
     
-    md_content.append("### Element Types")
+    if translator and translator.language == 'sk':
+        md_content.append("### Typy prvkov")
+    else:
+        md_content.append("### Element Types")
     md_content.append("")
     for elem_type, count in sorted(element_types.items()):
         md_content.append(f"- {elem_type.replace('_', ' ')}: {count}")
@@ -1111,25 +1156,102 @@ def generate_architecture_markdown(generator, title: str, description: str, png_
             rel_type = rel.relationship_type.value if hasattr(rel.relationship_type, 'value') else str(rel.relationship_type)
             rel_types[rel_type] = rel_types.get(rel_type, 0) + 1
         
-        md_content.append("### Relationship Types")
+        if translator and translator.language == 'sk':
+            md_content.append("### Typy vzťahov")
+        else:
+            md_content.append("### Relationship Types")
         md_content.append("")
         for rel_type, count in sorted(rel_types.items()):
             md_content.append(f"- {rel_type}: {count}")
         md_content.append("")
     
-    # PlantUML source reference
-    md_content.append("## Source Files")
-    md_content.append("")
-    md_content.append("- [PlantUML Source](diagram.puml)")
-    md_content.append("- [Generation Log](generation.log)")
-    md_content.append("- [Metadata](metadata.json)")
-    md_content.append("")
-    
-    # Footer
+    # Footer (bez Source Files sekcie)
     md_content.append("---")
-    md_content.append("*Generated by ArchiMate MCP Server*")
+    if translator and translator.language == 'sk':
+        md_content.append("*Vygenerované ArchiMate MCP Serverom*")
+    else:
+        md_content.append("*Generated by ArchiMate MCP Server*")
     
     return "\n".join(md_content)
+
+def _generate_detailed_description(generator, title: str, translator=None) -> str:
+    """Generate detailed description for the diagram based on its content."""
+    
+    # Analyze the diagram content
+    element_count = generator.get_element_count()
+    relationship_count = generator.get_relationship_count()
+    layers = generator.get_layers_used()
+    
+    # Generate contextual description based on diagram characteristics
+    description_parts = []
+    
+    # Translation templates
+    if translator and translator.language == 'sk':
+        # Slovak templates
+        templates = {
+            'basic_overview': "Tento diagram {title} ilustruje komplexný architektonický pohľad s {element_count} prvkami a {relationship_count} vzťahmi.",
+            'single_layer': "Diagram sa zameriava na vrstvu {layer}, poskytujúc detailný náhľad na tento špecifický architektonický aspekt.",
+            'multi_layer': "Architektúra zahŕňa viacero vrstiev vrátane {layer_list}, čo demonštruje integráciu a závislosti medzi vrstvami.",
+            'multi_layer_simple': "Architektúra zahŕňa {layer1} a {layer2} vrstvy, čo demonštruje integráciu a závislosti medzi vrstvami.",
+            'diverse_components': "Diagram predstavuje rôznorodé architektonické komponenty s {type_count} rôznymi typmi prvkov, čo odráža bohatý a komplexný systémový dizajn.",
+            'relationships': "Prepojenia demonštrujú {rel_count} typov vzťahov, čo poukazuje na sofistikované architektonické vzory a závislosti.",
+            'purpose': "Tento architektonický pohľad slúži ako základ pre pochopenie systémového dizajnu, podporu rozhodovania a uľahčenie komunikácie medzi zainteresovanými stranami."
+        }
+    else:
+        # English templates (default)
+        templates = {
+            'basic_overview': "This {title} diagram illustrates a comprehensive architectural view with {element_count} elements and {relationship_count} relationships.",
+            'single_layer': "The diagram focuses on the {layer} layer, providing detailed insight into this specific architectural aspect.",
+            'multi_layer': "The architecture spans multiple layers including {layer_list}, demonstrating cross-layer integration and dependencies.",
+            'multi_layer_simple': "The architecture spans {layer1} and {layer2} layers, demonstrating cross-layer integration and dependencies.",
+            'diverse_components': "The diagram showcases diverse architectural components with {type_count} different element types, reflecting a rich and complex system design.",
+            'relationships': "The interconnections demonstrate {rel_count} types of relationships, indicating sophisticated architectural patterns and dependencies.",
+            'purpose': "This architectural view serves as a foundation for understanding system design, supporting decision-making, and facilitating communication among stakeholders."
+        }
+    
+    # Basic overview
+    if element_count > 0:
+        description_parts.append(templates['basic_overview'].format(
+            title=title.lower(), 
+            element_count=element_count, 
+            relationship_count=relationship_count
+        ))
+    
+    # Layer analysis
+    if len(layers) == 1:
+        description_parts.append(templates['single_layer'].format(layer=layers[0]))
+    elif len(layers) == 2:
+        description_parts.append(templates['multi_layer_simple'].format(
+            layer1=layers[0], 
+            layer2=layers[1]
+        ))
+    elif len(layers) > 2:
+        layer_list = ", ".join(layers[:-1]) + f", and {layers[-1]}" if translator and translator.language != 'sk' else ", ".join(layers[:-1]) + f" a {layers[-1]}"
+        description_parts.append(templates['multi_layer'].format(layer_list=layer_list))
+    
+    # Element diversity analysis
+    if element_count > 0:
+        element_types = set()
+        for element in generator.elements.values():
+            element_types.add(element.element_type)
+        
+        if len(element_types) > 3:
+            description_parts.append(templates['diverse_components'].format(type_count=len(element_types)))
+        
+    # Relationship insights
+    if relationship_count > 0:
+        rel_types = set()
+        for rel in generator.relationships:
+            rel_type = rel.relationship_type.value if hasattr(rel.relationship_type, 'value') else str(rel.relationship_type)
+            rel_types.add(rel_type)
+        
+        if len(rel_types) > 1:
+            description_parts.append(templates['relationships'].format(rel_count=len(rel_types)))
+    
+    # Purpose and value statement
+    description_parts.append(templates['purpose'])
+    
+    return " ".join(description_parts)
 
 def normalize_element_type(element_type: str) -> str:
     """Normalize element type to correct ArchiMate format."""
@@ -1861,37 +1983,6 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
 # Removed validate_archimate_model - not needed in simplified API
 
 # Debug tools
-@mcp.tool() 
-def analyze_current_architecture() -> str:
-    """Analyze current architecture state and provide health assessment."""
-    try:
-        elements = generator._elements
-        relationships = generator._relationships
-        
-        if not elements:
-            return "⚠️ **No architecture to analyze** - Create a diagram first"
-        
-        result = f"📊 **Architecture Analysis Report**\n\n"
-        result += f"**Elements:** {len(elements)}\n"
-        result += f"**Relationships:** {len(relationships)}\n"
-        result += f"**Layers:** {', '.join(generator.get_layers_used())}\n\n"
-        
-        # Element breakdown by layer
-        layer_counts = {}
-        for element in elements.values():
-            layer = element.layer.value
-            layer_counts[layer] = layer_counts.get(layer, 0) + 1
-        
-        result += "**Elements by Layer:**\n"
-        for layer, count in layer_counts.items():
-            result += f"• {layer}: {count} elements\n"
-        
-        result += f"\n**Status:** Architecture is ready for validation ✅"
-        
-        return result
-        
-    except Exception as e:
-        return f"❌ Analysis failed: {str(e)}"
 
 @mcp.tool()
 def test_element_normalization() -> str:
@@ -1930,427 +2021,7 @@ def test_element_normalization() -> str:
 
 # Removed get_debug_log_info - not needed in simplified API
 
-@mcp.tool()
-def create_architecture_views_summary(
-    summary_filename: Optional[str] = None,
-    session_title: Optional[str] = None,
-    include_failed_attempts: bool = False
-) -> str:
-    """Create comprehensive markdown summary of all architectural views from current session.
-    
-    Args:
-        summary_filename: Name for the summary markdown file (auto-generated if not provided)
-        session_title: Title for the session summary (default: "Architecture Views Summary")
-        include_failed_attempts: Whether to include failed diagram attempts in summary
-        
-    Returns:
-        Summary of created architecture views with links to detailed views and diagrams
-    """
-    try:
-        exports_dir = get_exports_directory()
-        
-        if not exports_dir.exists():
-            return "❌ No exports directory found. Create some diagrams first using create_archimate_diagram."
-        
-        # Scan for successful exports (directories with PNG files)
-        successful_exports = []
-        failed_exports = []
-        
-        for export_dir in exports_dir.iterdir():
-            if not export_dir.is_dir() or export_dir.name == "failed_attempts":
-                continue
-                
-            png_file = export_dir / "diagram.png"
-            metadata_file = export_dir / "metadata.json"
-            architecture_file = export_dir / "architecture.md"
-            
-            export_info = {
-                "directory": export_dir.name,
-                "path": export_dir,
-                "timestamp": export_dir.name,
-                "has_png": png_file.exists(),
-                "has_metadata": metadata_file.exists(),
-                "has_architecture": architecture_file.exists(),
-                "title": "Unknown Diagram",
-                "description": "No description available",
-                "statistics": {}
-            }
-            
-            # Load metadata if available
-            if metadata_file.exists():
-                try:
-                    with open(metadata_file, 'r', encoding='utf-8') as f:
-                        metadata = json.load(f)
-                        export_info["title"] = metadata.get("title", "Unknown Diagram")
-                        export_info["description"] = metadata.get("description", "No description available")
-                        export_info["statistics"] = metadata.get("statistics", {})
-                        export_info["generated_at"] = metadata.get("generated_at", "")
-                except Exception:
-                    pass
-            
-            if png_file.exists():
-                successful_exports.append(export_info)
-            else:
-                failed_exports.append(export_info)
-        
-        # Sort by timestamp (directory name)
-        successful_exports.sort(key=lambda x: x["timestamp"], reverse=True)
-        failed_exports.sort(key=lambda x: x["timestamp"], reverse=True)
-        
-        # Generate summary filename
-        if not summary_filename:
-            session_date = datetime.now().strftime("%Y%m%d_%H%M%S")
-            summary_filename = f"architecture_session_summary_{session_date}.md"
-        
-        if not summary_filename.endswith('.md'):
-            summary_filename += '.md'
-        
-        # Generate markdown content
-        session_title = session_title or "Architecture Views Summary"
-        summary_content = _generate_views_summary_markdown(
-            session_title,
-            successful_exports,
-            failed_exports if include_failed_attempts else [],
-            exports_dir
-        )
-        
-        # Save summary file in exports directory
-        summary_file = exports_dir / summary_filename
-        with open(summary_file, 'w', encoding='utf-8') as f:
-            f.write(summary_content)
-        
-        # Generate response
-        total_views = len(successful_exports)
-        failed_count = len(failed_exports)
-        
-        result = f"✅ **Architecture Views Summary Created**\n\n"
-        result += f"📁 **File:** `{summary_file}`\n"
-        result += f"📊 **Session Statistics:**\n"
-        result += f"- Successful architectural views: {total_views}\n"
-        
-        if include_failed_attempts and failed_count > 0:
-            result += f"- Failed attempts: {failed_count}\n"
-        
-        if successful_exports:
-            result += f"- Date range: {successful_exports[-1]['timestamp']} → {successful_exports[0]['timestamp']}\n"
-            
-            # Show overview of view types
-            view_types = {}
-            for export in successful_exports:
-                title = export["title"]
-                # Extract view type from title
-                view_type = "General"
-                if "motivation" in title.lower():
-                    view_type = "Motivation"
-                elif "application" in title.lower():
-                    view_type = "Application"
-                elif "technology" in title.lower():
-                    view_type = "Technology" 
-                elif "business" in title.lower():
-                    view_type = "Business"
-                elif "implementation" in title.lower():
-                    view_type = "Implementation"
-                elif "layered" in title.lower() or "layer" in title.lower():
-                    view_type = "Layered"
-                
-                view_types[view_type] = view_types.get(view_type, 0) + 1
-            
-            result += f"- View types: {', '.join([f'{k}({v})' for k, v in view_types.items()])}\n"
-        
-        result += f"\n📖 **Usage:** Open `{summary_filename}` to browse all architectural views with links to detailed descriptions and diagrams."
-        
-        return result
-        
-    except Exception as e:
-        logger.error(f"Error creating architecture views summary: {e}")
-        return f"❌ Failed to create architecture views summary: {str(e)}"
 
-def _generate_views_summary_markdown(
-    session_title: str,
-    successful_exports: List[Dict],
-    failed_exports: List[Dict],
-    exports_dir: Path
-) -> str:
-    """Generate markdown content for architecture views summary."""
-    
-    lines = []
-    
-    # Header
-    lines.append(f"# {session_title}")
-    lines.append("")
-    lines.append(f"*Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*")
-    lines.append("")
-    
-    # Overview
-    total_successful = len(successful_exports)
-    total_failed = len(failed_exports)
-    
-    lines.append("## 📊 Session Overview")
-    lines.append("")
-    lines.append(f"- **Total Architectural Views:** {total_successful}")
-    if total_failed > 0:
-        lines.append(f"- **Failed Attempts:** {total_failed}")
-    
-    if successful_exports:
-        lines.append(f"- **Time Span:** {successful_exports[-1]['timestamp']} → {successful_exports[0]['timestamp']}")
-        
-        # Calculate total elements and relationships
-        total_elements = sum(export.get("statistics", {}).get("elements", 0) for export in successful_exports)
-        total_relationships = sum(export.get("statistics", {}).get("relationships", 0) for export in successful_exports)
-        
-        lines.append(f"- **Total Elements Modeled:** {total_elements}")
-        lines.append(f"- **Total Relationships:** {total_relationships}")
-    
-    lines.append("")
-    
-    # Table of Contents
-    if successful_exports:
-        lines.append("## 📋 Table of Contents")
-        lines.append("")
-        
-        for i, export in enumerate(successful_exports, 1):
-            title = export["title"]
-            # Generate anchor from the full heading text (including number)
-            full_heading = f"{i}. {title}"
-            lines.append(f"{i}. [{title}](#{_make_anchor(full_heading)})")
-        
-        lines.append("")
-    
-    # Detailed views
-    if successful_exports:
-        lines.append("## 🏗️ Architectural Views")
-        lines.append("")
-        
-        for i, export in enumerate(successful_exports, 1):
-            title = export["title"]
-            description = export["description"]
-            stats = export.get("statistics", {})
-            timestamp = export["timestamp"]
-            
-            # View header
-            lines.append(f"### {i}. {title}")
-            lines.append("")
-            
-            # Description
-            if description and description != "No description available":
-                lines.append(f"**Description:** {description}")
-                lines.append("")
-            
-            # Statistics
-            if stats:
-                lines.append("**Model Statistics:**")
-                if stats.get("elements"):
-                    lines.append(f"- Elements: {stats['elements']}")
-                if stats.get("relationships"):
-                    lines.append(f"- Relationships: {stats['relationships']}")
-                if stats.get("layers"):
-                    layers = stats["layers"]
-                    if isinstance(layers, list):
-                        lines.append(f"- Layers: {', '.join(layers)}")
-                lines.append("")
-            
-            # Links
-            lines.append("**Resources:**")
-            lines.append(f"- 📄 [Detailed Architecture Documentation]({timestamp}/architecture.md)")
-            lines.append(f"- 🖼️ [PNG Diagram]({timestamp}/diagram.png)")
-            lines.append(f"- 🎨 [SVG Diagram]({timestamp}/diagram.svg)")
-            lines.append(f"- 📝 [PlantUML Source]({timestamp}/diagram.puml)")
-            lines.append("")
-            
-            # Embedded diagram
-            lines.append("**Diagram Preview:**")
-            lines.append("")
-            lines.append(f"![{title}]({timestamp}/diagram.png)")
-            lines.append("")
-            lines.append("---")
-            lines.append("")
-    
-    # Failed attempts section
-    if failed_exports:
-        lines.append("## ⚠️ Failed Attempts")
-        lines.append("")
-        lines.append("The following diagram generation attempts failed but logs are available for debugging:")
-        lines.append("")
-        
-        for export in failed_exports:
-            title = export["title"]
-            timestamp = export["timestamp"]
-            lines.append(f"- **{title}** ({timestamp})")
-            lines.append(f"  - 📋 [Generation Log](failed_attempts/{timestamp}/generation.log)")
-        
-        lines.append("")
-    
-    # Footer
-    lines.append("---")
-    lines.append("*Generated by ArchiMate MCP Server - Architecture Views Summary Tool*")
-    
-    return "\n".join(lines)
-
-def _make_anchor(text: str) -> str:
-    """Convert text to markdown anchor format compatible with most markdown renderers."""
-    import re
-    # Convert to lowercase
-    anchor = text.lower()
-    # Replace spaces and special characters with hyphens
-    anchor = re.sub(r'[^\w\s-]', '', anchor)  # Remove special chars except spaces and hyphens
-    anchor = re.sub(r'[-\s]+', '-', anchor)    # Replace multiple spaces/hyphens with single hyphen
-    # Remove leading/trailing hyphens
-    anchor = anchor.strip('-')
-    return anchor
-
-@mcp.tool()
-def analyze_recent_errors(minutes: int = 10) -> str:
-    """Analyze recent PlantUML generation errors and provide troubleshooting guidance.
-    
-    Args:
-        minutes: Look back this many minutes for error analysis (default: 10)
-        
-    Returns:
-        Detailed analysis of recent errors with actionable recommendations
-    """
-    try:
-        # Get recent error data from various sources
-        analysis = _extract_recent_problems(minutes)
-        
-        if analysis['total_errors'] == 0:
-            return f"""✅ **No Recent Errors Found**
-
-**Analysis Period:** Last {minutes} minutes
-**Status:** System operating normally
-
-### 📊 Current Health Metrics:
-- PlantUML generation: ✅ Working
-- Element normalization: ✅ Working  
-- Validation pipeline: ✅ Working
-
-### 📈 Recommendations:
-- System is stable for architecture creation
-- Ready for complex multi-layer diagrams
-- All normalization functions operational
-"""
-        
-        # Build detailed error analysis
-        report = f"""🔍 **Recent Error Analysis** (Last {minutes} minutes)
-
-## 📊 Summary
-**Total Issues Found:** {analysis['total_errors']}
-**Error Categories:** {len(analysis['error_categories'])}
-**Timeframe:** {datetime.now().strftime('%H:%M:%S')} - {(datetime.now() - timedelta(minutes=minutes)).strftime('%H:%M:%S')}
-
-"""
-        
-        # Add error categories
-        if analysis['error_categories']:
-            report += "## 📊 Error Categories:\n"
-            for category, count in analysis['error_categories'].items():
-                report += f"- **{category}**: {count} occurrences\n"
-            report += "\n"
-        
-        # Add common patterns
-        if analysis['common_patterns']:
-            report += "## 🔎 Common Issues:\n"
-            for pattern in analysis['common_patterns']:
-                report += f"- {pattern}\n"
-            report += "\n"
-        
-        # Add troubleshooting recommendations
-        report += "## 🚀 Troubleshooting Steps:\n"
-        recommendations = _generate_troubleshooting_recommendations(analysis)
-        for rec in recommendations:
-            report += f"- {rec}\n"
-        
-        return report
-        
-    except Exception as e:
-        logger.error(f"Error in analyze_recent_errors: {e}")
-        return f"❌ Error analysis failed: {str(e)}"
-
-def _extract_recent_problems(minutes: int) -> Dict[str, Any]:
-    """Extract problems from recent logs and server state."""
-    from datetime import datetime, timedelta
-    import glob
-    
-    cutoff_time = datetime.now() - timedelta(minutes=minutes)
-    analysis = {
-        'total_errors': 0,
-        'error_categories': {},
-        'common_patterns': [],
-        'recent_attempts': []
-    }
-    
-    # Check for recent PlantUML generation errors in /tmp
-    temp_files = glob.glob('/tmp/archimate_diagram_*.png')
-    recent_files = [f for f in temp_files 
-                   if os.path.getmtime(f) > cutoff_time.timestamp()]
-    
-    # Analyze current generator state for issues
-    try:
-        elements_count = len(generator._elements)
-        relationships_count = len(generator._relationships)
-        
-        # Check for common error patterns
-        if elements_count == 0:
-            analysis['common_patterns'].append(
-                "No elements in current diagram - may need to create elements first"
-            )
-            analysis['error_categories']['Empty Model'] = 1
-            analysis['total_errors'] += 1
-        
-        # Check for orphaned relationships
-        element_ids = set(generator._elements.keys())
-        orphaned_rels = 0
-        for rel in generator._relationships.values():
-            if rel.from_element not in element_ids or rel.to_element not in element_ids:
-                orphaned_rels += 1
-        
-        if orphaned_rels > 0:
-            analysis['common_patterns'].append(
-                f"Found {orphaned_rels} relationships with missing elements"
-            )
-            analysis['error_categories']['Orphaned Relationships'] = orphaned_rels
-            analysis['total_errors'] += orphaned_rels
-            
-    except Exception as e:
-        analysis['common_patterns'].append(f"Generator state analysis failed: {str(e)}")
-        analysis['error_categories']['System Error'] = 1
-        analysis['total_errors'] += 1
-    
-    return analysis
-
-def _generate_troubleshooting_recommendations(analysis: Dict[str, Any]) -> List[str]:
-    """Generate specific troubleshooting recommendations based on error analysis."""
-    recommendations = []
-    
-    if 'Empty Model' in analysis['error_categories']:
-        recommendations.extend([
-            "Create elements first using create_archimate_diagram with element data",
-            "Ensure DiagramInput contains at least one ElementInput with valid layer and type",
-            "Check element normalization using test_element_normalization tool"
-        ])
-    
-    if 'Orphaned Relationships' in analysis['error_categories']:
-        recommendations.extend([
-            "Verify all relationship from_element and to_element IDs match existing element IDs",
-            "Use analyze_current_architecture to check element/relationship consistency",
-            "Consider recreating the diagram with proper element-relationship mapping"
-        ])
-    
-    if 'System Error' in analysis['error_categories']:
-        recommendations.extend([
-            "Check server logs for detailed error information",
-            "Verify PlantUML JAR file availability for PNG generation",
-            "Test basic functionality with simple single-element diagram"
-        ])
-    
-    # Default recommendations if no specific issues found
-    if not recommendations:
-        recommendations = [
-            "System appears healthy - ready for complex architecture creation",
-            "Use create_archimate_diagram for new diagrams", 
-            "Monitor with analyze_current_architecture for ongoing health checks"
-        ]
-    
-    return recommendations
 
 
 
@@ -2358,7 +2029,7 @@ def _generate_troubleshooting_recommendations(analysis: Dict[str, Any]) -> List[
 def main():
     """Main entry point for the ArchiMate MCP server."""
     logger.info("Starting ArchiMate MCP Server with FastMCP")
-    logger.info(f"Available tools: create_archimate_diagram, analyze_current_architecture, test_element_normalization, create_architecture_views_summary, analyze_recent_errors")
+    logger.info(f"Available tools: create_archimate_diagram, test_element_normalization")
     
     try:
         mcp.run()

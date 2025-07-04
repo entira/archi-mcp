@@ -50,27 +50,19 @@ uv run pytest tests/test_analysis_tools.py     # Analysis tools comprehensive te
 uv run pytest tests/test_generator_coverage.py # Generator edge case and coverage tests (95% pass)
 uv run pytest tests/test_validation_mandatory.py # Validation and MCP integration tests (100% pass)
 
-# Enhanced Testing Workflow with Validation Error Monitoring
-# IMPORTANT: Always check validation error logs before and after testing!
+# Enhanced Testing Workflow
+# Run comprehensive test suite with multiple validation levels
 
-# 1. Check validation error logs before testing
-cat logs/validation_errors.jsonl
+# 1. Run all tests with coverage
+uv run pytest --cov=archi_mcp --cov-report=html
 
-# 2. If errors found, implement fix-test-retest cycle:
-#    a) Analyze specific error in logs/validation_errors.jsonl
-#    b) Fix the validation issue in source code
-#    c) Run targeted tests: uv run pytest tests/test_validation.py -v
-#    d) Re-run full test suite: uv run pytest
-#    e) Verify error log is clean: cat logs/validation_errors.jsonl
+# 2. Run specific test categories for targeted validation
+uv run pytest tests/test_server.py             # Core server functionality tests
+uv run pytest tests/test_analysis_tools.py     # Element normalization tests
+uv run pytest tests/test_validation_mandatory.py # Validation and MCP integration tests
 
-# 3. Run comprehensive MCP testing (only if error log is clean)
+# 3. Run comprehensive MCP testing
 uv run python -m pytest testing/ -v
-
-# 4. Monitor validation errors during testing (in separate terminal)
-tail -f logs/validation_errors.jsonl
-
-# 5. Post-test validation check (must be empty for passing tests)
-wc -l logs/validation_errors.jsonl  # Should show 0 lines for clean tests
 ```
 
 ### Comprehensive Test Suite Documentation
@@ -118,26 +110,14 @@ uv run python -c "from archi_mcp.server import mcp; print('✅ Server ready')"
 
 ### Enhanced Validation & Error Monitoring
 ```bash
-# Check current validation error log (critical for debugging)
-cat logs/validation_errors.jsonl
-
-# View real-time validation errors during development
-tail -f logs/validation_errors.jsonl
-
-# Analyze validation error patterns
-grep "element_type" logs/validation_errors.jsonl | head -5
-
-# Test enhanced 4-step validation system
-uv run python tests/test_enhanced_validation.py
-
 # Test PlantUML rendering with comprehensive validation
-uv run python tests/test_plantuml_validation.py
+uv run python -c "from archi_mcp.server import _validate_plantuml_renders; print(_validate_plantuml_renders('@startuml\nrectangle A\n@enduml'))"
 
 # Test diagram generation with validation
-uv run python examples/generate_sample_diagrams.py
+uv run python -c "from archi_mcp.server import create_archimate_diagram, DiagramInput, ElementInput; print('Testing validation')"
 
-# Clear validation error log (use with caution)
-> logs/validation_errors.jsonl
+# Monitor failed attempts for debugging
+ls exports/failed_attempts/
 ```
 
 ### Comprehensive Failed Attempts Debugging (NEW)
@@ -292,16 +272,14 @@ uv sync  # Install dependencies
 Use full path in Claude Desktop config with `uv` command and `--directory` flag.
 
 ### PlantUML validation errors
-- **First step:** Check validation error log: `cat logs/validation_errors.jsonl`
 - **Element normalization issues:** Check if kebab-case elements are properly converted (business-actor → Business_Actor)
 - **Rendering failures:** Ensure Java is installed for PlantUML jar execution
-- **JSONL log entries:** Each validation failure is logged with full context for debugging
+- **Debug failed attempts:** Check `exports/failed_attempts/` for comprehensive failure logs
 - **Enhanced fix-test-retest cycle:** 
-  1. Check error log before testing: `cat logs/validation_errors.jsonl`
+  1. Run validation tests: `uv run pytest tests/test_validation_mandatory.py -v`
   2. Fix validation issues in source code
-  3. Run targeted tests: `uv run pytest tests/test_validation_mandatory.py -v`
-  4. Re-run full test suite: `uv run pytest`
-  5. Verify error log is clean: `wc -l logs/validation_errors.jsonl` (should be 0)
+  3. Re-run full test suite: `uv run pytest`
+  4. Check failed attempts: `ls exports/failed_attempts/` for any new failures
 
 ### PlantUML Headless Mode (CRITICAL REQUIREMENT)
 - **ALWAYS use headless mode:** All PlantUML jar executions MUST include `-Djava.awt.headless=true`
@@ -335,11 +313,11 @@ java -Djava.awt.headless=true -jar plantuml.jar -tpng -v diagram.puml
 - **Base64 URLs:** Copy data URLs directly into browser for immediate viewing
 - **Online previews:** Use generated PlantUML server URLs for instant preview
 
-### Validation error log monitoring
-- **Before testing:** Always check `logs/validation_errors.jsonl` is empty
-- **During development:** Use `tail -f logs/validation_errors.jsonl` to monitor real-time errors
-- **After fixes:** Verify log is clean with `wc -l logs/validation_errors.jsonl` (should be 0)
-- **Pattern analysis:** Use `grep` to find common error patterns for systematic fixes
+### Validation error monitoring
+- **Before testing:** Run validation tests to ensure clean baseline
+- **During development:** Monitor failed attempts in `exports/failed_attempts/` for debugging
+- **After fixes:** Re-run test suite to verify all validation passes
+- **Pattern analysis:** Examine failed attempt logs for systematic error patterns
 
 ## Development Guidelines
 
