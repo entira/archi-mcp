@@ -26,7 +26,7 @@ ArchiMate MCP Server fills a crucial gap in the MCP ecosystem by providing dedic
 - **Intelligent Input Normalization**: Case-insensitive inputs with automatic correction and helpful error messages
 - **Built-in Validation**: Comprehensive 4-step validation pipeline with real-time error detection
 - **macOS-Optimized PNG/SVG Generation**: Headless mode prevents cursor interference + live HTTP server for instant viewing (uses up-to-date PlantUML 1.2025.4)
-- **4 Essential MCP Tools**: Core diagram creation with intelligent error analysis and architecture health assessment
+- **2 Core MCP Tools**: Focused diagram creation and element normalization testing
 - **Real-time Error Analysis**: Actionable troubleshooting guidance with pattern recognition and fix suggestions
 - **FastMCP 2.8+ Integration**: Modern MCP protocol implementation with comprehensive schema discovery
 - **Production-Ready Testing**: 182 passing tests with 70% coverage and comprehensive test suites across all layers
@@ -196,7 +196,7 @@ All 12 ArchiMate relationship types with directional variants:
 
 ## 🛠️ MCP Tools
 
-The server exposes five core tools via FastMCP:
+The server exposes 2 core tools via FastMCP:
 
 ### 1. **create_archimate_diagram**
 Generate complete ArchiMate diagrams from structured input with:
@@ -206,34 +206,12 @@ Generate complete ArchiMate diagrams from structured input with:
 - PNG/SVG generation with HTTP server URLs
 - Comprehensive layout configuration options
 
-### 2. **analyze_current_architecture**
-Analyze current architecture state and provide insights:
-- Element and relationship statistics by layer
-- Architecture completeness assessment
-- Layer distribution analysis
-- Model health indicators
-
-### 3. **test_element_normalization**
+### 2. **test_element_normalization**
 Test element type normalization across all ArchiMate layers:
 - Validates case-insensitive input handling
 - Tests common element type mappings
 - Verifies layer and relationship normalization
 - Essential for troubleshooting input issues
-
-### 4. **create_architecture_views_summary**
-Create comprehensive markdown summary of all architectural views from current session:
-- Scans exports directory for all generated diagrams
-- Creates unified summary document with metadata and statistics
-- Links to all successful architectural views with timestamps
-- Optional inclusion of failed attempts for debugging
-- Perfect for documentation, stakeholder sharing, and project handoffs
-
-### 5. **analyze_recent_errors**
-Analyze recent diagram generation errors with actionable guidance:
-- Real-time error detection and pattern recognition
-- Categorized error reporting (Empty Model, Orphaned Relationships, System Errors)
-- Contextual troubleshooting recommendations
-- Configurable time window analysis (1-60 minutes)
 
 ### ArchiMate Viewpoints
 - **Layered**: Cross-layer relationships and dependencies

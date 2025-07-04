@@ -10,7 +10,7 @@ Professional Model Context Protocol server for ArchiMate enterprise architecture
 - **macOS-Optimized PNG/SVG Generation**: ALWAYS uses headless PlantUML mode to prevent cursor interference
 - **FastMCP 2.8+ Integration**: Modern MCP protocol with image support
 - **Intelligent Error Analysis**: Real-time error detection with actionable troubleshooting guidance
-- **Comprehensive Testing**: 169+ passing tests with 69% coverage and robust error handling
+- **Comprehensive Testing**: 182+ passing tests with 73% coverage and robust error handling
 - **Claude Desktop Ready**: Optimized configuration for seamless integration
 - **Multi-Layer Support**: All 7 ArchiMate layers with proper aspect detection
 
@@ -18,7 +18,7 @@ Professional Model Context Protocol server for ArchiMate enterprise architecture
 - **Python 3.11+** with modern async/await
 - **FastMCP 2.8+** for MCP protocol implementation
 - **UV** for fast package management
-- **PlantUML** for diagram generation and validation
+- **PlantUML 1.2025.4** for diagram generation and validation
 - **Pydantic 2.0+** for data validation and input schemas
 
 ## Development Commands
@@ -34,7 +34,7 @@ uv sync --extra dev
 
 ### Testing
 ```bash
-# Run all tests (169 passing tests, 69% coverage)
+# Run all tests (182 passing tests, 73% coverage)
 uv run pytest
 
 # Run tests with verbose output
@@ -87,12 +87,10 @@ wc -l logs/validation_errors.jsonl  # Should show 0 lines for clean tests
 - Aspect detection for unknown element types
 - **Coverage Impact**: Improved server.py coverage from 58% to 62%
 
-**test_analysis_tools.py**: Complete testing of all 4 MCP analysis tools
-- `analyze_current_architecture`: Empty architecture, basic stats, layer distribution
-- `analyze_recent_errors`: No errors, mock error log, different time windows, invalid JSON, file not found
+**test_analysis_tools.py**: Complete testing of element normalization tool
 - `test_element_normalization`: Case insensitive testing, comprehensive normalization validation
 - Translation override functionality for Slovak relationship labels
-- **Coverage Impact**: 100% test coverage for all analysis tools
+- **Coverage Impact**: 100% test coverage for element normalization tool
 
 **test_generator_coverage.py**: Generator edge cases and error scenarios
 - Export error handling (permission errors, disk full, directory creation failures)
@@ -202,27 +200,12 @@ uv run mypy src/
 - **Direct viewing URLs** - Returns HTTP URLs for immediate diagram viewing
 - Returns validated PlantUML code with statistics and viewing URLs
 
-### 2. `analyze_current_architecture() -> str`
-**Architecture health assessment tool** - Analyze current architecture state and provide insights.
-- Element and relationship statistics by layer
-- Architecture completeness assessment
-- Layer distribution analysis
-- Model health indicators and readiness check
-
-### 3. `test_element_normalization() -> str`
+### 2. `test_element_normalization() -> str`
 **Element validation tool** - Test element type normalization across all ArchiMate layers.
 - Validates case-insensitive input handling ("function" → "Business_Function")
 - Tests common element type mappings and transformations
 - Verifies layer and relationship type normalization
 - Essential for troubleshooting input compatibility issues
-
-### 4. `analyze_recent_errors(minutes: int = 10) -> str`
-**Intelligent error analysis tool** - Analyze recent diagram generation errors with actionable guidance.
-- Real-time error detection and pattern recognition
-- Categorized error reporting (Empty Model, Orphaned Relationships, System Errors)
-- Contextual troubleshooting recommendations
-- Configurable time window analysis (1-60 minutes)
-- Monitors validation error log: `logs/validation_errors.jsonl`
 
 
 ## Project Structure
@@ -243,7 +226,7 @@ archi-mcp/
 │   ├── utils/                 # Utilities
 │   └── architecture_generator.py # Full architecture generation
 ├── docs/                      # Comprehensive documentation
-├── tests/                     # Comprehensive test suite (115+ tests, 69% coverage)
+├── tests/                     # Comprehensive test suite (182+ tests, 73% coverage)
 │   ├── test_server.py             # Core server functionality tests
 │   ├── test_server_coverage.py    # Server coverage improvement tests
 │   ├── test_analysis_tools.py     # Analysis tools comprehensive tests
@@ -530,12 +513,12 @@ except ArchiMateValidationError as e:
 - [ ] **Examples**: Provide real-world architecture examples
 
 ## Quality Metrics
-- ✅ **Enhanced test suite** - 169 passing tests (7 skipped) with 69% code coverage (1075/1548 lines)
-- ✅ **Server coverage improvement** - server.py coverage improved from 58% to 62%
+- ✅ **Enhanced test suite** - 182 passing tests with 73% code coverage (1026/1587 lines)
+- ✅ **Server coverage improvement** - server.py coverage improved from 58% to 68%
 - ✅ **Generator coverage improvement** - generator.py coverage improved from 41% to 59%
-- ✅ **Comprehensive analysis tools testing** - 100% passing tests for all 4 MCP tools
+- ✅ **Streamlined MCP tools** - 100% passing tests for 2 core MCP tools (simplified API)
 - ✅ **Language detection testing** - Slovak/English detection with validation
-- ✅ **Error analysis testing** - Real-time error log analysis and monitoring
+- ✅ **Element normalization testing** - Comprehensive normalization validation
 - ✅ **Type hints** throughout codebase
 - ✅ **Professional documentation** 
 - ✅ **FastMCP 2.8+ integration** with Image object support
