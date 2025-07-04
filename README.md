@@ -25,7 +25,7 @@ ArchiMate MCP Server fills a crucial gap in the MCP ecosystem by providing dedic
 - **Universal PlantUML Generation**: All layers now supported with official PlantUML ArchiMate sprites and syntax
 - **Intelligent Input Normalization**: Case-insensitive inputs with automatic correction and helpful error messages
 - **Built-in Validation**: Comprehensive 4-step validation pipeline with real-time error detection
-- **macOS-Optimized PNG/SVG Generation**: Headless mode prevents cursor interference + live HTTP server for instant viewing
+- **macOS-Optimized PNG/SVG Generation**: Headless mode prevents cursor interference + live HTTP server for instant viewing (uses up-to-date PlantUML 1.2025.4)
 - **4 Essential MCP Tools**: Core diagram creation with intelligent error analysis and architecture health assessment
 - **Real-time Error Analysis**: Actionable troubleshooting guidance with pattern recognition and fix suggestions
 - **FastMCP 2.8+ Integration**: Modern MCP protocol implementation with comprehensive schema discovery
@@ -151,7 +151,7 @@ This repository showcases comprehensive architectural documentation of the Archi
 - **Technology Services**: MCP Protocol Service, PlantUML Service, Python Runtime Service, HTTP Service
 - **System Software**: Python Interpreter (3.11+), Java Runtime, Operating System
 - **Nodes**: Development Environment, Production Environment, Claude Desktop Environment
-- **Artifacts**: ArchiMate MCP Server Package, PlantUML JAR, Configuration Files
+- **Artifacts**: ArchiMate MCP Server Package, PlantUML JAR (v1.2025.4), Configuration Files
 
 ### 🏗️ **Physical Layer**
 ![Physical Layer](docs/diagrams/archi_mcp_physical.svg)
