@@ -41,6 +41,7 @@ ARCHIMATE_ELEMENTS = {
     "Node": TechnologyElement,
     "Device": TechnologyElement,
     "System_Software": TechnologyElement,
+    "Technology_Component": TechnologyElement,
     "Technology_Collaboration": TechnologyElement,
     "Technology_Interface": TechnologyElement,
     "Path": TechnologyElement,

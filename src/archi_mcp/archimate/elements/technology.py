@@ -66,6 +66,25 @@ class TechnologyElement(ArchiMateElement):
         )
     
     @classmethod
+    def create_technology_component(
+        cls,
+        id: str,
+        name: str,
+        description: str = None,
+        **kwargs
+    ) -> "TechnologyElement":
+        """Create a Technology Component element."""
+        return cls(
+            id=id,
+            name=name,
+            element_type="Technology_Component",
+            layer=ArchiMateLayer.TECHNOLOGY,
+            aspect=ArchiMateAspect.ACTIVE_STRUCTURE,
+            description=description,
+            **kwargs
+        )
+    
+    @classmethod
     def create_technology_collaboration(
         cls,
         id: str,

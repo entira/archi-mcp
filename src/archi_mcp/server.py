@@ -717,6 +717,7 @@ ELEMENT_TYPE_MAPPING = {
     "Node": "Technology_Node",
     "Device": "Technology_Device",
     "System_Software": "Technology_SystemSoftware",
+    "Technology_Component": "Technology_Component",
     "Technology_Collaboration": "Technology_Collaboration",
     "Technology_Interface": "Technology_Interface",
     "Path": "Technology_Path",
