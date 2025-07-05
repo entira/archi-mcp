@@ -11,7 +11,7 @@ from typing import Dict, List, Tuple, Optional
 
 logger = logging.getLogger(__name__)
 
-# Auto-fix rules based on analysis of existing exports
+# Auto-fix rules based on comprehensive analysis of existing exports
 # Pattern: (source_type, target_type, invalid_rel) -> suggested_rel
 AUTO_FIX_RULES = {
     # Cross-layer access issues - use Association instead
@@ -36,6 +36,26 @@ AUTO_FIX_RULES = {
     
     # Process triggering issues
     ("BusinessProcess", "ApplicationProcess", "TriggeringRelationship"): "ServingRelationship",
+    
+    # NEW RULES based on latest error analysis
+    # Implementation and Migration layer issues
+    ("BusinessRole", "Deliverable", "AssignmentRelationship"): "AssociationRelationship",
+    ("BusinessRole", "WorkPackage", "AssignmentRelationship"): "AssociationRelationship", 
+    ("BusinessActor", "WorkPackage", "AssignmentRelationship"): "AssociationRelationship",
+    
+    # Motivation to Implementation layer issues
+    ("Principle", "Deliverable", "InfluenceRelationship"): "AssociationRelationship",
+    ("Constraint", "WorkPackage", "InfluenceRelationship"): "AssociationRelationship",
+    ("Requirement", "WorkPackage", "InfluenceRelationship"): "AssociationRelationship",
+    
+    # Motivation to Business layer issues  
+    ("Goal", "BusinessRole", "InfluenceRelationship"): "AssociationRelationship",
+    ("Driver", "BusinessActor", "InfluenceRelationship"): "AssociationRelationship",
+    ("BusinessActor", "Requirement", "AssociationRelationship"): "AssociationRelationship",
+    
+    # Business layer internal issues
+    ("BusinessRole", "Location", "AssignmentRelationship"): "AssociationRelationship",
+    ("BusinessRole", "BusinessObject", "AccessRelationship"): "AssociationRelationship",
 }
 
 # Common relationship type mappings for readability

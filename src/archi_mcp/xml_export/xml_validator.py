@@ -255,7 +255,8 @@ class ArchiMateXMLValidator:
 # Environment-controlled validation
 def is_validation_enabled() -> bool:
     """Check if validation is enabled via environment variable."""
-    return os.getenv("ARCHI_MCP_ENABLE_VALIDATION", "false").lower() in ("true", "1", "yes")
+    # Enable by default for better user experience (can be disabled if needed)
+    return os.getenv("ARCHI_MCP_ENABLE_VALIDATION", "true").lower() in ("true", "1", "yes")
 
 def validate_archimate_export(xml_file_path: str) -> Optional[ValidationResult]:
     """

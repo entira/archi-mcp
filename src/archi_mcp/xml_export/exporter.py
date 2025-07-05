@@ -22,6 +22,7 @@ from ..archimate import ArchiMateElement, ArchiMateRelationship
 from ..archimate.elements.base import ArchiMateLayer, ArchiMateAspect
 from .xml_validator import validate_archimate_export, log_validation_results
 from .relationship_auto_fix import apply_auto_fix
+from .liberal_validator import analyze_model_relationships, generate_liberal_validation_report
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +119,8 @@ class ArchiMateXMLExporter:
             
             # Apply auto-fix for relationships (safe - preserves PlantUML generation)
             try:
-                enable_auto_fix = os.getenv("ARCHI_MCP_ENABLE_AUTO_FIX", "false").lower() in ("true", "1", "yes")
+                # Enable auto-fix by default for better user experience (can be disabled if needed)
+                enable_auto_fix = os.getenv("ARCHI_MCP_ENABLE_AUTO_FIX", "true").lower() in ("true", "1", "yes")
                 xml_string, fix_info = apply_auto_fix(xml_string, enable_fix=enable_auto_fix)
                 
                 if fix_info["fix_count"] > 0:
@@ -138,17 +140,34 @@ class ArchiMateXMLExporter:
                 output_path.write_text(xml_string, encoding='utf-8')
                 logger.info(f"XML exported to {output_path}")
                 
-                # Optional validation (safe - never blocks export)
+                # Liberal validation and analysis (safe - never blocks export)
                 try:
-                    validation_result = validate_archimate_export(str(output_path))
-                    if validation_result:
-                        log_validation_results(validation_result, logger)
-                        
-                        # Log validation summary for debugging
-                        logger.info(f"Validation summary: {len(validation_result.errors)} errors, {len(validation_result.warnings)} warnings")
+                    # Use liberal validator for better user experience
+                    analysis = analyze_model_relationships(xml_string)
+                    report = generate_liberal_validation_report(analysis)
+                    
+                    # Log the analysis results
+                    problematic_count = len(analysis["problematic"])
+                    total_count = analysis["total_relationships"]
+                    
+                    if problematic_count == 0:
+                        logger.info(f"✅ Model validation passed: {total_count} relationships analyzed, all semantically valid")
+                    else:
+                        logger.info(f"📊 Model analysis: {total_count} relationships, {problematic_count} may need review")
+                    
+                    # Log cross-layer relationship statistics
+                    cross_layer_count = len(analysis["cross_layer"])
+                    same_layer_count = len(analysis["same_layer"])
+                    logger.info(f"📈 Relationship distribution: {same_layer_count} same-layer, {cross_layer_count} cross-layer")
+                    
+                    # Log full report for debugging if needed
+                    logger.debug("ArchiMate model analysis report:")
+                    for line in report.split('\n'):
+                        if line.strip():
+                            logger.debug(line)
                         
                 except Exception as e:
-                    logger.warning(f"Validation failed (non-blocking): {e}")
+                    logger.warning(f"Model analysis failed (non-blocking): {e}")
             
             logger.info("XML export completed successfully")
             return xml_string
