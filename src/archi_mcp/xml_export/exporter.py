@@ -21,7 +21,7 @@ except ImportError:
 from ..archimate import ArchiMateElement, ArchiMateRelationship
 from ..archimate.elements.base import ArchiMateLayer, ArchiMateAspect
 from .xml_validator import validate_archimate_export, log_validation_results
-from .relationship_auto_fix import apply_auto_fix
+from .universal_relationship_fixer import apply_universal_fix, get_fix_summary
 from .liberal_validator import analyze_model_relationships, generate_liberal_validation_report
 
 logger = logging.getLogger(__name__)
@@ -117,21 +117,25 @@ class ArchiMateXMLExporter:
                 xml_string = etree.tostring(root, encoding='unicode')
                 xml_string = '<?xml version="1.0" encoding="UTF-8"?>' + xml_string
             
-            # Apply auto-fix for relationships (safe - preserves PlantUML generation)
+            # Apply universal relationship fixing (safe - preserves PlantUML generation)
             try:
-                # Enable auto-fix by default for better user experience (can be disabled if needed)
-                enable_auto_fix = os.getenv("ARCHI_MCP_ENABLE_AUTO_FIX", "true").lower() in ("true", "1", "yes")
-                xml_string, fix_info = apply_auto_fix(xml_string, enable_fix=enable_auto_fix)
+                # Universal fixing is always enabled for maximum compatibility
+                enable_universal_fix = os.getenv("ARCHI_MCP_ENABLE_UNIVERSAL_FIX", "true").lower() in ("true", "1", "yes")
                 
-                if fix_info["fix_count"] > 0:
-                    logger.info(f"Applied {fix_info['fix_count']} relationship auto-fixes")
-                    for fix in fix_info["fixes_applied"]:
-                        logger.info(f"Auto-fix: {fix}")
-                elif fix_info["suggestion_count"] > 0:
-                    logger.info(f"Found {fix_info['suggestion_count']} fixable relationships (auto-fix disabled)")
+                if enable_universal_fix:
+                    xml_string, fix_stats = apply_universal_fix(xml_string)
+                    
+                    # Log results
+                    if fix_stats["fixes_applied"] > 0:
+                        logger.info(f"Universal relationship fixer: {fix_stats['fixes_applied']} relationships optimized for Archi compatibility")
+                        logger.info(f"Preservation rate: {(fix_stats['preserved_relationships'] / fix_stats['total_relationships'] * 100):.1f}%")
+                    else:
+                        logger.info(f"Universal fixer: All {fix_stats['total_relationships']} relationships already optimal")
+                else:
+                    logger.debug("Universal relationship fixing disabled")
                     
             except Exception as e:
-                logger.warning(f"Auto-fix failed (non-blocking): {e}")
+                logger.warning(f"Universal relationship fixing failed (non-blocking): {e}")
             
             # Save to file if path provided
             if output_path:
