@@ -689,50 +689,50 @@ class DiagramInput(BaseModel):
 # Fixed element type mapping based on test errors
 ELEMENT_TYPE_MAPPING = {
     # Business Layer - with proper capitalization
-    "Business_Actor": "Business_Actor",
-    "Business_Role": "Business_Role", 
-    "Business_Collaboration": "Business_Collaboration",
-    "Business_Interface": "Business_Interface",
-    "Business_Function": "Business_Function",
-    "Business_Process": "Business_Process",
-    "Business_Event": "Business_Event",
-    "Business_Service": "Business_Service",
-    "Business_Object": "Business_Object",
-    "Business_Contract": "Business_Contract",
-    "Business_Representation": "Business_Representation",
+    "Business_Actor": "BusinessActor",
+    "Business_Role": "BusinessRole", 
+    "Business_Collaboration": "BusinessCollaboration",
+    "Business_Interface": "BusinessInterface",
+    "Business_Function": "BusinessFunction",
+    "Business_Process": "BusinessProcess",
+    "Business_Event": "BusinessEvent",
+    "Business_Service": "BusinessService",
+    "Business_Object": "BusinessObject",
+    "Business_Contract": "Contract",
+    "Business_Representation": "Representation",
     "Location": "Location",
     
     # Application Layer
-    "Application_Component": "Application_Component",
-    "Application_Collaboration": "Application_Collaboration",
-    "Application_Interface": "Application_Interface", 
-    "Application_Function": "Application_Function",
-    "Application_Interaction": "Application_Interaction",
-    "Application_Process": "Application_Process",
-    "Application_Event": "Application_Event",
-    "Application_Service": "Application_Service",
-    "Data_Object": "Application_DataObject",
+    "Application_Component": "ApplicationComponent",
+    "Application_Collaboration": "ApplicationCollaboration",
+    "Application_Interface": "ApplicationInterface", 
+    "Application_Function": "ApplicationFunction",
+    "Application_Interaction": "ApplicationInteraction",
+    "Application_Process": "ApplicationProcess",
+    "Application_Event": "ApplicationEvent",
+    "Application_Service": "ApplicationService",
+    "Data_Object": "DataObject",
     
     # Technology Layer
-    "Node": "Technology_Node",
-    "Device": "Technology_Device",
-    "System_Software": "Technology_SystemSoftware",
+    "Node": "Node",
+    "Device": "Device",
+    "System_Software": "SystemSoftware",
     "Technology_Component": "Technology_Component",
-    "Technology_Collaboration": "Technology_Collaboration",
-    "Technology_Interface": "Technology_Interface",
-    "Path": "Technology_Path",
-    "Communication_Network": "Technology_CommunicationNetwork",
-    "Technology_Function": "Technology_Function",
-    "Technology_Process": "Technology_Process",
-    "Technology_Interaction": "Technology_Interaction", 
-    "Technology_Event": "Technology_Event",
-    "Technology_Service": "Technology_Service",
-    "Artifact": "Technology_Artifact",
+    "Technology_Collaboration": "TechnologyCollaboration",
+    "Technology_Interface": "TechnologyInterface",
+    "Path": "Path",
+    "Communication_Network": "CommunicationNetwork",
+    "Technology_Function": "TechnologyFunction",
+    "Technology_Process": "TechnologyProcess",
+    "Technology_Interaction": "TechnologyInteraction", 
+    "Technology_Event": "TechnologyEvent",
+    "Technology_Service": "TechnologyService",
+    "Artifact": "Artifact",
     
     # Physical Layer
     "Equipment": "Equipment",
     "Facility": "Facility",
-    "Distribution_Network": "Distribution_Network",
+    "Distribution_Network": "DistributionNetwork",
     "Material": "Material",
     
     # Motivation Layer - proper capitalization
@@ -750,13 +750,13 @@ ELEMENT_TYPE_MAPPING = {
     # Strategy Layer
     "Resource": "Resource",
     "Capability": "Capability",
-    "Course_of_Action": "Course_of_Action",
-    "Value_Stream": "Value_Stream",
+    "Course_of_Action": "CourseOfAction",
+    "Value_Stream": "ValueStream",
     
     # Implementation Layer
-    "Work_Package": "Work_Package",
+    "Work_Package": "WorkPackage",
     "Deliverable": "Deliverable",
-    "Implementation_Event": "Implementation_Event",
+    "Implementation_Event": "ImplementationEvent",
     "Plateau": "Plateau",
     "Gap": "Gap",
 }
@@ -1853,6 +1853,31 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
             shutil.move(svg_file_path, str(svg_file))
             log_debug('INFO', f'Moved SVG file to {svg_file}')
             svg_generated = True
+        
+        # Generate ArchiMate XML Exchange export (only after successful PNG generation)
+        try:
+            from .xml_export import ArchiMateXMLExporter
+            xml_exporter = ArchiMateXMLExporter()
+            
+            # Extract elements and relationships from generator
+            elements = list(generator_with_translator.elements.values())
+            relationships = generator_with_translator.relationships
+            
+            # Export to XML
+            xml_file = export_dir / "archimate_model.archimate"
+            xml_content = xml_exporter.export_to_xml(
+                elements=elements,
+                relationships=relationships,
+                model_name=title or "ArchiMate Model",
+                output_path=xml_file
+            )
+            
+            log_debug('INFO', f'Generated ArchiMate XML Exchange export: {xml_file}')
+            
+        except ImportError:
+            log_debug('INFO', 'XML export module not available (lxml not installed)')
+        except Exception as xml_error:
+            log_debug('WARNING', f'XML export failed: {str(xml_error)}')
         
         # Save debug log
         log_file = save_debug_log(export_dir, debug_log)

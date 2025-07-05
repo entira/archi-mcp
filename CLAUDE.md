@@ -176,9 +176,19 @@ uv run mypy src/
 - Automatic element type and layer normalization (case-insensitive)
 - Built-in PlantUML validation before returning results
 - PNG/SVG generation with headless Java PlantUML integration (macOS-optimized, prevents focus stealing)
+- **NEW: ArchiMate XML Exchange Export** - Automatic export to Open Group ArchiMate Exchange XML format (only after successful PNG generation)
 - **Automatic HTTP server** - Starts web server for serving diagrams
 - **Direct viewing URLs** - Returns HTTP URLs for immediate diagram viewing
 - Returns validated PlantUML code with statistics and viewing URLs
+
+**Output Files (saved to exports/YYYYMMDD_HHMMSS/):**
+- `diagram.puml` - PlantUML source code
+- `diagram.png` - Production-ready PNG image
+- `diagram.svg` - Vector SVG format (if generated)
+- `architecture.md` - Extended documentation with embedded images
+- `generation.log` - Comprehensive debug information
+- `metadata.json` - Diagram statistics and metadata
+- **`archimate_model.archimate`** - ⭐ **NEW: Archi-compatible XML format** (Direct import into Archi tool)
 
 ### 2. `test_element_normalization() -> str`
 **Element validation tool** - Test element type normalization across all ArchiMate layers.
@@ -204,6 +214,11 @@ archi-mcp/
 │   │   ├── patterns.py        # Architecture patterns
 │   │   └── industry.py        # Industry-specific templates
 │   ├── utils/                 # Utilities
+│   ├── xml_export/            # ⭐ NEW: ArchiMate XML Exchange Export Module
+│   │   ├── __init__.py        # Module initialization
+│   │   ├── exporter.py        # XML exporter implementation
+│   │   ├── validator.py       # XML validation functionality
+│   │   └── templates.py       # XML templates and examples
 │   └── architecture_generator.py # Full architecture generation
 ├── docs/                      # Comprehensive documentation
 ├── tests/                     # Comprehensive test suite (182+ tests, 73% coverage)
@@ -503,6 +518,7 @@ except ArchiMateValidationError as e:
 - ⚡ **Performance optimized** - Sub-15s response for complex diagrams with PNG generation
 - 🏗️ **Production architecture demos** - 8 complete views
 - 🔧 **Real-time debugging** - MCP debug logging to /tmp with full traceability
+- ⭐ **NEW: ArchiMate XML Exchange Export** - Standards-compliant Open Group XML format with modular design
 
 ## License
 MIT License - Open source, free for commercial and personal use.

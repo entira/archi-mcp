@@ -185,56 +185,90 @@ class ArchiMateElement(BaseModel):
         # Complete mapping based on official PlantUML sprites and documentation
         plantuml_mapping = {
             # Business Layer - verified with PlantUML sprites
+            # Support both old internal format and new XML schema format
             "Business_Actor": "Business_Actor",
+            "BusinessActor": "Business_Actor",
             "Business_Role": "Business_Role",
-            "Business_Collaboration": "Business_Collaboration", 
+            "BusinessRole": "Business_Role",
+            "Business_Collaboration": "Business_Collaboration",
+            "BusinessCollaboration": "Business_Collaboration", 
             "Business_Interface": "Business_Interface",
+            "BusinessInterface": "Business_Interface",
             "Business_Function": "Business_Function",
+            "BusinessFunction": "Business_Function",
             "Business_Process": "Business_Process",
+            "BusinessProcess": "Business_Process",
             "Business_Event": "Business_Event",
+            "BusinessEvent": "Business_Event",
             "Business_Service": "Business_Service",
+            "BusinessService": "Business_Service",
             "Business_Object": "Business_Object",
+            "BusinessObject": "Business_Object",
             "Business_Contract": "Business_Contract",
+            "Contract": "Business_Contract",
             "Business_Representation": "Business_Representation",
+            "Representation": "Business_Representation",
             "Location": "Business_Location",
             
             # Application Layer - verified with PlantUML sprites
+            # Support both old internal format and new XML schema format
             "Application_Component": "Application_Component",
+            "ApplicationComponent": "Application_Component",
             "Application_Collaboration": "Application_Collaboration",
-            "Application_Interface": "Application_Interface", 
+            "ApplicationCollaboration": "Application_Collaboration",
+            "Application_Interface": "Application_Interface",
+            "ApplicationInterface": "Application_Interface", 
             "Application_Function": "Application_Function",
+            "ApplicationFunction": "Application_Function",
             "Application_Interaction": "Application_Interaction",
+            "ApplicationInteraction": "Application_Interaction",
             "Application_Process": "Application_Process",
+            "ApplicationProcess": "Application_Process",
             "Application_Event": "Application_Event",
+            "ApplicationEvent": "Application_Event",
             "Application_Service": "Application_Service",
+            "ApplicationService": "Application_Service",
             "Data_Object": "Application_DataObject",
+            "DataObject": "Application_DataObject",
             "Application_DataObject": "Application_DataObject",  # Handle already normalized types
             
             # Technology Layer - verified with PlantUML sprites
+            # Support both old internal format and new XML schema format
             "Node": "Technology_Node",
             "Technology_Node": "Technology_Node",  # Handle already normalized types
-            "Device": "Technology_Device", 
+            "Device": "Technology_Device",
             "Technology_Device": "Technology_Device",  # Handle already normalized types
             "System_Software": "Technology_SystemSoftware",
+            "SystemSoftware": "Technology_SystemSoftware",
             "Technology_SystemSoftware": "Technology_SystemSoftware",  # Handle already normalized types
             "Technology_Collaboration": "Technology_Collaboration",
+            "TechnologyCollaboration": "Technology_Collaboration",
             "Technology_Interface": "Technology_Interface",
+            "TechnologyInterface": "Technology_Interface",
             "Path": "Technology_Path",
             "Technology_Path": "Technology_Path",  # Handle already normalized types
             "Communication_Network": "Technology_CommunicationNetwork",
+            "CommunicationNetwork": "Technology_CommunicationNetwork",
             "Technology_CommunicationNetwork": "Technology_CommunicationNetwork",  # Handle already normalized types
             "Technology_Function": "Technology_Function",
+            "TechnologyFunction": "Technology_Function",
             "Technology_Process": "Technology_Process",
+            "TechnologyProcess": "Technology_Process",
             "Technology_Interaction": "Technology_Interaction",
+            "TechnologyInteraction": "Technology_Interaction",
             "Technology_Event": "Technology_Event",
+            "TechnologyEvent": "Technology_Event",
             "Technology_Service": "Technology_Service",
+            "TechnologyService": "Technology_Service",
             "Artifact": "Technology_Artifact",
             "Technology_Artifact": "Technology_Artifact",  # Handle already normalized types
             
             # Physical Layer - verified with official sprites (physical-equipment.png, etc.)
+            # Support both old internal format and new XML schema format
             "Equipment": "Physical_Equipment",
             "Facility": "Physical_Facility",
             "Distribution_Network": "Physical_DistributionNetwork",
+            "DistributionNetwork": "Physical_DistributionNetwork",
             "Material": "Physical_Material",
             
             # Motivation Layer - verified with official sprites (motivation-stakeholder.png, etc.)
@@ -250,21 +284,27 @@ class ArchiMateElement(BaseModel):
             "Value": "Motivation_Value",
             
             # Strategy Layer - verified with official sprites (strategy-capability.png, etc.)
+            # Support both old internal format and new XML schema format
             "Resource": "Strategy_Resource",
             "Strategy_Resource": "Strategy_Resource",  # Handle already normalized types
             "Capability": "Strategy_Capability",
             "Strategy_Capability": "Strategy_Capability",  # Handle already normalized types
             "Course_of_Action": "Strategy_CourseOfAction",  # Note: CamelCase, not underscore
+            "CourseOfAction": "Strategy_CourseOfAction",
             "Strategy_CourseOfAction": "Strategy_CourseOfAction",  # Handle already normalized types
             "Value_Stream": "Strategy_ValueStream",         # Note: CamelCase, not underscore
+            "ValueStream": "Strategy_ValueStream",
             "Strategy_ValueStream": "Strategy_ValueStream",  # Handle already normalized types
             
             # Implementation Layer - verified with official sprites (implementation-workpackage.png, etc.)
+            # Support both old internal format and new XML schema format
             "Work_Package": "Implementation_WorkPackage",   # Note: CamelCase, not underscore
+            "WorkPackage": "Implementation_WorkPackage",
             "Implementation_WorkPackage": "Implementation_WorkPackage",  # Handle already normalized types
             "Deliverable": "Implementation_Deliverable",
             "Implementation_Deliverable": "Implementation_Deliverable",  # Handle already normalized types
             "Implementation_Event": "Implementation_Event",
+            "ImplementationEvent": "Implementation_Event",
             "Plateau": "Implementation_Plateau",
             "Implementation_Plateau": "Implementation_Plateau",  # Handle already normalized types
             "Gap": "Implementation_Gap",
