@@ -54,6 +54,7 @@ ELEMENT_LAYERS = {
 
 # Safe relationships that work well within same layer
 SAFE_SAME_LAYER_RELATIONSHIPS = {
+    "AssignmentRelationship",     # Fundamental ArchiMate relationship (actor assigned to process/role)
     "CompositionRelationship",    # Part-of relationships
     "AggregationRelationship",    # Collection relationships  
     "ServingRelationship",        # Service provision
@@ -61,14 +62,20 @@ SAFE_SAME_LAYER_RELATIONSHIPS = {
     "AccessRelationship",         # Data access (within layer)
     "TriggeringRelationship",     # Process flow (within layer)
     "FlowRelationship",          # Information flow (within layer)
+    "InfluenceRelationship",     # Influence between elements (especially in Motivation layer)
     "SpecializationRelationship", # Inheritance (same element types)
     "AssociationRelationship"     # Always safe
 }
 
 # Relationships that are generally safe cross-layer
 SAFE_CROSS_LAYER_RELATIONSHIPS = {
+    "AssignmentRelationship",     # Valid cross-layer (Business Actor → Application Component)
     "ServingRelationship",        # Services can be provided cross-layer
     "RealizationRelationship",    # Implementation across layers is common
+    "AccessRelationship",         # Cross-layer data access (Business Process → Application Service)
+    "TriggeringRelationship",     # Cross-layer triggering (Business Event → Application Process)
+    "FlowRelationship",          # Cross-layer information flow
+    "InfluenceRelationship",     # Motivation influencing other layers
     "AssociationRelationship"     # Always safe
 }
 

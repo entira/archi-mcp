@@ -686,60 +686,89 @@ class DiagramInput(BaseModel):
         Language is automatically detected from element/relationship text content.
         Slovak detection triggers automatic translation of layer names and relationship labels.""")
 
-# Fixed element type mapping based on test errors
+# Element type normalization mapping - input formats to internal format
 ELEMENT_TYPE_MAPPING = {
-    # Business Layer - with proper capitalization
-    "Business_Actor": "BusinessActor",
-    "Business_Role": "BusinessRole", 
-    "Business_Collaboration": "BusinessCollaboration",
-    "Business_Interface": "BusinessInterface",
-    "Business_Function": "BusinessFunction",
-    "Business_Process": "BusinessProcess",
-    "Business_Event": "BusinessEvent",
-    "Business_Service": "BusinessService",
-    "Business_Object": "BusinessObject",
-    "Business_Contract": "Contract",
-    "Business_Representation": "Representation",
+    # Business Layer - normalize to internal format (with underscores)
+    "BusinessActor": "Business_Actor",
+    "Business_Actor": "Business_Actor",  # Identity mapping for correct format
+    "BusinessRole": "Business_Role",
+    "Business_Role": "Business_Role",  # Identity mapping
+    "BusinessCollaboration": "Business_Collaboration",
+    "Business_Collaboration": "Business_Collaboration",  # Identity mapping
+    "BusinessInterface": "Business_Interface", 
+    "Business_Interface": "Business_Interface",  # Identity mapping
+    "BusinessFunction": "Business_Function",
+    "Business_Function": "Business_Function",  # Identity mapping
+    "BusinessProcess": "Business_Process",
+    "Business_Process": "Business_Process",  # Identity mapping
+    "BusinessEvent": "Business_Event",
+    "Business_Event": "Business_Event",  # Identity mapping
+    "BusinessService": "Business_Service",
+    "Business_Service": "Business_Service",  # Identity mapping
+    "BusinessObject": "Business_Object",
+    "Business_Object": "Business_Object",  # Identity mapping
+    "Contract": "Contract",
+    "Business_Contract": "Contract",  # Normalize to shorter form
+    "Representation": "Representation", 
+    "Business_Representation": "Representation",  # Normalize to shorter form
     "Location": "Location",
     
     # Application Layer
-    "Application_Component": "ApplicationComponent",
-    "Application_Collaboration": "ApplicationCollaboration",
-    "Application_Interface": "ApplicationInterface", 
-    "Application_Function": "ApplicationFunction",
-    "Application_Interaction": "ApplicationInteraction",
-    "Application_Process": "ApplicationProcess",
-    "Application_Event": "ApplicationEvent",
-    "Application_Service": "ApplicationService",
-    "Data_Object": "DataObject",
+    "ApplicationComponent": "Application_Component",
+    "Application_Component": "Application_Component",  # Identity mapping
+    "ApplicationCollaboration": "Application_Collaboration",
+    "Application_Collaboration": "Application_Collaboration",  # Identity mapping
+    "ApplicationInterface": "Application_Interface",
+    "Application_Interface": "Application_Interface",  # Identity mapping
+    "ApplicationFunction": "Application_Function",
+    "Application_Function": "Application_Function",  # Identity mapping
+    "ApplicationInteraction": "Application_Interaction",
+    "Application_Interaction": "Application_Interaction",  # Identity mapping
+    "ApplicationProcess": "Application_Process",
+    "Application_Process": "Application_Process",  # Identity mapping
+    "ApplicationEvent": "Application_Event",
+    "Application_Event": "Application_Event",  # Identity mapping
+    "ApplicationService": "Application_Service",
+    "Application_Service": "Application_Service",  # Identity mapping
+    "DataObject": "Data_Object",
+    "Data_Object": "Data_Object",  # Identity mapping
     
     # Technology Layer
     "Node": "Node",
-    "Device": "Device",
-    "System_Software": "SystemSoftware",
-    "Technology_Component": "Technology_Component",
-    "Technology_Collaboration": "TechnologyCollaboration",
-    "Technology_Interface": "TechnologyInterface",
+    "Device": "Device", 
+    "SystemSoftware": "System_Software",
+    "System_Software": "System_Software",  # Identity mapping
+    "TechnologyCollaboration": "Technology_Collaboration",
+    "Technology_Collaboration": "Technology_Collaboration",  # Identity mapping
+    "TechnologyInterface": "Technology_Interface",
+    "Technology_Interface": "Technology_Interface",  # Identity mapping
     "Path": "Path",
-    "Communication_Network": "CommunicationNetwork",
-    "Technology_Function": "TechnologyFunction",
-    "Technology_Process": "TechnologyProcess",
-    "Technology_Interaction": "TechnologyInteraction", 
-    "Technology_Event": "TechnologyEvent",
-    "Technology_Service": "TechnologyService",
+    "CommunicationNetwork": "Communication_Network",
+    "Communication_Network": "Communication_Network",  # Identity mapping
+    "TechnologyFunction": "Technology_Function",
+    "Technology_Function": "Technology_Function",  # Identity mapping
+    "TechnologyProcess": "Technology_Process",
+    "Technology_Process": "Technology_Process",  # Identity mapping
+    "TechnologyInteraction": "Technology_Interaction",
+    "Technology_Interaction": "Technology_Interaction",  # Identity mapping
+    "TechnologyEvent": "Technology_Event",
+    "Technology_Event": "Technology_Event",  # Identity mapping
+    "TechnologyService": "Technology_Service",
+    "Technology_Service": "Technology_Service",  # Identity mapping
     "Artifact": "Artifact",
     
-    # Physical Layer
+    # Physical Layer  
     "Equipment": "Equipment",
     "Facility": "Facility",
-    "Distribution_Network": "DistributionNetwork",
+    "DistributionNetwork": "Distribution_Network",
+    "Distribution_Network": "Distribution_Network",  # Identity mapping
     "Material": "Material",
     
-    # Motivation Layer - proper capitalization
+    # Motivation Layer
     "Stakeholder": "Stakeholder",
     "Driver": "Driver",
-    "Assessment": "Assessment", 
-    "Goal": "Goal",
+    "Assessment": "Assessment",
+    "Goal": "Goal", 
     "Outcome": "Outcome",
     "Principle": "Principle",
     "Requirement": "Requirement",
@@ -750,15 +779,19 @@ ELEMENT_TYPE_MAPPING = {
     # Strategy Layer
     "Resource": "Resource",
     "Capability": "Capability",
-    "Course_of_Action": "CourseOfAction",
-    "Value_Stream": "ValueStream",
+    "CourseOfAction": "Course_of_Action",
+    "Course_of_Action": "Course_of_Action",  # Identity mapping
+    "ValueStream": "Value_Stream", 
+    "Value_Stream": "Value_Stream",  # Identity mapping
     
     # Implementation Layer
-    "Work_Package": "WorkPackage",
+    "WorkPackage": "Work_Package",
+    "Work_Package": "Work_Package",  # Identity mapping
     "Deliverable": "Deliverable",
-    "Implementation_Event": "ImplementationEvent",
+    "ImplementationEvent": "Implementation_Event",
+    "Implementation_Event": "Implementation_Event",  # Identity mapping
     "Plateau": "Plateau",
-    "Gap": "Gap",
+    "Gap": "Gap"
 }
 
 # Valid layers with proper capitalization
@@ -1165,11 +1198,9 @@ def generate_architecture_markdown(generator, title: str, description: str, png_
     # Footer (bez Source Files sekcie)
     md_content.append("---")
     if translator and translator.language == 'sk':
-        md_content.append("*Vygenerované ArchiMate MCP Serverom*")
-        md_content.append(f"*Vygenerované: {datetime.now().strftime('%d.%m.%Y o %H:%M')}*")
+        md_content.append(f"*Vygenerované ArchiMate MCP Serverom @ {datetime.now().strftime('%d.%m.%Y o %H:%M')}*")
     else:
-        md_content.append("*Generated by ArchiMate MCP Server*")
-        md_content.append(f"*Generated: {datetime.now().strftime('%Y-%m-%d at %H:%M')}*")
+        md_content.append(f"*Generated by ArchiMate MCP Server @ {datetime.now().strftime('%Y-%m-%d at %H:%M')}*")
     
     return "\n".join(md_content)
 

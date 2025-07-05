@@ -43,6 +43,9 @@ uv add archi-mcp
 
 # Or install with pip
 pip install archi-mcp
+
+# Download PlantUML JAR (required for diagram generation)
+curl -L https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar -o plantuml.jar
 ```
 
 ### Claude Desktop Configuration
@@ -81,15 +84,54 @@ pip install archi-mcp
 }
 ```
 
-**Environment Variables:**
-- **ARCHI_MCP_LANGUAGE**: Language for relationship labels (`auto`, `en`, `sk`). Default: `auto` (detects from content)
-- **ARCHI_MCP_DEFAULT_DIRECTION**: Default layout direction (`top-bottom`, `left-right`, `vertical`, `horizontal`). Default: `top-bottom`
-- **ARCHI_MCP_DEFAULT_SPACING**: Default element spacing (`compact`, `balanced`, `comfortable`). Default: `comfortable`
-- **ARCHI_MCP_DEFAULT_TITLE**: Show title by default (`true`/`false`). Default: `true`
-- **ARCHI_MCP_DEFAULT_LEGEND**: Show legend by default (`true`/`false`). Default: `false`
-- **ARCHI_MCP_DEFAULT_GROUP_BY_LAYER**: Group elements by layer by default (`true`/`false`). Default: `false`
+### Environment Variables
+
+**Core Configuration:**
+- **ARCHI_MCP_LOG_LEVEL**: Logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`). Default: `INFO`
+- **ARCHI_MCP_STRICT_VALIDATION**: Enable strict ArchiMate validation (`true`/`false`). Default: `true`
+
+**Language Settings:**
+- **ARCHI_MCP_LANGUAGE**: Language for relationship labels:
+  - `auto`: Auto-detect from content (Slovak/English)
+  - `en`: Force English labels
+  - `sk`: Force Slovak labels
+  - Default: `auto`
+
+**Layout Defaults:**
+- **ARCHI_MCP_DEFAULT_DIRECTION**: Default layout direction:
+  - `top-bottom`: Vertical top-to-bottom flow
+  - `left-right`: Horizontal left-to-right flow  
+  - `vertical`: Same as top-bottom
+  - `horizontal`: Same as left-right
+  - Default: `top-bottom`
+
+- **ARCHI_MCP_DEFAULT_SPACING**: Default element spacing:
+  - `compact`: Minimal spacing between elements
+  - `balanced`: Moderate spacing for readability
+  - `comfortable`: Maximum spacing for clarity
+  - Default: `comfortable`
+
+- **ARCHI_MCP_DEFAULT_TITLE**: Show diagram title (`true`/`false`). Default: `true`
+- **ARCHI_MCP_DEFAULT_LEGEND**: Show legend with element types (`true`/`false`). Default: `false`
+- **ARCHI_MCP_DEFAULT_GROUP_BY_LAYER**: Group elements by ArchiMate layer (`true`/`false`). Default: `false`
 - **ARCHI_MCP_DEFAULT_SHOW_RELATIONSHIP_LABELS**: Show enhanced relationship labels (`true`/`false`). Default: `true`
-- **ARCHI_MCP_LOCK_***: Lock specific parameters to prevent client override (`true`/`false`). Default: `false`
+
+**Parameter Locking (Prevent Client Override):**
+- **ARCHI_MCP_LOCK_DIRECTION**: Lock direction parameter (`true`/`false`). Default: `false`
+- **ARCHI_MCP_LOCK_SPACING**: Lock spacing parameter (`true`/`false`). Default: `false`
+- **ARCHI_MCP_LOCK_TITLE**: Lock title parameter (`true`/`false`). Default: `false`
+- **ARCHI_MCP_LOCK_LEGEND**: Lock legend parameter (`true`/`false`). Default: `false`
+- **ARCHI_MCP_LOCK_GROUP_BY_LAYER**: Lock grouping parameter (`true`/`false`). Default: `false`
+- **ARCHI_MCP_LOCK_SHOW_RELATIONSHIP_LABELS**: Lock relationship labels parameter (`true`/`false`). Default: `false`
+
+**XML Export (Experimental):**
+- **ARCHI_MCP_ENABLE_UNIVERSAL_FIX**: Enable universal relationship fixing for Archi compatibility (`true`/`false`). Default: `true`
+- **ARCHI_MCP_ENABLE_VALIDATION**: Enable XML validation logging (`true`/`false`). Default: `false`
+- **ARCHI_MCP_ENABLE_AUTO_FIX**: Enable automatic relationship correction (`true`/`false`). Default: `false`
+
+**HTTP Server:**
+- **ARCHI_MCP_HTTP_PORT**: Port for diagram viewing server (number). Default: `8080`
+- **ARCHI_MCP_HTTP_HOST**: Host for diagram server (`localhost`, `0.0.0.0`). Default: `localhost`
 
 
 ### Basic Usage
@@ -105,7 +147,11 @@ Create a simple service-oriented diagram with:
 Show how the layers interact.
 ```
 
-The full architecture generator follows the **ArchiMate Cookbook methodology** and automatically creates multiple coordinated views with proper element relationships and business domain context.
+The server automatically:
+- Generates all diagram formats (PlantUML, PNG, SVG, XML)
+- Starts an HTTP server for instant viewing
+- Returns direct URLs for immediate access (e.g., http://localhost:8080/diagram.png)
+- Saves all outputs to timestamped directories in `exports/`
 
 ## 🏛️ Complete Architecture Demonstration
 
@@ -203,8 +249,10 @@ Generate complete ArchiMate diagrams from structured input with:
 - Support for all 55+ element types across 7 layers
 - All 12 ArchiMate relationship types with directional support
 - Intelligent input normalization and validation
-- PNG/SVG generation with HTTP server URLs
+- Multi-format export: PlantUML (.puml), PNG, SVG, ArchiMate XML (.archimate)
+- Built-in HTTP server with direct viewing URLs
 - Comprehensive layout configuration options
+- Multi-language support (auto-detects Slovak/English)
 
 ### 2. **test_element_normalization**
 Test element type normalization across all ArchiMate layers:
@@ -229,37 +277,14 @@ Test element type normalization across all ArchiMate layers:
 
 ## 🧪 Development
 
-### Requirements
+> 🔧 **For complete development setup, testing, and contribution guidelines, see [CLAUDE.md](CLAUDE.md)**
 
-- Python 3.11+
-- uv (recommended) or pip
-- Git
-
-### Development Setup
-
+**Quick Start for Developers:**
 ```bash
-# Clone the repository
 git clone https://github.com/pskovajsa/archi-mcp.git
 cd archi-mcp
-
-# Install development dependencies
 uv sync --dev
-
-# Run tests
 uv run pytest
-
-# Run tests with coverage
-uv run pytest --cov=archi_mcp --cov-report=html
-
-# Code formatting
-uv run black src tests
-uv run isort src tests
-
-# Type checking
-uv run mypy src
-
-# Linting
-uv run ruff src tests
 ```
 
 ### Project Structure
@@ -268,29 +293,21 @@ uv run ruff src tests
 archi-mcp/
 ├── src/archi_mcp/           # Library and server code
 │   ├── archimate/           # Modeling components
-│   │   ├── elements/        # Element definitions
-│   │   ├── relationships.py # Relationship types
-│   │   ├── generator.py     # PlantUML generation
-│   │   └── validator.py     # Model validation
+│   ├── i18n/                # Internationalization
+│   ├── xml_export/          # XML export functionality
 │   ├── utils/               # Logging and exceptions
 │   └── server.py            # FastMCP server entry point
-├── tests/                   # Comprehensive test suites (182 tests, 70% coverage)
-│   ├── test_server.py           # Core server functionality tests
-│   ├── test_server_coverage.py  # Server coverage improvement tests
-│   ├── test_analysis_tools.py   # Analysis tools comprehensive tests
-│   ├── test_generator_coverage.py # Generator edge case and coverage tests
-│   └── test_validation_mandatory.py # Validation and MCP integration tests
+├── tests/                   # Test suites (194 tests, 66% coverage)
 ├── docs/                    # Documentation and diagrams
 ```
-
-### Setup and Configuration
-- **[CLAUDE.md](CLAUDE.md)**: Development instructions and project guidelines for Claude
 
 > **💡 Production Validation**: All architecture diagrams were generated using the ArchiMate MCP Server itself, proving 100% ArchiMate 3.2 layer support and production readiness.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please see CLAUDE.md for dev/ops/devops documentation.
+> 🔧 **For complete development guidelines, code style, and contribution workflow, see [CLAUDE.md](CLAUDE.md)**
+
+Contributions are welcome! The project follows standard open source practices with comprehensive testing and documentation requirements.
 
 ## 📄 License
 
@@ -305,4 +322,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ Roadmap
 
-- [ ] Export to ArchiMate Open Exchange Format
+- [x] Export to ArchiMate Open Exchange Format (Experimental)
+- **PlantUML is the primary output** - fully tested and production-ready
+- **XML export is experimental** - may not be 100% ArchiMate compliant 
+- **Use for exploration** - XML export is bonus functionality for those who need it
+- [ ] Enhanced XML validation and auto-fix capabilities
+- [ ] Additional language support (beyond Slovak/English)
+- [ ] Custom ArchiMate viewpoint templates
+

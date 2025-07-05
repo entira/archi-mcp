@@ -1,40 +1,48 @@
 # 🏗️ ArchiMate MCP Server - Claude Code Assistant Configuration
 
 ## Project Overview
-Professional Model Context Protocol server for ArchiMate enterprise architecture modeling with AI-powered diagram generation and PlantUML integration.
+> 📖 **For complete project overview, features, and user documentation, see [README.md](README.md)**
 
-## Key Features
-- **Complete ArchiMate 3.2 Support**: All 55+ elements across 7 layers
-- **Intelligent Input Normalization**: Case-insensitive inputs ("function" → "Business_Function", "motivation" → "Motivation")
-- **Built-in PlantUML Validation**: Automatic syntax and rendering validation before returning results
-- **macOS-Optimized PNG/SVG Generation**: ALWAYS uses headless PlantUML mode to prevent cursor interference
-- **FastMCP 2.8+ Integration**: Modern MCP protocol with image support
-- **Intelligent Error Analysis**: Real-time error detection with actionable troubleshooting guidance
-- **Comprehensive Testing**: 182+ passing tests with 73% coverage and robust error handling
-- **Claude Desktop Ready**: Optimized configuration for seamless integration
-- **Multi-Layer Support**: All 7 ArchiMate layers with proper aspect detection
+This document contains development-specific instructions and technical details for working with the ArchiMate MCP Server codebase.
 
 ## Tech Stack
-- **Python 3.11+** with modern async/await
-- **FastMCP 2.8+** for MCP protocol implementation
-- **UV** for fast package management
-- **PlantUML 1.2025.4** for diagram generation and validation
-- **Pydantic 2.0+** for data validation and input schemas
+> 📖 **For complete tech stack and dependencies, see [README.md](README.md#development)**
+
+**Key Development Tools:**
+- **UV** for fast package management and virtual environments
+- **pytest** for comprehensive testing framework
+- **black** + **ruff** for code formatting and linting
+- **mypy** for type checking
+
+## Requirements
+
+- Python 3.11+
+- uv (recommended) or pip
+- Git
+- Java 8+ (for PlantUML)
+- PlantUML JAR file (see installation command below)
 
 ## Development Commands
 
 ### Setup
 ```bash
+# Clone the repository
+git clone https://github.com/pskovajsa/archi-mcp.git
+cd archi-mcp
+
 # Install dependencies
 uv sync
 
 # Install development dependencies
-uv sync --extra dev
+uv sync --dev
+
+# Download PlantUML JAR (required for diagram generation)
+curl -L https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar -o plantuml.jar
 ```
 
 ### Testing
 ```bash
-# Run all tests (182 passing tests, 73% coverage)
+# Run all tests (194 passing tests, 66% coverage)
 uv run pytest
 
 # Run tests with verbose output
@@ -43,61 +51,22 @@ uv run pytest -v
 # Run tests with coverage
 uv run pytest --cov=archi_mcp --cov-report=html
 
-# Run specific test categories
-uv run pytest tests/test_server.py             # Core server functionality tests (100% pass)
-uv run pytest tests/test_server_coverage.py    # Server coverage improvement tests (100% pass)
-uv run pytest tests/test_analysis_tools.py     # Analysis tools comprehensive tests (100% pass)
-uv run pytest tests/test_generator_coverage.py # Generator edge case and coverage tests (95% pass)
-uv run pytest tests/test_validation_mandatory.py # Validation and MCP integration tests (100% pass)
-
-# Enhanced Testing Workflow
-# Run comprehensive test suite with multiple validation levels
-
-# 1. Run all tests with coverage
-uv run pytest --cov=archi_mcp --cov-report=html
-
-# 2. Run specific test categories for targeted validation
-uv run pytest tests/test_server.py             # Core server functionality tests
-uv run pytest tests/test_analysis_tools.py     # Element normalization tests
-uv run pytest tests/test_validation_mandatory.py # Validation and MCP integration tests
-
-# 3. Run comprehensive MCP testing
-uv run python -m pytest testing/ -v
+# Quick test for development
+uv run pytest -xvs
 ```
 
-### Comprehensive Test Suite Documentation
+### Test Coverage Summary
 
-#### New Test Files (Created for Coverage Improvement)
+The test suite includes 194 passing tests with 66% code coverage across 13 test files:
 
-**test_server_coverage.py**: Comprehensive server functionality tests
-- Language detection with Slovak/English content
-- Custom relationship validation with intelligent synonym matching
-- Diagram validation error scenarios (invalid layers, element types, relationships)
-- PlantUML validation timeout and error handling
-- Element/layer/relationship normalization edge cases
-- Configuration parameter handling and environment variables
-- Aspect detection for unknown element types
-- **Coverage Impact**: Improved server.py coverage from 58% to 62%
-
-**test_analysis_tools.py**: Complete testing of element normalization tool
-- `test_element_normalization`: Case insensitive testing, comprehensive normalization validation
-- Translation override functionality for Slovak relationship labels
-- **Coverage Impact**: 100% test coverage for element normalization tool
-
-**test_generator_coverage.py**: Generator edge cases and error scenarios
-- Export error handling (permission errors, disk full, directory creation failures)
-- PlantUML generation with complex descriptions, properties, stereotypes
-- Layout overrides (direction, grouping, spacing, title/legend)
-- Diagram validation (orphaned relationships, duplicate IDs, success scenarios)
-- Statistics and information methods (layer usage, element/relationship counts)
-- **Coverage Impact**: Partial coverage improvement (some import issues remain)
-
-#### Test Strategy and Methodology
-- **Mock-based testing**: Extensive use of `unittest.mock` for error simulation
-- **Edge case focus**: Emphasis on boundary conditions and error paths
-- **Real-world scenarios**: Tests based on actual usage patterns
-- **Validation monitoring**: Integration with error log analysis
-- **Performance considerations**: Tests designed to complete quickly while maintaining thoroughness
+- **Core Functionality**: Server operations, MCP protocol integration
+- **ArchiMate Elements**: All 55+ element types across 7 layers
+- **Relationships**: All 12 relationship types with validation
+- **PlantUML Generation**: Syntax generation and validation
+- **XML Export**: ArchiMate Exchange Format export and validation
+- **Multi-Language**: Slovak/English detection and translation
+- **Error Handling**: Comprehensive error scenarios and recovery
+- **Layout Options**: Direction, spacing, grouping configurations
 
 ### Server Operations
 ```bash
@@ -106,80 +75,53 @@ uv run python src/archi_mcp/server.py
 
 # Test server initialization
 uv run python -c "from archi_mcp.server import mcp; print('✅ Server ready')"
+
+# Generate sample diagrams
+uv run python examples/generate_sample_diagrams.py
+
+# Start HTTP server for diagram viewing (if needed separately)
+uv run python -m http.server 8080 --directory exports
 ```
 
-### Enhanced Validation & Error Monitoring
+### Debugging
 ```bash
-# Test PlantUML rendering with comprehensive validation
-uv run python -c "from archi_mcp.server import _validate_plantuml_renders; print(_validate_plantuml_renders('@startuml\nrectangle A\n@enduml'))"
+# Check generated exports
+ls -la exports/
 
-# Test diagram generation with validation
-uv run python -c "from archi_mcp.server import create_archimate_diagram, DiagramInput, ElementInput; print('Testing validation')"
+# View latest PlantUML code
+cat exports/*/diagram.puml | head -20
 
-# Monitor failed attempts for debugging
-ls exports/failed_attempts/
-```
+# Test PlantUML rendering manually
+java -Djava.awt.headless=true -jar plantuml.jar -tpng exports/*/diagram.puml
 
-### Comprehensive Failed Attempts Debugging (NEW)
-```bash
-# CRITICAL DEBUG LOCATION: Complete failure context saved automatically
-# When PNG generation fails, comprehensive debugging data is saved to:
-# exports/failed_attempts/YYYYMMDD_HHMMSS_mmm/
+# Check HTTP server logs
+tail -f exports/http_server.log
 
-# Check all failed attempts
-ls exports/failed_attempts/
-
-# Examine specific failure (replace timestamp with actual directory)
-# Each failure directory contains 3 critical files:
-cd exports/failed_attempts/20250702_191045_123/
-
-# 1. INPUT.JSON - Complete user request that caused the failure
-cat input.json  # Full DiagramInput with elements, relationships, layout
-
-# 2. DIAGRAM.PUML - Generated PlantUML code that failed PNG rendering  
-cat diagram.puml  # Exact PlantUML code sent to PlantUML jar
-
-# 3. GENERATION.LOG - Complete debug trace with error context
-cat generation.log  # Full debug log with timestamps, error details, PlantUML output
-
-# Debug workflow for failures:
-# 1. Find latest failure: ls -la exports/failed_attempts/ | tail -1
-# 2. Examine input: cat exports/failed_attempts/TIMESTAMP/input.json
-# 3. Test PlantUML: java -Djava.awt.headless=true -jar plantuml.jar -tpng exports/failed_attempts/TIMESTAMP/diagram.puml
-# 4. Check logs: cat exports/failed_attempts/TIMESTAMP/generation.log
-
-# Reproduce failure locally using saved context:
-# Copy input.json content and use create_archimate_diagram MCP tool
-# with exact same input to reproduce the issue
-
-# Pattern Analysis across multiple failures
-find exports/failed_attempts/ -name "generation.log" -exec grep -l "specific_error" {} \;
+# Validate XML export
+xmllint --noout exports/*/archimate_model.archimate
 ```
 
 ### Code Quality
 ```bash
 # Format code
-uv run black src/ tests/
+uv run black src tests
+uv run isort src tests
 
 # Lint code
-uv run ruff check src/ tests/
+uv run ruff src tests
 
 # Type checking
-uv run mypy src/
+uv run mypy src
 ```
 
 ## Available MCP Tools
+> 📖 **For complete MCP tools documentation and usage examples, see [README.md](README.md#mcp-tools)**
 
-### 1. `create_archimate_diagram(diagram: DiagramInput) -> str`
-**Core diagram creation tool** - Generate complete ArchiMate diagrams from structured input.
-- Supports all ArchiMate 3.2 elements (55+ types) and relationships (12 types)
-- Automatic element type and layer normalization (case-insensitive)
-- Built-in PlantUML validation before returning results
-- PNG/SVG generation with headless Java PlantUML integration (macOS-optimized, prevents focus stealing)
-- **NEW: ArchiMate XML Exchange Export** - Automatic export to Open Group ArchiMate Exchange XML format (only after successful PNG generation)
-- **Automatic HTTP server** - Starts web server for serving diagrams
-- **Direct viewing URLs** - Returns HTTP URLs for immediate diagram viewing
-- Returns validated PlantUML code with statistics and viewing URLs
+**Development Notes:**
+- Both tools are defined in `server.py` with full type annotations
+- Input validation uses Pydantic models for schema enforcement
+- Error handling includes comprehensive logging for debugging
+- Tools are automatically discovered by FastMCP protocol
 
 **Output Files (saved to exports/YYYYMMDD_HHMMSS/):**
 - `diagram.puml` - PlantUML source code
@@ -188,93 +130,59 @@ uv run mypy src/
 - `architecture.md` - Extended documentation with embedded images
 - `generation.log` - Comprehensive debug information
 - `metadata.json` - Diagram statistics and metadata
-- **`archimate_model.archimate`** - ⭐ **NEW: Archi-compatible XML format** (Direct import into Archi tool)
-
-### 2. `test_element_normalization() -> str`
-**Element validation tool** - Test element type normalization across all ArchiMate layers.
-- Validates case-insensitive input handling ("function" → "Business_Function")
-- Tests common element type mappings and transformations
-- Verifies layer and relationship type normalization
-- Essential for troubleshooting input compatibility issues
-
+- `archimate_model.archimate` - Archi-compatible XML format
 
 ## Project Structure
+> 📖 **For complete project structure overview, see [README.md](README.md#project-structure)**
+
+**Development-Specific Directories:**
 ```
-archi-mcp/
-├── src/archi_mcp/
-│   ├── __init__.py
-│   ├── server.py              # Main FastMCP server (480+ lines)
-│   ├── archimate/             # ArchiMate modeling components
-│   │   ├── elements/          # Element definitions by layer
-│   │   ├── relationships.py   # Relationship types and validation
-│   │   ├── generator.py       # PlantUML code generation
-│   │   └── validator.py       # Model validation
-│   ├── templates/             # Template library
-│   │   ├── viewpoints.py      # ArchiMate viewpoints
-│   │   ├── patterns.py        # Architecture patterns
-│   │   └── industry.py        # Industry-specific templates
-│   ├── utils/                 # Utilities
-│   ├── xml_export/            # ⭐ NEW: ArchiMate XML Exchange Export Module
-│   │   ├── __init__.py        # Module initialization
-│   │   ├── exporter.py        # XML exporter implementation
-│   │   ├── validator.py       # XML validation functionality
-│   │   └── templates.py       # XML templates and examples
-│   └── architecture_generator.py # Full architecture generation
-├── docs/                      # Comprehensive documentation
-├── tests/                     # Comprehensive test suite (182+ tests, 73% coverage)
-│   ├── test_server.py             # Core server functionality tests
-│   ├── test_server_coverage.py    # Server coverage improvement tests
-│   ├── test_analysis_tools.py     # Analysis tools comprehensive tests
-│   ├── test_generator_coverage.py # Generator edge case and coverage tests
-│   └── test_validation_mandatory.py # Validation and MCP integration tests
-├── pyproject.toml            # Project configuration
-└── README.md                 # Project overview
+tests/                     # 194 passing tests, 66% coverage
+├── test_server.py         # Core server functionality
+├── test_elements.py       # Element definitions
+├── test_relationships.py  # Relationship validation
+├── test_generator.py      # PlantUML generation
+├── test_xml_export.py     # XML export functionality
+└── ...                    # Additional test modules
+
+exports/                   # Generated output (gitignored)  
+plantuml.jar               # PlantUML JAR file (download separately)
+.github/                   # CI/CD workflows (if any)
 ```
 
 ## Claude Desktop Integration
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+> 📖 **For complete Claude Desktop configuration, see [README.md](README.md#claude-desktop-configuration)**
 
+**Development Configuration:**
+- Use absolute path to your local development directory
+- Enable `DEBUG` log level for development: `"ARCHI_MCP_LOG_LEVEL": "DEBUG"`
+- Consider enabling experimental features for testing: `"ARCHI_MCP_ENABLE_VALIDATION": "true"`
+
+**Example Development Config:**
 ```json
 {
   "mcpServers": {
     "archi-mcp": {
       "command": "uv",
-      "args": ["run", "--directory", "/Users/patrik/Projects/archi-mcp", "python", "-m", "archi_mcp.server"],
-      "cwd": "/Users/patrik/Projects/archi-mcp",
+      "args": ["run", "--directory", "/path/to/your/archi-mcp", "python", "-m", "archi_mcp.server"],
+      "cwd": "/path/to/your/archi-mcp",
       "env": {
-        "ARCHI_MCP_LOG_LEVEL": "INFO",
-        "ARCHI_MCP_STRICT_VALIDATION": "true",
-        "ARCHI_MCP_DEFAULT_SHOW_RELATIONSHIP_LABELS": "true",
-        "ARCHI_MCP_LOCK_SHOW_RELATIONSHIP_LABELS": "true"
+        "ARCHI_MCP_LOG_LEVEL": "DEBUG",
+        "ARCHI_MCP_ENABLE_VALIDATION": "true",
+        "ARCHI_MCP_ENABLE_AUTO_FIX": "true"
       }
     }
   }
 }
 ```
 
-## Architecture Generation Examples
+## Architecture Examples
+> 📖 **For complete architecture examples and demonstrations, see [README.md](README.md#complete-architecture-demonstration)**
 
-### Basic Three-Tier Architecture
-```
-Generate an ArchiMate diagram showing a three-tier architecture with:
-- A business service layer
-- An application component layer  
-- A technology infrastructure layer
-Include the relationships between these layers.
-```
-
-### Full Enterprise Architecture
-```
-Generate a complete enterprise architecture for an online banking portal 
-including motivation view, layered view, application structure, and 
-implementation roadmap with 4 phases.
-```
-
-### Industry-Specific Template
-```
-Generate an ArchiMate diagram using the banking industry template and 
-customize it for a digital transformation project.
-```
+**Development Testing:**
+- Use `examples/generate_sample_diagrams.py` for testing
+- Check `exports/` directory for generated outputs
+- Test different language detection with Slovak/English content
 
 ## Common Issues & Solutions
 
@@ -290,21 +198,11 @@ Use full path in Claude Desktop config with `uv` command and `--directory` flag.
 - **Element normalization issues:** Check if kebab-case elements are properly converted (business-actor → Business_Actor)
 - **Rendering failures:** Ensure Java is installed for PlantUML jar execution
 - **Debug failed attempts:** Check `exports/failed_attempts/` for comprehensive failure logs
-- **Enhanced fix-test-retest cycle:** 
-  1. Run validation tests: `uv run pytest tests/test_validation_mandatory.py -v`
-  2. Fix validation issues in source code
-  3. Re-run full test suite: `uv run pytest`
-  4. Check failed attempts: `ls exports/failed_attempts/` for any new failures
 
 ### PlantUML Headless Mode (CRITICAL REQUIREMENT)
 - **ALWAYS use headless mode:** All PlantUML jar executions MUST include `-Djava.awt.headless=true`
 - **Focus stealing prevention:** Without headless mode, PlantUML steals desktop focus during PNG/SVG generation
-- **Implemented everywhere:** Both server.py and generator.py use headless mode consistently
-- **Test compatibility:** All tests and development commands use headless mode
-- **Manual testing:** When testing PlantUML manually, ALWAYS use headless mode
-- **Debug commands:** All debugging commands in CLAUDE.md use headless mode
 - **Example command:** `java -Djava.awt.headless=true -jar plantuml.jar -tpng diagram.puml`
-- **Never remove this flag:** Removing headless mode will cause desktop focus interruption
 
 #### All PlantUML Testing Commands (MANDATORY HEADLESS)
 ```bash
@@ -315,9 +213,6 @@ java -Djava.awt.headless=true -jar plantuml.jar -tsvg diagram.puml
 # Test PlantUML syntax validation
 java -Djava.awt.headless=true -jar plantuml.jar -checkonly diagram.puml
 
-# Debug failed attempts
-java -Djava.awt.headless=true -jar plantuml.jar -tpng exports/failed_attempts/TIMESTAMP/diagram.puml
-
 # Test with verbose output
 java -Djava.awt.headless=true -jar plantuml.jar -tpng -v diagram.puml
 ```
@@ -327,12 +222,6 @@ java -Djava.awt.headless=true -jar plantuml.jar -tpng -v diagram.puml
 - **Check image files:** Look for timestamped PNG files in `/tmp/archimate_*.png`
 - **Base64 URLs:** Copy data URLs directly into browser for immediate viewing
 - **Online previews:** Use generated PlantUML server URLs for instant preview
-
-### Validation error monitoring
-- **Before testing:** Run validation tests to ensure clean baseline
-- **During development:** Monitor failed attempts in `exports/failed_attempts/` for debugging
-- **After fixes:** Re-run test suite to verify all validation passes
-- **Pattern analysis:** Examine failed attempt logs for systematic error patterns
 
 ## Development Guidelines
 
@@ -380,70 +269,6 @@ def your_new_archimate_tool(param1: str, param2: Optional[ElementInput] = None) 
     }
     
     return f"✅ Success: {param1}\n\nStatistics:\n- Elements: {stats['elements']}\n- Relationships: {stats['relationships']}\n\nPlantUML Code:\n```plantuml\n{result}\n```"
-```
-
-### Testing New Features
-
-```python
-# tests/test_new_feature.py
-import pytest
-from archi_mcp.server import your_new_archimate_tool
-from archi_mcp.server import ElementInput
-
-class TestNewArchiMateTool:
-    def test_basic_functionality(self):
-        """Test basic tool functionality."""
-        result = your_new_archimate_tool("test input")
-        
-        assert isinstance(result, str)
-        assert "✅ Success" in result
-        assert "```plantuml" in result
-    
-    def test_with_element_input(self):
-        """Test with ArchiMate element input."""
-        element_input = ElementInput(
-            id="test_element",
-            name="Test Element",
-            element_type="Business_Actor",
-            layer="Business"
-        )
-        
-        result = your_new_archimate_tool("test", element_input)
-        
-        assert "Business_Actor" in result
-        assert "Test Element" in result
-    
-    def test_error_handling(self):
-        """Test error handling."""
-        result = your_new_archimate_tool("")  # Empty input
-        
-        assert "❌ Error" in result
-        assert "cannot be empty" in result
-```
-
-### Custom ArchiMate Elements
-
-```python
-# src/archi_mcp/archimate/elements/custom.py
-from .base import ArchiMateElement, ArchiMateLayer, ArchiMateAspect
-
-class CustomElement(ArchiMateElement):
-    """Custom ArchiMate element for specialized use cases."""
-    
-    def __init__(self, id: str, name: str, custom_property: str = None, **kwargs):
-        super().__init__(
-            id=id,
-            name=name,
-            element_type="Custom_Element",
-            layer=ArchiMateLayer.BUSINESS,
-            aspect=ArchiMateAspect.BEHAVIOR,
-            **kwargs
-        )
-        self.custom_property = custom_property
-    
-    def to_plantuml(self) -> str:
-        """Generate custom PlantUML syntax."""
-        return f"Business_Element({self.id}, \"{self.name}\")"
 ```
 
 ### Code Style Requirements
@@ -506,19 +331,17 @@ except ArchiMateValidationError as e:
 - [ ] **Examples**: Provide real-world architecture examples
 
 ## Quality Metrics
-- ✅ **Enhanced test suite** - 182 passing tests with 73% code coverage (1026/1587 lines)
-- ✅ **Server coverage improvement** - server.py coverage improved from 58% to 68%
-- ✅ **Generator coverage improvement** - generator.py coverage improved from 41% to 59%
-- ✅ **Streamlined MCP tools** - 100% passing tests for 2 core MCP tools (simplified API)
-- ✅ **Language detection testing** - Slovak/English detection with validation
-- ✅ **Element normalization testing** - Comprehensive normalization validation
-- ✅ **Type hints** throughout codebase
-- ✅ **Professional documentation** 
-- ✅ **FastMCP 2.8+ integration** with Image object support
-- ⚡ **Performance optimized** - Sub-15s response for complex diagrams with PNG generation
-- 🏗️ **Production architecture demos** - 8 complete views
-- 🔧 **Real-time debugging**
-- ⭐ **NEW: Experimental ArchiMate XML Exchange Export** - Standards-compliant Open Group XML format with modular design
+- ✅ **Test Suite** - 194 passing tests with 66% code coverage
+- ✅ **Production Ready** - Version 1.0.0 stable release
+- ✅ **Complete ArchiMate 3.2** - All 55+ elements, 12 relationships, 7 layers
+- ✅ **Multi-Language** - Slovak/English auto-detection and translation
+- ✅ **Multi-Format Export** - PlantUML, PNG, SVG, XML (experimental)
+- ✅ **Type Hints** - Full type annotations throughout codebase
+- ✅ **Documentation** - Comprehensive user and developer docs
+- ✅ **FastMCP 2.8+** - Modern MCP protocol implementation
+- ⚡ **Performance** - Sub-10s generation for complex diagrams
+- 🏗️ **Production Demos** - 8 complete architecture views
+- 🔧 **HTTP Server** - Built-in web server for instant viewing
 
 ## License
 MIT License - Open source, free for commercial and personal use.

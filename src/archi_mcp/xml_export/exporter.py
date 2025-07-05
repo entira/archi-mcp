@@ -119,8 +119,8 @@ class ArchiMateXMLExporter:
             
             # Apply universal relationship fixing (safe - preserves PlantUML generation)
             try:
-                # Universal fixing temporarily disabled due to Views compatibility issues
-                enable_universal_fix = os.getenv("ARCHI_MCP_ENABLE_UNIVERSAL_FIX", "false").lower() in ("true", "1", "yes")
+                # Universal fixing enabled by default for maximum Archi compatibility
+                enable_universal_fix = os.getenv("ARCHI_MCP_ENABLE_UNIVERSAL_FIX", "true").lower() in ("true", "1", "yes")
                 
                 if enable_universal_fix:
                     xml_string, fix_stats = apply_universal_fix(xml_string)

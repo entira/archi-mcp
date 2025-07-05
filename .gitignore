@@ -49,6 +49,7 @@ Thumbs.db
 # Testing
 .pytest_cache/
 .coverage
+coverage.xml
 htmlcov/
 .tox/
 .nox/
@@ -81,3 +82,10 @@ examples/*/20*/
 examples/failed_attempts/
 *.puml
 !docs/*.pumltemp/plantuml/
+
+# Knowledge directory
+knowledge/
+
+# PlantUML JAR file (download separately)
+plantuml*.jar
+lib/plantuml*.jar
