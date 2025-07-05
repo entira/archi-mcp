@@ -361,9 +361,10 @@ class ArchiMateXMLExporter:
                         connection_map[target_obj_id] = []
                     connection_map[target_obj_id].append(connection_id)
             
-            # Add elements to the view with proper connection attributes
-            x_pos = 50
-            y_pos = 50
+            # Calculate intelligent layout positions
+            element_positions = self._calculate_intelligent_layout(elements, relationships)
+            
+            # Add elements to the view with intelligent positioning
             for i, element in enumerate(elements):
                 child = etree.SubElement(view, "child")
                 child.set(f"{{{self.XSI_NAMESPACE}}}type", "archimate:DiagramObject")
@@ -375,10 +376,11 @@ class ArchiMateXMLExporter:
                 if target_connections:
                     child.set("targetConnections", " ".join(target_connections))
                 
-                # Simple grid layout
+                # Use intelligent layout positions
+                position = element_positions.get(element.id, {"x": 50, "y": 50})
                 bounds = etree.SubElement(child, "bounds")
-                bounds.set("x", str(x_pos))
-                bounds.set("y", str(y_pos))
+                bounds.set("x", str(position["x"]))
+                bounds.set("y", str(position["y"]))
                 bounds.set("width", "200")
                 bounds.set("height", "60")
                 
@@ -399,14 +401,288 @@ class ArchiMateXMLExporter:
                             source_connection.set("source", f"id-obj-{i}")
                             source_connection.set("target", f"id-obj-{target_idx}")
                             source_connection.set("archimateRelationship", relationship.id)
-                
-                # Move to next position
-                x_pos += 220
-                if x_pos > 800:  # New row
-                    x_pos = 50
-                    y_pos += 100
+                            
+                            # Add connection routing for better visual clarity
+                            source_pos = element_positions.get(element.id, {"x": 50, "y": 50})
+                            target_element = elements[target_idx]
+                            target_pos = element_positions.get(target_element.id, {"x": 50, "y": 50})
+                            
+                            # Add bendpoints for cross-layer connections to avoid overlap
+                            if abs(source_pos["y"] - target_pos["y"]) > 80:  # Different layers
+                                bendpoints = self._calculate_connection_bendpoints(source_pos, target_pos)
+                                if bendpoints:
+                                    for bp_idx, (bx, by) in enumerate(bendpoints):
+                                        bendpoint = etree.SubElement(source_connection, "bendpoint")
+                                        bendpoint.set("startX", str(bx - source_pos["x"] - 100))  # Relative to source center
+                                        bendpoint.set("startY", str(by - source_pos["y"] - 30))
+                                        bendpoint.set("endX", str(bx - target_pos["x"] - 100))    # Relative to target center  
+                                        bendpoint.set("endY", str(by - target_pos["y"] - 30))
             
             # Set viewpoint property
             viewpoint_prop = etree.SubElement(view, "property")
             viewpoint_prop.set("key", "viewpoint")
             viewpoint_prop.set("value", "layered")
+    
+    def _calculate_intelligent_layout(self, elements: List[ArchiMateElement], relationships: List[ArchiMateRelationship]):
+        """Calculate intelligent layout positions for elements based on ArchiMate layer hierarchy."""
+        positions = {}
+        
+        # ArchiMate layer hierarchy (top to bottom) - FIXED ORDER
+        layer_hierarchy = [
+            "Motivation",
+            "Strategy", 
+            "Business",
+            "Application",
+            "Technology",
+            "Physical",
+            "Implementation"
+        ]
+        
+        # Group elements by their actual ArchiMate layer
+        layer_groups = {layer: [] for layer in layer_hierarchy}
+        
+        # Categorize elements by their actual layer
+        for element in elements:
+            layer = element.layer.value if hasattr(element.layer, 'value') else str(element.layer)
+            if layer in layer_groups:
+                layer_groups[layer].append(element)
+            else:
+                # If unknown layer, add to Business as fallback
+                layer_groups["Business"].append(element)
+        
+        # Build relationship graph for positioning within layers
+        element_connections = {}
+        for element in elements:
+            element_connections[element.id] = {"outgoing": [], "incoming": []}
+        
+        for relationship in relationships:
+            if relationship.from_element in element_connections:
+                element_connections[relationship.from_element]["outgoing"].append(relationship.to_element)
+            if relationship.to_element in element_connections:
+                element_connections[relationship.to_element]["incoming"].append(relationship.from_element)
+        
+        # Layout configuration - optimized for visual clarity
+        layer_height = 160  # Vertical space between layers (increased for group padding)
+        element_width = 300   # Horizontal space between elements (increased for readability)
+        start_x = 80          # More margin from left
+        start_y = 80          # More margin from top
+        max_elements_per_row = 3  # Fewer elements per row for better readability
+        
+        current_y = start_y
+        
+        # Position elements layer by layer following ArchiMate hierarchy
+        for layer_name in layer_hierarchy:
+            layer_elements = layer_groups[layer_name]
+            if not layer_elements:
+                continue
+                
+            # Sort elements within layer by relationship importance
+            # Elements with more connections should be more central
+            layer_elements.sort(key=lambda e: len(element_connections[e.id]["outgoing"]) + 
+                                            len(element_connections[e.id]["incoming"]), reverse=True)
+            
+            # Calculate positions for this layer
+            layer_positions = self._calculate_layer_positions(
+                layer_elements, element_connections, start_x, current_y, 
+                element_width, max_elements_per_row
+            )
+            
+            # Add to overall positions
+            positions.update(layer_positions)
+            
+            # Move to next layer position
+            current_y += layer_height
+        
+        return positions
+    
+    def _calculate_layer_positions(self, layer_elements, element_connections, start_x, start_y, 
+                                  element_width, max_elements_per_row):
+        """Calculate positions for elements within a single layer with relationship awareness."""
+        positions = {}
+        
+        if not layer_elements:
+            return positions
+        
+        # Try to group related elements together
+        if len(layer_elements) <= max_elements_per_row:
+            # Single row layout - arrange by relationship importance
+            # Central elements (with most connections) in the middle
+            sorted_elements = self._sort_elements_by_centrality(layer_elements, element_connections)
+            
+            # Calculate optimal spacing to center the elements on the canvas
+            canvas_width = 1200  # Assume canvas width for centering
+            total_elements_width = len(sorted_elements) * element_width
+            center_offset = (canvas_width - total_elements_width) // 2
+            current_x = max(start_x, center_offset)
+            
+            for element in sorted_elements:
+                positions[element.id] = {"x": current_x, "y": start_y}
+                current_x += element_width
+        else:
+            # Multi-row layout with relationship-aware clustering
+            element_clusters = self._cluster_related_elements(layer_elements, element_connections, max_elements_per_row)
+            
+            current_x = start_x
+            current_y = start_y
+            elements_in_current_row = 0
+            
+            for cluster in element_clusters:
+                for element in cluster:
+                    positions[element.id] = {"x": current_x, "y": current_y}
+                    current_x += element_width
+                    elements_in_current_row += 1
+                    
+                    # Move to next row if needed
+                    if elements_in_current_row >= max_elements_per_row:
+                        current_x = start_x
+                        current_y += 100  # Move down
+                        elements_in_current_row = 0
+        
+        return positions
+    
+    def _sort_elements_by_centrality(self, elements, element_connections):
+        """Sort elements by their centrality (connection count) for better visual impact."""
+        def centrality_score(element):
+            return len(element_connections[element.id]["outgoing"]) + len(element_connections[element.id]["incoming"])
+        
+        return sorted(elements, key=centrality_score, reverse=True)
+    
+    def _cluster_related_elements(self, elements, element_connections, max_per_row):
+        """Group related elements into clusters for better visual organization."""
+        clusters = []
+        remaining_elements = elements.copy()
+        
+        while remaining_elements:
+            # Start a new cluster with the most connected element
+            cluster_seed = max(remaining_elements, key=lambda e: 
+                             len(element_connections[e.id]["outgoing"]) + len(element_connections[e.id]["incoming"]))
+            
+            current_cluster = [cluster_seed]
+            remaining_elements.remove(cluster_seed)
+            
+            # Add related elements to the cluster (up to max_per_row)
+            while len(current_cluster) < max_per_row and remaining_elements:
+                best_candidate = None
+                best_score = -1
+                
+                for candidate in remaining_elements:
+                    # Score based on connections to elements already in cluster
+                    score = 0
+                    for cluster_element in current_cluster:
+                        if candidate.id in element_connections[cluster_element.id]["outgoing"]:
+                            score += 2  # Outgoing connection
+                        if candidate.id in element_connections[cluster_element.id]["incoming"]:
+                            score += 2  # Incoming connection
+                        if cluster_element.id in element_connections[candidate.id]["outgoing"]:
+                            score += 1  # Connected element
+                        if cluster_element.id in element_connections[candidate.id]["incoming"]:
+                            score += 1  # Connected element
+                    
+                    if score > best_score:
+                        best_score = score
+                        best_candidate = candidate
+                
+                if best_candidate and best_score > 0:
+                    current_cluster.append(best_candidate)
+                    remaining_elements.remove(best_candidate)
+                else:
+                    # No more related elements, move to next available
+                    if remaining_elements:
+                        current_cluster.append(remaining_elements.pop(0))
+            
+            clusters.append(current_cluster)
+        
+        return clusters
+    
+    def _calculate_connection_bendpoints(self, source_pos, target_pos):
+        """Calculate bendpoints for connections to improve visual clarity."""
+        bendpoints = []
+        
+        # Calculate the distance and direction
+        dx = target_pos["x"] - source_pos["x"]
+        dy = target_pos["y"] - source_pos["y"]
+        
+        # For cross-layer connections (vertical), add a bendpoint to make nice curves
+        if abs(dy) > 80:  # Different layers
+            # Add a midpoint for smooth routing
+            mid_y = source_pos["y"] + dy // 2
+            
+            # If horizontal distance is small, create a straight vertical path
+            if abs(dx) < 100:
+                # Simple vertical connection
+                bendpoints.append((source_pos["x"] + 100, mid_y))  # Element center + offset
+            else:
+                # Create an L-shaped or curved path
+                if dx > 0:  # Target is to the right
+                    bendpoints.append((source_pos["x"] + 150, source_pos["y"] + 30))  # Exit right
+                    bendpoints.append((target_pos["x"] - 50, target_pos["y"] - 30))   # Enter left
+                else:  # Target is to the left
+                    bendpoints.append((source_pos["x"] - 50, source_pos["y"] + 30))   # Exit left  
+                    bendpoints.append((target_pos["x"] + 150, target_pos["y"] - 30))  # Enter right
+        
+        return bendpoints
+    
+    def _group_elements_by_layer(self, elements: List[ArchiMateElement]):
+        """Group elements by their ArchiMate layer."""
+        layer_hierarchy = [
+            "Motivation", "Strategy", "Business", "Application", 
+            "Technology", "Physical", "Implementation"
+        ]
+        
+        layer_groups = {layer: [] for layer in layer_hierarchy}
+        
+        for element in elements:
+            layer = element.layer.value if hasattr(element.layer, 'value') else str(element.layer)
+            if layer in layer_groups:
+                layer_groups[layer].append(element)
+            else:
+                layer_groups["Business"].append(element)  # Fallback
+                
+        return layer_groups
+    
+    def _calculate_group_bounds(self, layer_elements, element_positions):
+        """Calculate bounds for a layer group based on its elements."""
+        if not layer_elements:
+            return {"x": 0, "y": 0, "width": 100, "height": 100}
+        
+        # Find min/max positions
+        x_positions = []
+        y_positions = []
+        
+        for element in layer_elements:
+            pos = element_positions.get(element.id, {"x": 50, "y": 50})
+            x_positions.append(pos["x"])
+            y_positions.append(pos["y"])
+        
+        if not x_positions:
+            return {"x": 0, "y": 0, "width": 100, "height": 100}
+        
+        min_x = min(x_positions)
+        max_x = max(x_positions)
+        min_y = min(y_positions)
+        max_y = max(y_positions)
+        
+        # Add padding around elements
+        padding = 20
+        element_width = 200
+        element_height = 60
+        
+        return {
+            "x": min_x - padding,
+            "y": min_y - padding,
+            "width": (max_x - min_x) + element_width + (2 * padding),
+            "height": (max_y - min_y) + element_height + (2 * padding)
+        }
+    
+    def _get_layer_color(self, layer_name):
+        """Get distinctive color for each ArchiMate layer."""
+        layer_colors = {
+            "Motivation": "#FFE6E6",    # Light pink
+            "Strategy": "#E6F3FF",      # Light blue  
+            "Business": "#FFF4E6",      # Light orange
+            "Application": "#E6FFE6",   # Light green
+            "Technology": "#F0E6FF",    # Light purple
+            "Physical": "#FFFFE6",      # Light yellow
+            "Implementation": "#E6E6E6"  # Light gray
+        }
+        return layer_colors.get(layer_name, "#F5F5F5")
