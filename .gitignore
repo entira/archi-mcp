@@ -54,6 +54,10 @@ htmlcov/
 .tox/
 .nox/
 
+# Temporary test files (in root directory only)
+/test_*.py
+/test_*.archimate
+
 # MyPy
 .mypy_cache/
 .dmypy.json
