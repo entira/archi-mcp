@@ -517,8 +517,8 @@ except ArchiMateValidationError as e:
 - ✅ **FastMCP 2.8+ integration** with Image object support
 - ⚡ **Performance optimized** - Sub-15s response for complex diagrams with PNG generation
 - 🏗️ **Production architecture demos** - 8 complete views
-- 🔧 **Real-time debugging** - MCP debug logging to /tmp with full traceability
-- ⭐ **NEW: ArchiMate XML Exchange Export** - Standards-compliant Open Group XML format with modular design
+- 🔧 **Real-time debugging**
+- ⭐ **NEW: Experimental ArchiMate XML Exchange Export** - Standards-compliant Open Group XML format with modular design
 
 ## License
 MIT License - Open source, free for commercial and personal use.

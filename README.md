@@ -283,14 +283,6 @@ archi-mcp/
 ├── docs/                    # Documentation and diagrams
 ```
 
-## 📁 Complete Documentation
-
-### Architecture Documentation
-- **[EA.md](docs/EA.md)**: Complete Enterprise Architecture across all 7 ArchiMate layers
-- **[ARCHITECTURE_GENERATOR.md](docs/ARCHITECTURE_GENERATOR.md)**: Architecture generation and analysis tool documentation
-- **Live Architecture Demonstration**: All layers shown above with interactive HTTP server URLs
-- **100% Layer Coverage**: Successfully demonstrates Motivation, Strategy, Business, Application, Technology, Physical, and Implementation layers
-
 ### Setup and Configuration
 - **[CLAUDE.md](CLAUDE.md)**: Development instructions and project guidelines for Claude
 
