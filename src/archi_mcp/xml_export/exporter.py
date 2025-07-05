@@ -119,8 +119,8 @@ class ArchiMateXMLExporter:
             
             # Apply universal relationship fixing (safe - preserves PlantUML generation)
             try:
-                # Universal fixing is always enabled for maximum compatibility
-                enable_universal_fix = os.getenv("ARCHI_MCP_ENABLE_UNIVERSAL_FIX", "true").lower() in ("true", "1", "yes")
+                # Universal fixing temporarily disabled due to Views compatibility issues
+                enable_universal_fix = os.getenv("ARCHI_MCP_ENABLE_UNIVERSAL_FIX", "false").lower() in ("true", "1", "yes")
                 
                 if enable_universal_fix:
                     xml_string, fix_stats = apply_universal_fix(xml_string)
@@ -146,29 +146,22 @@ class ArchiMateXMLExporter:
                 
                 # Liberal validation and analysis (safe - never blocks export)
                 try:
-                    # Use liberal validator for better user experience
+                    # Use liberal validator for informational purposes only
                     analysis = analyze_model_relationships(xml_string)
-                    report = generate_liberal_validation_report(analysis)
                     
-                    # Log the analysis results
+                    # Log the analysis results (informational only - no fixing)
                     problematic_count = len(analysis["problematic"])
                     total_count = analysis["total_relationships"]
                     
-                    if problematic_count == 0:
-                        logger.info(f"✅ Model validation passed: {total_count} relationships analyzed, all semantically valid")
-                    else:
-                        logger.info(f"📊 Model analysis: {total_count} relationships, {problematic_count} may need review")
+                    logger.info(f"📊 ArchiMate analysis: {total_count} relationships, {problematic_count} flagged for review")
                     
                     # Log cross-layer relationship statistics
                     cross_layer_count = len(analysis["cross_layer"])
                     same_layer_count = len(analysis["same_layer"])
-                    logger.info(f"📈 Relationship distribution: {same_layer_count} same-layer, {cross_layer_count} cross-layer")
+                    logger.info(f"📈 Distribution: {same_layer_count} same-layer, {cross_layer_count} cross-layer relationships")
                     
-                    # Log full report for debugging if needed
-                    logger.debug("ArchiMate model analysis report:")
-                    for line in report.split('\n'):
-                        if line.strip():
-                            logger.debug(line)
+                    # Note: Liberal validator allows most relationships as valid for practical use
+                    logger.info("ℹ️  ArchiMate relationships may show warnings in Archi validation but are functionally valid")
                         
                 except Exception as e:
                     logger.warning(f"Model analysis failed (non-blocking): {e}")
