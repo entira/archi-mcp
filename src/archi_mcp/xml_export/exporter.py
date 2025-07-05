@@ -5,6 +5,7 @@ Supports ArchiMate 3.2 elements using 3.0 XML schema namespace for backward comp
 """
 
 import uuid
+import os
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 from pathlib import Path
@@ -19,6 +20,8 @@ except ImportError:
 
 from ..archimate import ArchiMateElement, ArchiMateRelationship
 from ..archimate.elements.base import ArchiMateLayer, ArchiMateAspect
+from .xml_validator import validate_archimate_export, log_validation_results
+from .relationship_auto_fix import apply_auto_fix
 
 logger = logging.getLogger(__name__)
 
@@ -113,12 +116,39 @@ class ArchiMateXMLExporter:
                 xml_string = etree.tostring(root, encoding='unicode')
                 xml_string = '<?xml version="1.0" encoding="UTF-8"?>' + xml_string
             
+            # Apply auto-fix for relationships (safe - preserves PlantUML generation)
+            try:
+                enable_auto_fix = os.getenv("ARCHI_MCP_ENABLE_AUTO_FIX", "false").lower() in ("true", "1", "yes")
+                xml_string, fix_info = apply_auto_fix(xml_string, enable_fix=enable_auto_fix)
+                
+                if fix_info["fix_count"] > 0:
+                    logger.info(f"Applied {fix_info['fix_count']} relationship auto-fixes")
+                    for fix in fix_info["fixes_applied"]:
+                        logger.info(f"Auto-fix: {fix}")
+                elif fix_info["suggestion_count"] > 0:
+                    logger.info(f"Found {fix_info['suggestion_count']} fixable relationships (auto-fix disabled)")
+                    
+            except Exception as e:
+                logger.warning(f"Auto-fix failed (non-blocking): {e}")
+            
             # Save to file if path provided
             if output_path:
                 if isinstance(output_path, str):
                     output_path = Path(output_path)
                 output_path.write_text(xml_string, encoding='utf-8')
                 logger.info(f"XML exported to {output_path}")
+                
+                # Optional validation (safe - never blocks export)
+                try:
+                    validation_result = validate_archimate_export(str(output_path))
+                    if validation_result:
+                        log_validation_results(validation_result, logger)
+                        
+                        # Log validation summary for debugging
+                        logger.info(f"Validation summary: {len(validation_result.errors)} errors, {len(validation_result.warnings)} warnings")
+                        
+                except Exception as e:
+                    logger.warning(f"Validation failed (non-blocking): {e}")
             
             logger.info("XML export completed successfully")
             return xml_string
