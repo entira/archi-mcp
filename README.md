@@ -7,8 +7,8 @@
 [![ArchiMate](https://img.shields.io/badge/ArchiMate-3.2-orange.svg)](https://www.opengroup.org/archimate-forum/archimate-overview)
 [![PlantUML](https://img.shields.io/badge/PlantUML-Compatible-lightblue.svg)](https://plantuml.com/)
 [![MCP Protocol](https://img.shields.io/badge/MCP-Protocol-purple.svg)](https://modelcontextprotocol.io/)
-[![Tests](https://img.shields.io/badge/Tests-182%20Passing-brightgreen.svg)](#-development)
-[![Coverage](https://img.shields.io/badge/Coverage-70%25-success.svg)](#-development)
+[![Tests](https://img.shields.io/badge/Tests-194%20Passing-brightgreen.svg)](#-development)
+[![Coverage](https://img.shields.io/badge/Coverage-67%25-success.svg)](#-development)
 [![Production Ready](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)](#-overview)
 
 A specialized MCP (Model Context Protocol) server for generating PlantUML ArchiMate diagrams with comprehensive enterprise architecture modeling support.
