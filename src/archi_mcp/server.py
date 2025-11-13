@@ -13,6 +13,7 @@ import platform
 import logging
 import threading
 import socket
+import re
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Literal, Union
 from pathlib import Path
@@ -361,6 +362,242 @@ current_model_state = {
     "latest_export_dir": None
 }
 
+
+# ============================================================================
+# DIAGRAM HISTORY MANAGEMENT
+# ============================================================================
+
+def get_history_index_path() -> str:
+    """Get path to history index file."""
+    return os.path.join(os.getcwd(), "exports", "history_index.json")
+
+
+def load_history_index() -> dict:
+    """Load history index from file or build it if missing.
+
+    Returns:
+        dict: History index with 'last_updated', 'total_count', 'items'
+    """
+    index_path = get_history_index_path()
+
+    # Try to load existing index
+    if os.path.exists(index_path):
+        try:
+            with open(index_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            log_debug('WARNING', f'Failed to load history index: {e}')
+
+    # Build new index
+    return build_history_index()
+
+
+def build_history_index() -> dict:
+    """Scan exports directory and build history index.
+
+    Returns:
+        dict: History index with metadata for all diagrams
+    """
+    log_debug('INFO', 'Building history index...')
+
+    exports_dir = os.path.join(os.getcwd(), "exports")
+    if not os.path.exists(exports_dir):
+        return {
+            "last_updated": datetime.now().isoformat(),
+            "total_count": 0,
+            "items": []
+        }
+
+    items = []
+
+    # Scan all timestamp directories
+    for entry in os.listdir(exports_dir):
+        entry_path = os.path.join(exports_dir, entry)
+
+        # Skip non-directories, symlinks, and failed_attempts
+        if not os.path.isdir(entry_path) or os.path.islink(entry_path):
+            continue
+        if entry == "failed_attempts":
+            continue
+
+        # Try to parse timestamp
+        if not re.match(r'^\d{8}_\d{6}', entry):
+            continue
+
+        # Load metadata.json if exists
+        metadata_path = os.path.join(entry_path, "metadata.json")
+        if not os.path.exists(metadata_path):
+            # No metadata, skip this entry
+            continue
+
+        try:
+            with open(metadata_path, 'r', encoding='utf-8') as f:
+                metadata = json.load(f)
+
+            # Calculate directory size
+            dir_size = sum(
+                os.path.getsize(os.path.join(entry_path, f))
+                for f in os.listdir(entry_path)
+                if os.path.isfile(os.path.join(entry_path, f))
+            )
+
+            # Build item
+            item = {
+                "timestamp": entry,
+                "title": metadata.get("title"),
+                "description": metadata.get("description"),
+                "generated_at": metadata.get("generated_at"),
+                "element_count": metadata.get("statistics", {}).get("elements", 0),
+                "relationship_count": metadata.get("statistics", {}).get("relationships", 0),
+                "layers": metadata.get("statistics", {}).get("layers", []),
+                "generation_time": metadata.get("generation_time_seconds", 0),
+                "size_bytes": dir_size,
+                "has_png": metadata.get("png_generated", False),
+                "has_svg": metadata.get("svg_generated", False)
+            }
+
+            items.append(item)
+
+        except Exception as e:
+            log_debug('WARNING', f'Failed to load metadata for {entry}: {e}')
+            continue
+
+    # Sort by timestamp (newest first)
+    items.sort(key=lambda x: x["timestamp"], reverse=True)
+
+    # Build index
+    index = {
+        "last_updated": datetime.now().isoformat(),
+        "total_count": len(items),
+        "items": items
+    }
+
+    # Save index
+    try:
+        index_path = get_history_index_path()
+        os.makedirs(os.path.dirname(index_path), exist_ok=True)
+        with open(index_path, 'w', encoding='utf-8') as f:
+            json.dump(index, f, indent=2)
+        log_debug('INFO', f'History index built: {len(items)} diagrams')
+    except Exception as e:
+        log_debug('WARNING', f'Failed to save history index: {e}')
+
+    return index
+
+
+def update_history_index_with_new_export(timestamp: str, metadata: dict):
+    """Add new export to history index.
+
+    Args:
+        timestamp: Export timestamp (directory name)
+        metadata: Metadata dict for the new export
+    """
+    try:
+        # Load existing index
+        index = load_history_index()
+
+        # Calculate directory size
+        export_dir = os.path.join(os.getcwd(), "exports", timestamp)
+        dir_size = sum(
+            os.path.getsize(os.path.join(export_dir, f))
+            for f in os.listdir(export_dir)
+            if os.path.isfile(os.path.join(export_dir, f))
+        )
+
+        # Build new item
+        new_item = {
+            "timestamp": timestamp,
+            "title": metadata.get("title"),
+            "description": metadata.get("description"),
+            "generated_at": metadata.get("generated_at"),
+            "element_count": metadata.get("statistics", {}).get("elements", 0),
+            "relationship_count": metadata.get("statistics", {}).get("relationships", 0),
+            "layers": metadata.get("statistics", {}).get("layers", []),
+            "generation_time": metadata.get("generation_time_seconds", 0),
+            "size_bytes": dir_size,
+            "has_png": metadata.get("png_generated", False),
+            "has_svg": metadata.get("svg_generated", False)
+        }
+
+        # Remove existing entry with same timestamp (if any)
+        index["items"] = [item for item in index["items"] if item["timestamp"] != timestamp]
+
+        # Add new item at beginning
+        index["items"].insert(0, new_item)
+        index["total_count"] = len(index["items"])
+        index["last_updated"] = datetime.now().isoformat()
+
+        # Save updated index
+        index_path = get_history_index_path()
+        with open(index_path, 'w', encoding='utf-8') as f:
+            json.dump(index, f, indent=2)
+
+        log_debug('DEBUG', f'History index updated with {timestamp}')
+
+    except Exception as e:
+        log_debug('WARNING', f'Failed to update history index: {e}')
+
+
+def remove_from_history_index(timestamp: str):
+    """Remove export from history index.
+
+    Args:
+        timestamp: Export timestamp to remove
+    """
+    try:
+        index = load_history_index()
+        index["items"] = [item for item in index["items"] if item["timestamp"] != timestamp]
+        index["total_count"] = len(index["items"])
+        index["last_updated"] = datetime.now().isoformat()
+
+        index_path = get_history_index_path()
+        with open(index_path, 'w', encoding='utf-8') as f:
+            json.dump(index, f, indent=2)
+
+        log_debug('DEBUG', f'Removed {timestamp} from history index')
+
+    except Exception as e:
+        log_debug('WARNING', f'Failed to remove from history index: {e}')
+
+
+def delete_diagram_export(timestamp: str) -> bool:
+    """Delete a diagram export directory.
+
+    Args:
+        timestamp: Export timestamp (directory name)
+
+    Returns:
+        bool: True if deleted successfully
+    """
+    try:
+        export_dir = os.path.join(os.getcwd(), "exports", timestamp)
+
+        if not os.path.exists(export_dir):
+            return False
+
+        # Prevent deleting latest
+        latest_link = os.path.join(os.getcwd(), "exports", "latest")
+        if os.path.islink(latest_link):
+            latest_target = os.readlink(latest_link)
+            if latest_target == timestamp:
+                log_debug('WARNING', f'Cannot delete latest diagram: {timestamp}')
+                return False
+
+        # Delete directory
+        import shutil
+        shutil.rmtree(export_dir)
+
+        # Remove from index
+        remove_from_history_index(timestamp)
+
+        log_debug('INFO', f'Deleted diagram export: {timestamp}')
+        return True
+
+    except Exception as e:
+        log_debug('ERROR', f'Failed to delete {timestamp}: {e}')
+        return False
+
+
 def regenerate_diagram_from_state():
     """Regenerate diagram from current_model_state.
 
@@ -583,6 +820,228 @@ def start_http_server(port: int = 8080):
                 logger.error(f"API regenerate error: {e}")
                 return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
+        async def api_get_history(request):
+            """Get diagram history with optional filtering"""
+            try:
+                # Parse query parameters
+                params = request.query_params
+                limit = int(params.get('limit', '50'))
+                offset = int(params.get('offset', '0'))
+                search = params.get('search', '').lower()
+                from_date = params.get('from', '')
+                to_date = params.get('to', '')
+                min_elements = int(params.get('min_elements', '0'))
+                max_elements = int(params.get('max_elements', '999999'))
+                layers = params.get('layers', '').split(',') if params.get('layers') else []
+
+                # Load history index
+                index = load_history_index()
+
+                # Get latest timestamp for marking
+                latest_link = os.path.join(os.getcwd(), "exports", "latest")
+                latest_timestamp = None
+                if os.path.islink(latest_link):
+                    latest_timestamp = os.readlink(latest_link)
+
+                # Filter items
+                filtered_items = []
+                for item in index["items"]:
+                    # Search filter
+                    if search and search not in (item.get("title") or "").lower():
+                        continue
+
+                    # Date range filter
+                    if from_date and item["generated_at"] < from_date:
+                        continue
+                    if to_date and item["generated_at"] > to_date:
+                        continue
+
+                    # Element count filter
+                    if item["element_count"] < min_elements or item["element_count"] > max_elements:
+                        continue
+
+                    # Layer filter
+                    if layers and not any(layer in item.get("layers", []) for layer in layers):
+                        continue
+
+                    # Mark if latest
+                    item["is_latest"] = (item["timestamp"] == latest_timestamp)
+
+                    filtered_items.append(item)
+
+                # Apply pagination
+                total = len(filtered_items)
+                paginated_items = filtered_items[offset:offset + limit]
+
+                return JSONResponse({
+                    "total": total,
+                    "limit": limit,
+                    "offset": offset,
+                    "has_more": (offset + limit) < total,
+                    "items": paginated_items
+                })
+
+            except Exception as e:
+                logger.error(f"API get history error: {e}")
+                return JSONResponse({"error": str(e)}, status_code=500)
+
+        async def api_get_history_item(request):
+            """Get single history item with full metadata"""
+            try:
+                timestamp = request.path_params['timestamp']
+                export_dir = os.path.join(os.getcwd(), "exports", timestamp)
+
+                if not os.path.exists(export_dir):
+                    return JSONResponse({"error": "Diagram not found"}, status_code=404)
+
+                # Load metadata
+                metadata_path = os.path.join(export_dir, "metadata.json")
+                if not os.path.exists(metadata_path):
+                    return JSONResponse({"error": "Metadata not found"}, status_code=404)
+
+                with open(metadata_path, 'r', encoding='utf-8') as f:
+                    metadata = json.load(f)
+
+                # Check if latest
+                latest_link = os.path.join(os.getcwd(), "exports", "latest")
+                is_latest = False
+                if os.path.islink(latest_link):
+                    is_latest = (os.readlink(latest_link) == timestamp)
+
+                metadata["is_latest"] = is_latest
+                metadata["timestamp"] = timestamp
+
+                return JSONResponse(metadata)
+
+            except Exception as e:
+                logger.error(f"API get history item error: {e}")
+                return JSONResponse({"error": str(e)}, status_code=500)
+
+        async def api_fork_diagram(request):
+            """Fork a historical diagram (load into editor as new current)"""
+            global current_model_state
+
+            try:
+                timestamp = request.path_params['timestamp']
+                export_dir = os.path.join(os.getcwd(), "exports", timestamp)
+
+                if not os.path.exists(export_dir):
+                    return JSONResponse({"error": "Diagram not found"}, status_code=404)
+
+                # Load metadata
+                metadata_path = os.path.join(export_dir, "metadata.json")
+                if not os.path.exists(metadata_path):
+                    return JSONResponse({"error": "Metadata not found"}, status_code=404)
+
+                with open(metadata_path, 'r', encoding='utf-8') as f:
+                    metadata = json.load(f)
+
+                # Load PlantUML to extract model (if available)
+                puml_path = os.path.join(export_dir, "diagram.puml")
+                if not os.path.exists(puml_path):
+                    return JSONResponse({"error": "PlantUML file not found"}, status_code=404)
+
+                # For now, we'll create a new diagram with same title/description
+                # Full model reconstruction would require parsing PlantUML or storing model_state
+                # This is simplified - just copy title and trigger regeneration notice
+
+                # Update current state title
+                current_model_state["title"] = metadata.get("title")
+
+                # Note: Elements and relationships are NOT loaded (PlantUML parsing would be needed)
+                # User will need to recreate via Claude or we'd need to store full model_state
+
+                return JSONResponse({
+                    "success": True,
+                    "message": f"Forked diagram '{metadata.get('title')}' - title loaded. Recreate elements via Claude.",
+                    "title": metadata.get("title"),
+                    "note": "Full model reconstruction not yet implemented. Only title was loaded."
+                })
+
+            except Exception as e:
+                logger.error(f"API fork diagram error: {e}")
+                return JSONResponse({"error": str(e)}, status_code=500)
+
+        async def api_delete_diagram(request):
+            """Delete a historical diagram"""
+            try:
+                timestamp = request.path_params['timestamp']
+
+                # Check if latest
+                latest_link = os.path.join(os.getcwd(), "exports", "latest")
+                if os.path.islink(latest_link):
+                    if os.readlink(latest_link) == timestamp:
+                        return JSONResponse({
+                            "error": "Cannot delete the latest diagram"
+                        }, status_code=403)
+
+                # Delete the export
+                success = delete_diagram_export(timestamp)
+
+                if success:
+                    return JSONResponse({
+                        "success": True,
+                        "message": f"Deleted diagram {timestamp}"
+                    })
+                else:
+                    return JSONResponse({
+                        "error": "Failed to delete diagram"
+                    }, status_code=500)
+
+            except Exception as e:
+                logger.error(f"API delete diagram error: {e}")
+                return JSONResponse({"error": str(e)}, status_code=500)
+
+        async def api_cleanup_old_diagrams(request):
+            """Bulk cleanup old diagrams"""
+            try:
+                body = await request.json()
+                older_than_days = body.get("older_than_days", 30)
+                keep_latest = body.get("keep_latest", 50)
+
+                # Load index
+                index = load_history_index()
+
+                # Get latest timestamp
+                latest_link = os.path.join(os.getcwd(), "exports", "latest")
+                latest_timestamp = None
+                if os.path.islink(latest_link):
+                    latest_timestamp = os.readlink(latest_link)
+
+                # Filter old diagrams
+                cutoff_date = datetime.now() - timedelta(days=older_than_days)
+                deleted_count = 0
+
+                for item in index["items"]:
+                    # Skip latest
+                    if item["timestamp"] == latest_timestamp:
+                        continue
+
+                    # Check age
+                    try:
+                        generated_at = datetime.fromisoformat(item["generated_at"])
+                        if generated_at < cutoff_date:
+                            # Delete
+                            if delete_diagram_export(item["timestamp"]):
+                                deleted_count += 1
+
+                            # Stop if we've kept enough latest
+                            remaining = len(index["items"]) - deleted_count
+                            if remaining <= keep_latest:
+                                break
+                    except:
+                        continue
+
+                return JSONResponse({
+                    "success": True,
+                    "deleted_count": deleted_count,
+                    "message": f"Deleted {deleted_count} old diagrams"
+                })
+
+            except Exception as e:
+                logger.error(f"API cleanup error: {e}")
+                return JSONResponse({"error": str(e)}, status_code=500)
+
         async def serve_designer(request):
             """Serve the interactive designer HTML"""
             designer_path = os.path.join(os.getcwd(), "designer.html")
@@ -601,6 +1060,12 @@ def start_http_server(port: int = 8080):
                 Route("/api/status", api_status),
                 Route("/api/model", api_get_model),
                 Route("/api/regenerate", api_regenerate, methods=["POST"]),
+                # History API
+                Route("/api/history", api_get_history),
+                Route("/api/history/cleanup", api_cleanup_old_diagrams, methods=["POST"]),
+                Route("/api/history/{timestamp}", api_get_history_item, methods=["GET"]),
+                Route("/api/history/{timestamp}", api_delete_diagram, methods=["DELETE"]),
+                Route("/api/history/{timestamp}/fork", api_fork_diagram, methods=["POST"]),
                 # Static files
                 Mount("/exports", StaticFiles(directory=exports_dir), name="exports"),
             ]
@@ -2202,7 +2667,10 @@ The jar should be placed in the project root directory or one of these locations
         metadata_file = export_dir / "metadata.json"
         with open(metadata_file, 'w', encoding='utf-8') as f:
             json.dump(metadata, f, indent=2)
-        
+
+        # Update history index with new export
+        update_history_index_with_new_export(timestamp, metadata)
+
         # Generate markdown documentation (PNG was successful if we reach this point)
         log_debug('INFO', 'Generating architecture documentation')
         markdown_content = generate_architecture_markdown(generator_with_translator, title, description, "diagram.png")
