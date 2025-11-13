@@ -286,48 +286,81 @@
         /* Tab Navigation */
         .tab-navigation {
             display: flex;
-            gap: 8px;
-            margin: 20px 0;
-            border-bottom: 2px solid #3a3a3a;
+            gap: 4px;
+            margin: 20px 0 0 0;
+            padding: 0;
+            background: #252525;
+            border-radius: 8px 8px 0 0;
+            overflow: hidden;
         }
 
         .tab-btn {
             flex: 1;
-            padding: 12px;
-            background: #252525;
+            padding: 14px 16px;
+            background: transparent;
             border: none;
             border-bottom: 3px solid transparent;
-            color: #b0b0b0;
+            color: #808080;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .tab-btn::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #4ec9b0;
+            transform: scaleX(0);
+            transition: transform 0.2s ease;
         }
 
         .tab-btn:hover {
-            background: #2d2d2d;
-            color: #e0e0e0;
+            color: #c0c0c0;
+            background: rgba(255,255,255,0.03);
         }
 
         .tab-btn.active {
-            background: #1e1e1e;
             color: #4ec9b0;
-            border-bottom-color: #4ec9b0;
+            background: rgba(78,201,176,0.08);
+        }
+
+        .tab-btn.active::after {
+            transform: scaleX(1);
         }
 
         #history-count {
-            font-size: 11px;
-            opacity: 0.7;
+            font-size: 10px;
+            opacity: 0.6;
+            font-weight: normal;
+            margin-left: 4px;
         }
 
         .tab-content {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+            /* Remove flex from tab-content to preserve original layout */
         }
 
         .tab-content:not(.active) {
-            display: none;
+            display: none !important;
+        }
+
+        .tab-content.active {
+            display: block !important;
+        }
+
+        /* History tab specific styling */
+        #history-tab {
+            padding-top: 20px;
+        }
+
+        #history-tab > * {
+            margin-bottom: 16px;
         }
 
         /* History Filters */
@@ -1204,14 +1237,12 @@
                 btn.classList.toggle('active', btn.dataset.tab === tabName);
             });
 
-            // Show/hide tab content
+            // Show/hide tab content (CSS handles display via .active class)
             document.querySelectorAll('.tab-content').forEach(content => {
                 if (content.id === `${tabName}-tab`) {
                     content.classList.add('active');
-                    content.style.display = 'flex';
                 } else {
                     content.classList.remove('active');
-                    content.style.display = 'none';
                 }
             });
 
