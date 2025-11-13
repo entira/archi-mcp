@@ -2230,8 +2230,8 @@ The jar should be placed in the project root directory or one of these locations
                 }
                 for rel in generator_with_translator.relationships
             ]
-            current_model_state["options"]["direction"] = layout.get("direction", "top-bottom")
-            current_model_state["options"]["spacing"] = layout.get("spacing", "comfortable")
+            current_model_state["options"]["direction"] = layout.direction
+            current_model_state["options"]["spacing"] = layout.spacing
             current_model_state["latest_export_dir"] = str(export_dir)
             current_model_state["last_updated"] = datetime.now().isoformat()
 
