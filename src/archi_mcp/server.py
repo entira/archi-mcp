@@ -494,15 +494,32 @@ def find_free_port():
         port = s.getsockname()[1]
     return port
 
-def start_http_server():
-    """Start HTTP server for serving static files and REST API from exports directory."""
+def start_http_server(port: int = 8080):
+    """Start HTTP server for serving static files and REST API from exports directory.
+
+    Args:
+        port: Port number to use (default: 8080). If port is in use, will try port+1, port+2, etc.
+    """
     global http_server_port, http_server_thread, http_server_running
 
     if http_server_running:
         return http_server_port
 
-    # Find free port
-    http_server_port = find_free_port()
+    # Try to use fixed port, or find next available
+    http_server_port = port
+    max_attempts = 10
+    for attempt in range(max_attempts):
+        try:
+            # Test if port is available
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind(('127.0.0.1', http_server_port))
+            break  # Port is available
+        except OSError:
+            # Port in use, try next one
+            http_server_port += 1
+            if attempt == max_attempts - 1:
+                # Fall back to random free port
+                http_server_port = find_free_port()
 
     # Create Starlette app with static files and REST API
     try:
@@ -2383,7 +2400,16 @@ def main():
     """Main entry point for the ArchiMate MCP server."""
     logger.info("Starting ArchiMate MCP Server with FastMCP")
     logger.info(f"Available tools: create_archimate_diagram, test_element_normalization")
-    
+
+    # Start HTTP server immediately on fixed port (8080)
+    try:
+        port = start_http_server(port=8080)
+        logger.info(f"✓ HTTP server started on http://127.0.0.1:{port}")
+        logger.info(f"✓ Interactive viewer: http://127.0.0.1:{port}/viewer.html")
+    except Exception as e:
+        logger.warning(f"Failed to start HTTP server: {e}")
+        logger.warning("Viewer will not be available, but diagram generation will still work")
+
     try:
         mcp.run()
     except KeyboardInterrupt:
