@@ -374,8 +374,8 @@ def regenerate_diagram_from_state():
                 id=elem_data["id"],
                 name=elem_data["name"],
                 element_type=elem_data["element_type"],
-                layer=ArchiMateLayer[elem_data["layer"]],
-                aspect=ArchiMateAspect[elem_data["aspect"]],
+                layer=ArchiMateLayer[elem_data["layer"].upper()],
+                aspect=ArchiMateAspect[elem_data["aspect"].upper()],
                 description=elem_data.get("description")
             )
             gen.add_element(elem)
