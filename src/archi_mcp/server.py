@@ -338,6 +338,16 @@ http_server_port = None
 http_server_thread = None
 http_server_running = False
 
+# Global state for current diagram model (for interactive viewer)
+current_model_state = {
+    "title": None,
+    "elements": [],
+    "relationships": [],
+    "options": {"direction": "top-bottom", "spacing": "comfortable"},
+    "last_updated": None,
+    "latest_export_dir": None
+}
+
 def find_free_port():
     """Find a free port for the HTTP server."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -347,40 +357,102 @@ def find_free_port():
     return port
 
 def start_http_server():
-    """Start HTTP server for serving static files from exports directory."""
+    """Start HTTP server for serving static files and REST API from exports directory."""
     global http_server_port, http_server_thread, http_server_running
-    
+
     if http_server_running:
         return http_server_port
-    
+
     # Find free port
     http_server_port = find_free_port()
-    
-    # Create Starlette app for static files
+
+    # Create Starlette app with static files and REST API
     try:
         from starlette.applications import Starlette
-        from starlette.routing import Mount
+        from starlette.routing import Mount, Route
         from starlette.staticfiles import StaticFiles
+        from starlette.responses import JSONResponse, FileResponse
+        from starlette.middleware.cors import CORSMiddleware
         import uvicorn
-        
+
         # Ensure exports directory exists
         exports_dir = os.path.join(os.getcwd(), "exports")
         os.makedirs(exports_dir, exist_ok=True)
-        
-        app = Starlette(routes=[
-            Mount("/exports", StaticFiles(directory=exports_dir), name="exports"),
-        ])
-        
+
+        # REST API Endpoints
+        async def api_status(request):
+            """Health check endpoint"""
+            global current_model_state
+            return JSONResponse({"status": "ok", "server": "archi-mcp"})
+
+        async def api_get_model(request):
+            """Get current model state"""
+            global current_model_state
+            return JSONResponse(current_model_state)
+
+        async def api_regenerate(request):
+            """Regenerate diagram with new options"""
+            global current_model_state
+            try:
+                body = await request.json()
+                options = body
+
+                # Update current model options
+                current_model_state["options"].update(options)
+
+                # TODO: Trigger actual regeneration
+                # For now, just return success
+                return JSONResponse({
+                    "success": True,
+                    "message": "Regeneration queued",
+                    "options": current_model_state["options"]
+                })
+            except Exception as e:
+                return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+        async def serve_viewer(request):
+            """Serve the interactive viewer HTML"""
+            viewer_path = os.path.join(os.getcwd(), "viewer.html")
+            if os.path.exists(viewer_path):
+                return FileResponse(viewer_path)
+            return JSONResponse({"error": "Viewer not found"}, status_code=404)
+
+        # Create Starlette app
+        app = Starlette(
+            routes=[
+                # Viewer
+                Route("/", serve_viewer),
+                Route("/viewer", serve_viewer),
+                Route("/viewer.html", serve_viewer),
+                # REST API
+                Route("/api/status", api_status),
+                Route("/api/model", api_get_model),
+                Route("/api/regenerate", api_regenerate, methods=["POST"]),
+                # Static files
+                Mount("/exports", StaticFiles(directory=exports_dir), name="exports"),
+            ]
+        )
+
+        # Add CORS middleware for local development
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+
         def run_server():
             uvicorn.run(app, host="127.0.0.1", port=http_server_port, log_level="warning")
-        
+
         http_server_thread = threading.Thread(target=run_server, daemon=True)
         http_server_thread.start()
         http_server_running = True
-        
+
         logger.info(f"HTTP server started on http://127.0.0.1:{http_server_port}")
+        logger.info(f"Interactive viewer: http://127.0.0.1:{http_server_port}/viewer")
         return http_server_port
-        
+
     except ImportError as e:
         logger.error(f"Failed to start HTTP server: {e}. Install starlette and uvicorn.")
         return None

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArchiMate Diagram Viewer - Live</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1e1e1e;
+            color: #e0e0e0;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar Controls */
+        #sidebar {
+            width: 300px;
+            background: #252525;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid #3a3a3a;
+        }
+
+        h1 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #b0b0b0;
+            font-weight: 500;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 8px 12px;
+            background: #1e1e1e;
+            border: 1px solid #3a3a3a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 13px;
+        }
+
+        select:hover, input:hover {
+            border-color: #4a4a4a;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #007acc;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #007acc;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            background: #005a9e;
+        }
+
+        button:active {
+            background: #004578;
+        }
+
+        button.secondary {
+            background: #3a3a3a;
+        }
+
+        button.secondary:hover {
+            background: #4a4a4a;
+        }
+
+        /* Status */
+        #status {
+            padding: 10px;
+            background: #2d2d2d;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+
+        #status.success { background: #1e3a1e; color: #4caf50; }
+        #status.error { background: #3a1e1e; color: #f44336; }
+        #status.loading { background: #1e2a3a; color: #2196f3; }
+
+        /* Diagram Display */
+        #diagram-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            overflow: auto;
+        }
+
+        #diagram {
+            max-width: 100%;
+            max-height: 100%;
+            border: 2px solid #3a3a3a;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        #diagram-info {
+            margin-top: 20px;
+            text-align: center;
+            color: #b0b0b0;
+            font-size: 13px;
+        }
+
+        /* Element Palette */
+        #palette {
+            background: #2d2d2d;
+            border-radius: 4px;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .element-item {
+            padding: 8px 12px;
+            background: #1e1e1e;
+            border: 1px solid #3a3a3a;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .element-item:hover {
+            background: #2a2a2a;
+            border-color: #007acc;
+        }
+
+        .element-icon {
+            font-size: 16px;
+        }
+
+        /* Auto-refresh indicator */
+        #refresh-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 12px;
+            background: #2d2d2d;
+            border-radius: 4px;
+            font-size: 12px;
+            display: none;
+        }
+
+        #refresh-indicator.active {
+            display: block;
+            background: #1e3a1e;
+            color: #4caf50;
+        }
+
+        .stats {
+            background: #2d2d2d;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .stat-label {
+            color: #b0b0b0;
+        }
+
+        .stat-value {
+            color: #007acc;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h1>🏗️ ArchiMate Viewer</h1>
+
+        <div id="status" class="loading">Connecting to server...</div>
+
+        <div class="stats" id="model-stats">
+            <div class="stat-item">
+                <span class="stat-label">Elements:</span>
+                <span class="stat-value" id="stat-elements">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Relationships:</span>
+                <span class="stat-value" id="stat-relationships">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Last Updated:</span>
+                <span class="stat-value" id="stat-updated">-</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label for="direction">Layout Direction</label>
+            <select id="direction">
+                <option value="top-bottom">Top to Bottom ↓</option>
+                <option value="left-right">Left to Right →</option>
+                <option value="bottom-top">Bottom to Top ↑</option>
+                <option value="right-left">Right to Left ←</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="spacing">Spacing</label>
+            <select id="spacing">
+                <option value="compact">Compact</option>
+                <option value="comfortable" selected>Comfortable</option>
+                <option value="spacious">Spacious</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="title">Diagram Title</label>
+            <input type="text" id="title" placeholder="Architecture Overview">
+        </div>
+
+        <button onclick="regenerate()">🔄 Regenerate Diagram</button>
+        <button class="secondary" onclick="exportDiagram()">💾 Export PNG</button>
+        <button class="secondary" onclick="openPlantUML()">📝 View PlantUML Source</button>
+
+        <div class="control-group" style="margin-top: 30px;">
+            <label>Quick Elements</label>
+            <div id="palette">
+                <div class="element-item" onclick="quickAdd('Business_Actor')">
+                    <span class="element-icon">👤</span>
+                    <span>Business Actor</span>
+                </div>
+                <div class="element-item" onclick="quickAdd('Application_Component')">
+                    <span class="element-icon">📦</span>
+                    <span>Application Component</span>
+                </div>
+                <div class="element-item" onclick="quickAdd('Data_Object')">
+                    <span class="element-icon">💾</span>
+                    <span>Data Object</span>
+                </div>
+                <div class="element-item" onclick="quickAdd('Node')">
+                    <span class="element-icon">🖥️</span>
+                    <span>Technology Node</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="diagram-container">
+        <img id="diagram" src="exports/latest/diagram.png" alt="ArchiMate Diagram">
+        <div id="diagram-info">
+            Auto-refreshing every 2 seconds
+        </div>
+    </div>
+
+    <div id="refresh-indicator">↻ Refreshing...</div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        let autoRefreshInterval;
+        let currentModel = null;
+
+        // Initialize
+        async function init() {
+            await checkServerStatus();
+            await loadCurrentModel();
+            startAutoRefresh();
+        }
+
+        // Check if server is running
+        async function checkServerStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/status`);
+                const data = await response.json();
+                updateStatus('Connected to MCP server', 'success');
+                return true;
+            } catch (error) {
+                updateStatus('Server not running. Start MCP server first.', 'error');
+                return false;
+            }
+        }
+
+        // Load current model state
+        async function loadCurrentModel() {
+            try {
+                const response = await fetch(`${API_BASE}/model`);
+                currentModel = await response.json();
+                updateStats(currentModel);
+            } catch (error) {
+                console.error('Failed to load model:', error);
+            }
+        }
+
+        // Update statistics display
+        function updateStats(model) {
+            if (!model) return;
+
+            document.getElementById('stat-elements').textContent = model.elements?.length || 0;
+            document.getElementById('stat-relationships').textContent = model.relationships?.length || 0;
+
+            if (model.title) {
+                document.getElementById('title').value = model.title;
+            }
+
+            const now = new Date().toLocaleTimeString();
+            document.getElementById('stat-updated').textContent = now;
+        }
+
+        // Regenerate diagram with current options
+        async function regenerate() {
+            updateStatus('Regenerating diagram...', 'loading');
+
+            const options = {
+                direction: document.getElementById('direction').value,
+                spacing: document.getElementById('spacing').value,
+                title: document.getElementById('title').value || undefined
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/regenerate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(options)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    updateStatus('✓ Diagram regenerated successfully!', 'success');
+                    await loadCurrentModel();
+                    refreshDiagram();
+                } else {
+                    updateStatus(`✗ Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                updateStatus(`✗ Failed to regenerate: ${error.message}`, 'error');
+            }
+        }
+
+        // Quick add element (placeholder - will integrate with Claude)
+        async function quickAdd(elementType) {
+            updateStatus(`Adding ${elementType}...`, 'loading');
+
+            // For MVP, just show message to use Claude
+            updateStatus(`💬 Use Claude Desktop to add elements: "Add a ${elementType} called..."`, 'success');
+
+            // TODO: Implement direct element addition via API
+        }
+
+        // Export diagram
+        function exportDiagram() {
+            window.open('exports/latest/diagram.png', '_blank');
+        }
+
+        // Open PlantUML source
+        function openPlantUML() {
+            window.open('exports/latest/diagram.puml', '_blank');
+        }
+
+        // Auto-refresh diagram
+        function startAutoRefresh() {
+            autoRefreshInterval = setInterval(() => {
+                refreshDiagram();
+            }, 2000);
+        }
+
+        function refreshDiagram() {
+            const indicator = document.getElementById('refresh-indicator');
+            indicator.classList.add('active');
+
+            const img = document.getElementById('diagram');
+            const timestamp = new Date().getTime();
+            img.src = `exports/latest/diagram.png?t=${timestamp}`;
+
+            setTimeout(() => {
+                indicator.classList.remove('active');
+            }, 500);
+        }
+
+        // Update status message
+        function updateStatus(message, type = '') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = type;
+        }
+
+        // Start on load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
