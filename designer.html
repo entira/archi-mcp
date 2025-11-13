@@ -282,6 +282,342 @@
             width: 14px;
             height: 14px;
         }
+
+        /* Tab Navigation */
+        .tab-navigation {
+            display: flex;
+            gap: 8px;
+            margin: 20px 0;
+            border-bottom: 2px solid #3a3a3a;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: #252525;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: #b0b0b0;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            background: #2d2d2d;
+            color: #e0e0e0;
+        }
+
+        .tab-btn.active {
+            background: #1e1e1e;
+            color: #4ec9b0;
+            border-bottom-color: #4ec9b0;
+        }
+
+        #history-count {
+            font-size: 11px;
+            opacity: 0.7;
+        }
+
+        .tab-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .tab-content:not(.active) {
+            display: none;
+        }
+
+        /* History Filters */
+        .history-filters {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 15px;
+            background: #252525;
+            border-radius: 6px;
+        }
+
+        .history-filters input[type="text"],
+        .history-filters input[type="date"],
+        .history-filters input[type="number"] {
+            width: 100%;
+            padding: 8px 12px;
+            background: #1e1e1e;
+            border: 1px solid #3a3a3a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 13px;
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .filter-btn,
+        .filter-btn-secondary {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .filter-btn {
+            background: #4ec9b0;
+            color: #1e1e1e;
+        }
+
+        .filter-btn:hover {
+            background: #5fd9c0;
+        }
+
+        .filter-btn-secondary {
+            background: #3a3a3a;
+            color: #b0b0b0;
+        }
+
+        .filter-btn-secondary:hover {
+            background: #4a4a4a;
+        }
+
+        /* History Table */
+        .history-table {
+            display: flex;
+            flex-direction: column;
+            max-height: 400px;
+            overflow-y: auto;
+            background: #252525;
+            border-radius: 6px;
+        }
+
+        .history-table-header {
+            display: grid;
+            grid-template-columns: 40px 100px 2fr 120px 60px 60px 180px;
+            gap: 10px;
+            padding: 12px;
+            background: #2d2d2d;
+            font-weight: 600;
+            font-size: 12px;
+            color: #4ec9b0;
+            border-bottom: 2px solid #3a3a3a;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .history-table-header > div {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .history-table-header > div:hover {
+            color: #5fd9c0;
+        }
+
+        .history-table-body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .history-item {
+            display: grid;
+            grid-template-columns: 40px 100px 2fr 120px 60px 60px 180px;
+            gap: 10px;
+            padding: 12px;
+            border-bottom: 1px solid #3a3a3a;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .history-item:hover {
+            background: #2a2a2a;
+        }
+
+        .history-item.is-latest {
+            background: #1a2f2a;
+            border-left: 3px solid #4ec9b0;
+        }
+
+        .history-item-thumbnail {
+            position: relative;
+            width: 90px;
+            height: 60px;
+            overflow: hidden;
+            border-radius: 4px;
+            border: 1px solid #3a3a3a;
+        }
+
+        .history-item-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .badge-latest {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #4ec9b0;
+            color: #1e1e1e;
+            padding: 2px 6px;
+            font-size: 9px;
+            font-weight: bold;
+            border-radius: 3px;
+        }
+
+        .history-item-title {
+            color: #e0e0e0;
+            font-size: 13px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .history-item-date {
+            color: #b0b0b0;
+            font-size: 12px;
+        }
+
+        .history-item-count {
+            color: #b0b0b0;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .history-item-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .history-item-actions button {
+            padding: 6px 12px;
+            background: #3a3a3a;
+            border: none;
+            border-radius: 3px;
+            color: #e0e0e0;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-item-actions button:hover:not(:disabled) {
+            background: #4a4a4a;
+        }
+
+        .history-item-actions button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .history-item-actions .btn-fork {
+            background: #4ec9b0;
+            color: #1e1e1e;
+        }
+
+        .history-item-actions .btn-fork:hover:not(:disabled) {
+            background: #5fd9c0;
+        }
+
+        .history-item-actions .btn-delete {
+            background: #c94e4e;
+            color: #fff;
+        }
+
+        .history-item-actions .btn-delete:hover:not(:disabled) {
+            background: #d95f5f;
+        }
+
+        .history-loading {
+            padding: 40px;
+            text-align: center;
+            color: #b0b0b0;
+            font-size: 14px;
+        }
+
+        .history-empty {
+            padding: 40px;
+            text-align: center;
+            color: #b0b0b0;
+            font-size: 14px;
+        }
+
+        /* History Footer */
+        .history-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #252525;
+            border-radius: 6px;
+            gap: 10px;
+        }
+
+        .bulk-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .bulk-actions button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        #bulk-delete-btn {
+            background: #c94e4e;
+            color: #fff;
+        }
+
+        #bulk-delete-btn:hover:not(:disabled) {
+            background: #d95f5f;
+        }
+
+        #bulk-delete-btn:disabled {
+            background: #3a3a3a;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .cleanup-btn {
+            background: #b07a4e;
+            color: #fff;
+        }
+
+        .cleanup-btn:hover {
+            background: #c08a5e;
+        }
+
+        .pagination-info {
+            color: #b0b0b0;
+            font-size: 12px;
+        }
+
+        #load-more-btn {
+            padding: 8px 16px;
+            background: #4ec9b0;
+            border: none;
+            border-radius: 4px;
+            color: #1e1e1e;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        #load-more-btn:hover {
+            background: #5fd9c0;
+        }
     </style>
 </head>
 <body>
@@ -289,6 +625,18 @@
         <h1>🎨 ArchiMate Interactive Designer</h1>
         <div class="subtitle">Real-time diagram visualization & control</div>
 
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" data-tab="editor" onclick="switchTab('editor')">
+                ✏️ Editor
+            </button>
+            <button class="tab-btn" data-tab="history" onclick="switchTab('history')">
+                📜 History <span id="history-count">(0)</span>
+            </button>
+        </div>
+
+        <!-- Editor Tab Content -->
+        <div class="tab-content active" id="editor-tab">
         <div class="stats" id="model-stats">
             <div class="stat-item">
                 <span class="stat-label">Elements:</span>
@@ -391,6 +739,68 @@
                 All (ZIP)
             </a>
         </div>
+
+        </div>
+        <!-- End Editor Tab -->
+
+        <!-- History Tab Content -->
+        <div class="tab-content" id="history-tab" style="display:none;">
+            <!-- History Filters -->
+            <div class="history-filters">
+                <input type="text" id="history-search" placeholder="🔍 Search by title...">
+
+                <div class="filter-row">
+                    <input type="date" id="history-from-date" placeholder="From date">
+                    <input type="date" id="history-to-date" placeholder="To date">
+                </div>
+
+                <div class="filter-row">
+                    <input type="number" id="history-min-elements" placeholder="Min elements" min="0">
+                    <input type="number" id="history-max-elements" placeholder="Max elements" min="0">
+                </div>
+
+                <button onclick="applyHistoryFilters()" class="filter-btn">Apply Filters</button>
+                <button onclick="clearHistoryFilters()" class="filter-btn-secondary">Clear</button>
+            </div>
+
+            <!-- History Table -->
+            <div class="history-table">
+                <!-- Table Header -->
+                <div class="history-table-header">
+                    <div class="col-select"><input type="checkbox" id="select-all-history" onclick="toggleSelectAll()"></div>
+                    <div class="col-thumbnail">Preview</div>
+                    <div class="col-title" onclick="sortHistoryBy('title')">Title ↕</div>
+                    <div class="col-date" onclick="sortHistoryBy('date')">Date ↕</div>
+                    <div class="col-count" onclick="sortHistoryBy('elements')">Elem ↕</div>
+                    <div class="col-count" onclick="sortHistoryBy('relations')">Rel ↕</div>
+                    <div class="col-actions">Actions</div>
+                </div>
+
+                <!-- Table Body (scrollable) -->
+                <div class="history-table-body" id="history-items">
+                    <div class="history-loading">Loading history...</div>
+                </div>
+            </div>
+
+            <!-- History Footer (Pagination & Bulk Actions) -->
+            <div class="history-footer">
+                <div class="bulk-actions">
+                    <button onclick="bulkDeleteHistory()" id="bulk-delete-btn" disabled>
+                        Delete Selected (0)
+                    </button>
+                    <button onclick="cleanupOldDiagrams()" class="cleanup-btn">
+                        🗑️ Cleanup Old (>30 days)
+                    </button>
+                </div>
+                <div class="pagination-info" id="pagination-info">
+                    Showing 0-0 of 0
+                </div>
+                <button onclick="loadMoreHistory()" id="load-more-btn" style="display:none;">
+                    Load More
+                </button>
+            </div>
+        </div>
+        <!-- End History Tab -->
 
         <div class="spacer"></div>
 
@@ -773,6 +1183,423 @@
             const status = document.getElementById('status');
             status.textContent = message;
             status.className = type;
+        }
+
+        // =================================================================
+        // HISTORY MANAGEMENT
+        // =================================================================
+
+        let historyData = [];
+        let filteredHistoryData = [];
+        let selectedHistoryItems = new Set();
+        let historySortColumn = 'date';
+        let historySortOrder = 'desc';
+        let historyOffset = 0;
+        let historyLimit = 50;
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tabName);
+            });
+
+            // Show/hide tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                if (content.id === `${tabName}-tab`) {
+                    content.classList.add('active');
+                    content.style.display = 'flex';
+                } else {
+                    content.classList.remove('active');
+                    content.style.display = 'none';
+                }
+            });
+
+            // Load history when switching to history tab
+            if (tabName === 'history') {
+                loadHistory();
+            }
+        }
+
+        // Load history from API
+        async function loadHistory(append = false) {
+            try {
+                updateHistoryStatus('Loading history...');
+
+                // Build query parameters
+                const params = new URLSearchParams();
+                params.append('limit', historyLimit);
+                params.append('offset', append ? historyOffset : 0);
+
+                // Apply filters
+                const search = document.getElementById('history-search').value;
+                if (search) params.append('search', search);
+
+                const fromDate = document.getElementById('history-from-date').value;
+                if (fromDate) params.append('from', fromDate);
+
+                const toDate = document.getElementById('history-to-date').value;
+                if (toDate) params.append('to', toDate);
+
+                const minElements = document.getElementById('history-min-elements').value;
+                if (minElements) params.append('min_elements', minElements);
+
+                const maxElements = document.getElementById('history-max-elements').value;
+                if (maxElements) params.append('max_elements', maxElements);
+
+                const response = await fetch(`${API_BASE}/history?${params}`);
+                const data = await response.json();
+
+                if (!append) {
+                    historyData = data.items;
+                    historyOffset = 0;
+                } else {
+                    historyData = [...historyData, ...data.items];
+                }
+
+                historyOffset = data.offset + data.items.length;
+
+                // Update history count
+                document.getElementById('history-count').textContent = `(${data.total})`;
+
+                // Update pagination info
+                document.getElementById('pagination-info').textContent =
+                    `Showing ${Math.min(1, data.total)}-${Math.min(historyOffset, data.total)} of ${data.total}`;
+
+                // Show/hide load more button
+                const loadMoreBtn = document.getElementById('load-more-btn');
+                if (data.has_more) {
+                    loadMoreBtn.style.display = 'block';
+                } else {
+                    loadMoreBtn.style.display = 'none';
+                }
+
+                // Render items
+                renderHistoryItems();
+
+            } catch (error) {
+                console.error('Failed to load history:', error);
+                updateHistoryStatus('Failed to load history');
+            }
+        }
+
+        // Render history items
+        function renderHistoryItems() {
+            const container = document.getElementById('history-items');
+
+            if (historyData.length === 0) {
+                container.innerHTML = '<div class="history-empty">No diagrams found</div>';
+                return;
+            }
+
+            // Apply sorting
+            const sorted = [...historyData].sort((a, b) => {
+                let aVal, bVal;
+
+                switch (historySortColumn) {
+                    case 'title':
+                        aVal = (a.title || 'Untitled').toLowerCase();
+                        bVal = (b.title || 'Untitled').toLowerCase();
+                        break;
+                    case 'date':
+                        aVal = new Date(a.generated_at);
+                        bVal = new Date(b.generated_at);
+                        break;
+                    case 'elements':
+                        aVal = a.element_count;
+                        bVal = b.element_count;
+                        break;
+                    case 'relations':
+                        aVal = a.relationship_count;
+                        bVal = b.relationship_count;
+                        break;
+                    default:
+                        return 0;
+                }
+
+                if (historySortOrder === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            // Render items
+            container.innerHTML = sorted.map(item => {
+                const isSelected = selectedHistoryItems.has(item.timestamp);
+                const isLatest = item.is_latest;
+
+                return `
+                    <div class="history-item ${isLatest ? 'is-latest' : ''}" data-timestamp="${item.timestamp}">
+                        <div class="col-select">
+                            <input type="checkbox"
+                                   ${isSelected ? 'checked' : ''}
+                                   onchange="toggleHistoryItem('${item.timestamp}')">
+                        </div>
+                        <div class="history-item-thumbnail">
+                            <img src="exports/${item.timestamp}/diagram.png"
+                                 alt="${item.title || 'Diagram'}"
+                                 loading="lazy">
+                            ${isLatest ? '<span class="badge-latest">⚡ Current</span>' : ''}
+                        </div>
+                        <div class="history-item-title" title="${item.title || 'Untitled Diagram'}">
+                            ${item.title || 'Untitled Diagram'}
+                        </div>
+                        <div class="history-item-date">
+                            ${formatDate(item.generated_at)}
+                        </div>
+                        <div class="history-item-count">${item.element_count}</div>
+                        <div class="history-item-count">${item.relationship_count}</div>
+                        <div class="history-item-actions">
+                            ${isLatest ?
+                                '<button disabled title="Already loaded">Current</button>' :
+                                `<button class="btn-fork" onclick="forkDiagram('${item.timestamp}')">Fork & Edit</button>`
+                            }
+                            <button onclick="viewDiagram('${item.timestamp}')">View</button>
+                            <button class="btn-delete"
+                                    onclick="deleteDiagram('${item.timestamp}')"
+                                    ${isLatest ? 'disabled title="Cannot delete current"' : ''}>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Format date
+        function formatDate(isoString) {
+            if (!isoString) return '-';
+            const date = new Date(isoString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+
+            if (diffMins < 60) {
+                return `${diffMins}m ago`;
+            } else if (diffMins < 1440) {
+                return `${Math.floor(diffMins / 60)}h ago`;
+            } else {
+                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+            }
+        }
+
+        // Toggle history item selection
+        function toggleHistoryItem(timestamp) {
+            if (selectedHistoryItems.has(timestamp)) {
+                selectedHistoryItems.delete(timestamp);
+            } else {
+                selectedHistoryItems.add(timestamp);
+            }
+            updateBulkDeleteButton();
+        }
+
+        // Toggle select all
+        function toggleSelectAll() {
+            const checkbox = document.getElementById('select-all-history');
+            if (checkbox.checked) {
+                // Select all (except latest)
+                historyData.forEach(item => {
+                    if (!item.is_latest) {
+                        selectedHistoryItems.add(item.timestamp);
+                    }
+                });
+            } else {
+                selectedHistoryItems.clear();
+            }
+            renderHistoryItems();
+            updateBulkDeleteButton();
+        }
+
+        // Update bulk delete button
+        function updateBulkDeleteButton() {
+            const btn = document.getElementById('bulk-delete-btn');
+            const count = selectedHistoryItems.size;
+            btn.textContent = `Delete Selected (${count})`;
+            btn.disabled = count === 0;
+        }
+
+        // Sort history
+        function sortHistoryBy(column) {
+            if (historySortColumn === column) {
+                historySortOrder = historySortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                historySortColumn = column;
+                historySortOrder = 'desc';
+            }
+            renderHistoryItems();
+        }
+
+        // Apply filters
+        function applyHistoryFilters() {
+            historyOffset = 0;
+            loadHistory(false);
+        }
+
+        // Clear filters
+        function clearHistoryFilters() {
+            document.getElementById('history-search').value = '';
+            document.getElementById('history-from-date').value = '';
+            document.getElementById('history-to-date').value = '';
+            document.getElementById('history-min-elements').value = '';
+            document.getElementById('history-max-elements').value = '';
+            applyHistoryFilters();
+        }
+
+        // Load more history
+        function loadMoreHistory() {
+            loadHistory(true);
+        }
+
+        // Fork diagram (Load & Edit)
+        async function forkDiagram(timestamp) {
+            if (!confirm('Fork this diagram? This will load it into the editor (current changes may be lost).')) {
+                return;
+            }
+
+            try {
+                updateHistoryStatus('Forking diagram...');
+
+                const response = await fetch(`${API_BASE}/history/${timestamp}/fork`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Switch to editor tab
+                    switchTab('editor');
+
+                    // Reload current model
+                    await loadCurrentModel();
+
+                    // Refresh diagram
+                    refreshDiagram();
+
+                    updateStatus('✓ Diagram forked successfully', 'success');
+                } else {
+                    alert(`Failed to fork diagram: ${result.error || result.message}`);
+                }
+
+            } catch (error) {
+                console.error('Fork error:', error);
+                alert(`Failed to fork diagram: ${error.message}`);
+            }
+        }
+
+        // View diagram (open in new window)
+        function viewDiagram(timestamp) {
+            window.open(`exports/${timestamp}/diagram.png`, '_blank');
+        }
+
+        // Delete diagram
+        async function deleteDiagram(timestamp) {
+            if (!confirm('Delete this diagram? This cannot be undone.')) {
+                return;
+            }
+
+            try {
+                updateHistoryStatus('Deleting diagram...');
+
+                const response = await fetch(`${API_BASE}/history/${timestamp}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Remove from local data
+                    historyData = historyData.filter(item => item.timestamp !== timestamp);
+                    selectedHistoryItems.delete(timestamp);
+
+                    // Re-render
+                    renderHistoryItems();
+                    updateBulkDeleteButton();
+
+                    updateHistoryStatus('✓ Diagram deleted');
+                } else {
+                    alert(`Failed to delete: ${result.error}`);
+                }
+
+            } catch (error) {
+                console.error('Delete error:', error);
+                alert(`Failed to delete: ${error.message}`);
+            }
+        }
+
+        // Bulk delete
+        async function bulkDeleteHistory() {
+            const count = selectedHistoryItems.size;
+            if (count === 0) return;
+
+            if (!confirm(`Delete ${count} diagrams? This cannot be undone.`)) {
+                return;
+            }
+
+            updateHistoryStatus(`Deleting ${count} diagrams...`);
+
+            let deleted = 0;
+            for (const timestamp of selectedHistoryItems) {
+                try {
+                    const response = await fetch(`${API_BASE}/history/${timestamp}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        deleted++;
+                        historyData = historyData.filter(item => item.timestamp !== timestamp);
+                    }
+                } catch (error) {
+                    console.error(`Failed to delete ${timestamp}:`, error);
+                }
+            }
+
+            selectedHistoryItems.clear();
+            renderHistoryItems();
+            updateBulkDeleteButton();
+
+            updateHistoryStatus(`✓ Deleted ${deleted}/${count} diagrams`);
+        }
+
+        // Cleanup old diagrams
+        async function cleanupOldDiagrams() {
+            if (!confirm('Delete all diagrams older than 30 days? This cannot be undone.')) {
+                return;
+            }
+
+            try {
+                updateHistoryStatus('Cleaning up old diagrams...');
+
+                const response = await fetch(`${API_BASE}/history/cleanup`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        older_than_days: 30,
+                        keep_latest: 50
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`Deleted ${result.deleted_count} old diagrams`);
+                    loadHistory(false);
+                } else {
+                    alert(`Cleanup failed: ${result.error}`);
+                }
+
+            } catch (error) {
+                console.error('Cleanup error:', error);
+                alert(`Cleanup failed: ${error.message}`);
+            }
+        }
+
+        // Update history status
+        function updateHistoryStatus(message) {
+            const container = document.getElementById('history-items');
+            if (container && historyData.length === 0) {
+                container.innerHTML = `<div class="history-loading">${message}</div>`;
+            }
         }
 
         // Start on load
