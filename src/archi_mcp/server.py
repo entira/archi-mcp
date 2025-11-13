@@ -344,7 +344,15 @@ current_model_state = {
     "title": None,
     "elements": [],
     "relationships": [],
-    "options": {"direction": "top-bottom", "spacing": "comfortable"},
+    "options": {
+        "direction": "top-bottom",
+        "spacing": "comfortable",
+        "show_legend": True,
+        "show_title": True,
+        "group_by_layer": False,
+        "show_element_types": False,
+        "show_relationship_labels": True
+    },
     "last_updated": None,
     "latest_export_dir": None
 }
@@ -413,15 +421,15 @@ def regenerate_diagram_from_state():
         }
         spacing = spacing_map.get(options.get("spacing", "comfortable"), "normal")
 
-        # Set layout options
+        # Set layout options (get all from options or use defaults)
         layout = DiagramLayout(
             direction=direction,
             spacing=spacing,
-            show_legend=True,
-            show_title=True,
-            group_by_layer=False,
-            show_element_types=False,
-            show_relationship_labels=True
+            show_legend=options.get("show_legend", True),
+            show_title=options.get("show_title", True),
+            group_by_layer=options.get("group_by_layer", False),
+            show_element_types=options.get("show_element_types", False),
+            show_relationship_labels=options.get("show_relationship_labels", True)
         )
         gen.set_layout(layout)
 
@@ -2247,8 +2255,14 @@ The jar should be placed in the project root directory or one of these locations
                 }
                 for rel in generator_with_translator.relationships
             ]
+            # Store all layout options in state
             current_model_state["options"]["direction"] = layout.direction
             current_model_state["options"]["spacing"] = layout.spacing
+            current_model_state["options"]["show_legend"] = layout.show_legend
+            current_model_state["options"]["show_title"] = layout.show_title
+            current_model_state["options"]["group_by_layer"] = layout.group_by_layer
+            current_model_state["options"]["show_element_types"] = layout.show_element_types
+            current_model_state["options"]["show_relationship_labels"] = layout.show_relationship_labels
             current_model_state["latest_export_dir"] = str(export_dir)
             current_model_state["last_updated"] = datetime.now().isoformat()
 

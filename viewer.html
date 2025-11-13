@@ -46,7 +46,7 @@
             font-weight: 500;
         }
 
-        select, input {
+        select, input[type="text"] {
             width: 100%;
             padding: 8px 12px;
             background: #1e1e1e;
@@ -56,13 +56,25 @@
             font-size: 13px;
         }
 
-        select:hover, input:hover {
+        select:hover, input[type="text"]:hover {
             border-color: #4a4a4a;
         }
 
-        select:focus, input:focus {
+        select:focus, input[type="text"]:focus {
             outline: none;
             border-color: #007acc;
+        }
+
+        input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .control-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
         }
 
         button {
@@ -252,6 +264,41 @@
             <input type="text" id="title" placeholder="Architecture Overview">
         </div>
 
+        <div class="control-group">
+            <label>
+                <input type="checkbox" id="show_legend" checked>
+                Show Legend
+            </label>
+        </div>
+
+        <div class="control-group">
+            <label>
+                <input type="checkbox" id="show_title" checked>
+                Show Title
+            </label>
+        </div>
+
+        <div class="control-group">
+            <label>
+                <input type="checkbox" id="group_by_layer">
+                Group By Layer
+            </label>
+        </div>
+
+        <div class="control-group">
+            <label>
+                <input type="checkbox" id="show_element_types">
+                Show Element Types
+            </label>
+        </div>
+
+        <div class="control-group">
+            <label>
+                <input type="checkbox" id="show_relationship_labels" checked>
+                Show Relationship Labels
+            </label>
+        </div>
+
         <button onclick="regenerate()">🔄 Regenerate Diagram</button>
         <button class="secondary" onclick="exportDiagram()">💾 Export PNG</button>
         <button class="secondary" onclick="openPlantUML()">📝 View PlantUML Source</button>
@@ -347,7 +394,12 @@
             const options = {
                 direction: document.getElementById('direction').value,
                 spacing: document.getElementById('spacing').value,
-                title: document.getElementById('title').value || undefined
+                title: document.getElementById('title').value || undefined,
+                show_legend: document.getElementById('show_legend').checked,
+                show_title: document.getElementById('show_title').checked,
+                group_by_layer: document.getElementById('group_by_layer').checked,
+                show_element_types: document.getElementById('show_element_types').checked,
+                show_relationship_labels: document.getElementById('show_relationship_labels').checked
             };
 
             try {
