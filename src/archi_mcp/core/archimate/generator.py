@@ -115,13 +115,24 @@ class ArchiMateGenerator:
         if description:
             lines.append(f"' Description: {description}")
             lines.append("")
-        
+
         # Set direction
         if self.layout.direction == "vertical":
             lines.append("top to bottom direction")
         elif self.layout.direction == "horizontal":
             lines.append("left to right direction")
-        
+
+        # Set spacing using skinparam
+        spacing_values = {
+            "compact": {"ranksep": "20", "nodesep": "30"},
+            "normal": {"ranksep": "40", "nodesep": "50"},
+            "wide": {"ranksep": "80", "nodesep": "100"}
+        }
+        if self.layout.spacing in spacing_values:
+            values = spacing_values[self.layout.spacing]
+            lines.append(f"skinparam ranksep {values['ranksep']}")
+            lines.append(f"skinparam nodesep {values['nodesep']}")
+
         lines.append("")
         
         # Generate elements - use layout setting for grouping
