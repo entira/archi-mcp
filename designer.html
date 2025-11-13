@@ -1470,20 +1470,20 @@
                 params.append('offset', append ? historyOffset : 0);
 
                 // Apply filters
-                const search = document.getElementById('history-search').value;
-                if (search) params.append('search', search);
+                const searchEl = document.getElementById('history-search');
+                if (searchEl && searchEl.value) params.append('search', searchEl.value);
 
-                const fromDate = document.getElementById('history-from-date').value;
-                if (fromDate) params.append('from', fromDate);
+                const fromDateEl = document.getElementById('history-from-date');
+                if (fromDateEl && fromDateEl.value) params.append('from', fromDateEl.value);
 
-                const toDate = document.getElementById('history-to-date').value;
-                if (toDate) params.append('to', toDate);
+                const toDateEl = document.getElementById('history-to-date');
+                if (toDateEl && toDateEl.value) params.append('to', toDateEl.value);
 
-                const minElements = document.getElementById('history-min-elements').value;
-                if (minElements) params.append('min_elements', minElements);
+                const minElementsEl = document.getElementById('history-min-elements');
+                if (minElementsEl && minElementsEl.value) params.append('min_elements', minElementsEl.value);
 
-                const maxElements = document.getElementById('history-max-elements').value;
-                if (maxElements) params.append('max_elements', maxElements);
+                const maxElementsEl = document.getElementById('history-max-elements');
+                if (maxElementsEl && maxElementsEl.value) params.append('max_elements', maxElementsEl.value);
 
                 const response = await fetch(`${API_BASE}/history?${params}`);
                 const data = await response.json();
@@ -1654,11 +1654,21 @@
 
         // Clear filters
         function clearHistoryFilters() {
-            document.getElementById('history-search').value = '';
-            document.getElementById('history-from-date').value = '';
-            document.getElementById('history-to-date').value = '';
-            document.getElementById('history-min-elements').value = '';
-            document.getElementById('history-max-elements').value = '';
+            const searchEl = document.getElementById('history-search');
+            if (searchEl) searchEl.value = '';
+
+            const fromDateEl = document.getElementById('history-from-date');
+            if (fromDateEl) fromDateEl.value = '';
+
+            const toDateEl = document.getElementById('history-to-date');
+            if (toDateEl) toDateEl.value = '';
+
+            const minElementsEl = document.getElementById('history-min-elements');
+            if (minElementsEl) minElementsEl.value = '';
+
+            const maxElementsEl = document.getElementById('history-max-elements');
+            if (maxElementsEl) maxElementsEl.value = '';
+
             applyHistoryFilters();
         }
 
