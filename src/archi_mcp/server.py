@@ -39,6 +39,7 @@ from .archimate import (
     ARCHIMATE_RELATIONSHIPS,
 )
 from .archimate.elements.base import ArchiMateLayer, ArchiMateAspect
+from .archimate.generator import DiagramLayout
 from .i18n import ArchiMateTranslator, AVAILABLE_LANGUAGES
 
 def detect_language_from_content(diagram) -> str:
@@ -395,12 +396,20 @@ def regenerate_diagram_from_state():
         options = current_model_state["options"]
         title = current_model_state.get("title") or "Architecture Diagram"
 
-        # Generate PlantUML code
-        puml_code = gen.generate_plantuml(
-            title=title,
+        # Set layout options
+        layout = DiagramLayout(
             direction=options.get("direction", "top-bottom"),
-            spacing=options.get("spacing", "comfortable")
+            spacing=options.get("spacing", "comfortable"),
+            show_legend=True,
+            show_title=True,
+            group_by_layer=False,
+            show_element_types=False,
+            show_relationship_labels=True
         )
+        gen.set_layout(layout)
+
+        # Generate PlantUML code
+        puml_code = gen.generate_plantuml(title=title)
 
         # Create export directory
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
