@@ -123,25 +123,20 @@
             background: #004578;
         }
 
-        /* Status - centered in canvas */
+        /* Status - in sidebar below subtitle */
         #status {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 12px 24px;
+            padding: 10px 15px;
             background: #2d2d2d;
             border-radius: 6px;
-            font-size: 13px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 100;
-            min-width: 300px;
+            font-size: 12px;
+            margin: 15px 0;
             text-align: center;
+            border: 1px solid #3a3a3a;
         }
 
-        #status.success { background: #1e3a1e; color: #4caf50; border: 1px solid #4caf50; }
-        #status.error { background: #3a1e1e; color: #f44336; border: 1px solid #f44336; }
-        #status.loading { background: #1e2a3a; color: #2196f3; border: 1px solid #2196f3; }
+        #status.success { background: #1e3a1e; color: #4caf50; border-color: #4caf50; }
+        #status.error { background: #3a1e1e; color: #f44336; border-color: #f44336; }
+        #status.loading { background: #1e2a3a; color: #2196f3; border-color: #2196f3; }
 
         /* Diagram Display */
         #diagram-container {
@@ -778,6 +773,10 @@
         <div class="sidebar-content">
         <h1>🎨 ArchiMate Interactive Designer</h1>
         <div class="subtitle">Real-time diagram visualization & control</div>
+
+        <!-- Status Bar -->
+        <div id="status" class="loading">Connecting to server...</div>
+
         <div class="stats" id="model-stats">
             <div class="stat-item">
                 <span class="stat-label">Elements:</span>
@@ -911,9 +910,6 @@
     </div>
 
     <div id="diagram-container">
-        <!-- Status Bar (floating over canvas) -->
-        <div id="status" class="loading">Connecting to server...</div>
-
         <!-- Zoom Controls -->
         <div class="zoom-controls" id="zoom-controls">
             <button class="zoom-btn" onclick="zoomIn()" title="Zoom in">+</button>
