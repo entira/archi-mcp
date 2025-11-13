@@ -978,10 +978,24 @@
             <!-- Filters -->
             <div style="background: #252525; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
                 <input type="text" id="history-search" placeholder="🔍 Search by title..." style="width: 100%; padding: 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0; margin-bottom: 10px;">
+
                 <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                    <input type="date" id="history-from-date" style="flex: 1; padding: 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0;">
-                    <input type="date" id="history-to-date" style="flex: 1; padding: 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0;">
+                    <input type="date" id="history-from-date" placeholder="From date" style="flex: 1; padding: 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0;">
+                    <input type="date" id="history-to-date" placeholder="To date" style="flex: 1; padding: 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0;">
                 </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input type="number" id="history-min-elements" placeholder="Min elements" style="flex: 1; padding: 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0;" min="0">
+                    <input type="number" id="history-max-elements" placeholder="Max elements" style="flex: 1; padding: 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0;" min="0">
+                    <input type="number" id="history-min-relationships" placeholder="Min relationships" style="flex: 1; padding: 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0;" min="0">
+                    <input type="number" id="history-max-relationships" placeholder="Max relationships" style="flex: 1; padding: 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0;" min="0">
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <input type="text" id="history-layers" placeholder="Filter by layers (e.g., Business, Application, Technology)" style="width: 100%; padding: 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0;">
+                    <small style="color: #808080; margin-top: 4px; display: block;">Comma-separated layer names</small>
+                </div>
+
                 <button onclick="applyHistoryFilters()" style="padding: 10px 20px; background: #4ec9b0; border: none; border-radius: 4px; color: #1a1a1a; cursor: pointer; margin-right: 10px;">Apply Filters</button>
                 <button onclick="clearHistoryFilters()" style="padding: 10px 20px; background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0; cursor: pointer;">Clear</button>
             </div>
@@ -1485,17 +1499,13 @@
             zoomReset();
         }
 
-        // Exit view mode and return to current diagram
+        // Exit view mode and return to history
         function exitViewMode() {
-            // Load current diagram
-            const img = document.getElementById('diagram');
-            img.src = `exports/latest/diagram.png?t=${Date.now()}`;
-
             // Hide close button
             document.getElementById('view-mode-close').style.display = 'none';
 
-            // Reset zoom
-            zoomReset();
+            // Show history again
+            showHistory();
         }
 
         // Load history from API
@@ -1523,6 +1533,15 @@
 
                 const maxElementsEl = document.getElementById('history-max-elements');
                 if (maxElementsEl && maxElementsEl.value) params.append('max_elements', maxElementsEl.value);
+
+                const minRelationshipsEl = document.getElementById('history-min-relationships');
+                if (minRelationshipsEl && minRelationshipsEl.value) params.append('min_relationships', minRelationshipsEl.value);
+
+                const maxRelationshipsEl = document.getElementById('history-max-relationships');
+                if (maxRelationshipsEl && maxRelationshipsEl.value) params.append('max_relationships', maxRelationshipsEl.value);
+
+                const layersEl = document.getElementById('history-layers');
+                if (layersEl && layersEl.value) params.append('layers', layersEl.value);
 
                 const response = await fetch(`${API_BASE}/history?${params}`);
                 const data = await response.json();
@@ -1708,6 +1727,15 @@
 
             const maxElementsEl = document.getElementById('history-max-elements');
             if (maxElementsEl) maxElementsEl.value = '';
+
+            const minRelationshipsEl = document.getElementById('history-min-relationships');
+            if (minRelationshipsEl) minRelationshipsEl.value = '';
+
+            const maxRelationshipsEl = document.getElementById('history-max-relationships');
+            if (maxRelationshipsEl) maxRelationshipsEl.value = '';
+
+            const layersEl = document.getElementById('history-layers');
+            if (layersEl) layersEl.value = '';
 
             applyHistoryFilters();
         }
