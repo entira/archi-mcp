@@ -377,28 +377,33 @@
 
         #sidebar-toggle {
             position: absolute;
-            top: 80px;
+            top: 10px;
             right: 10px;
-            background: #1e1e1e;
+            background: transparent;
             border: 1px solid #3a3a3a;
             border-radius: 4px;
-            color: #e0e0e0;
+            color: #808080;
             cursor: pointer;
-            padding: 8px 12px;
-            font-size: 16px;
+            padding: 6px 8px;
+            font-size: 14px;
             transition: all 0.2s ease;
             z-index: 1000;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         #sidebar-toggle:hover {
-            background: #2a2a2a;
+            background: rgba(78,201,176,0.1);
             border-color: #4ec9b0;
             color: #4ec9b0;
         }
 
         #sidebar.collapsed #sidebar-toggle {
             right: 5px;
-            top: 15px;
+            top: 10px;
         }
 
         /* Zoom Controls */
@@ -754,10 +759,8 @@
 </head>
 <body>
     <div id="sidebar">
-        <!-- Sidebar Toggle Button -->
-        <button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
-            ◀
-        </button>
+        <!-- Sidebar Toggle Button (icon only) -->
+        <button id="sidebar-toggle" onclick="toggleSidebar()" title="Collapse sidebar">◀</button>
 
         <div class="sidebar-content">
         <h1>🎨 ArchiMate Interactive Designer</h1>
@@ -1344,7 +1347,7 @@
 
             sidebar.classList.toggle('collapsed');
 
-            // Update button icon
+            // Update button icon and tooltip
             if (sidebar.classList.contains('collapsed')) {
                 toggle.textContent = '▶';
                 toggle.title = 'Expand sidebar';
