@@ -424,11 +424,34 @@
         const API_BASE = `${window.location.protocol}//${window.location.host}/api`;
         let autoRefreshInterval;
         let currentModel = null;
+        let userIsInteracting = false;
+        let lastInteractionTime = 0;
+
+        // Track user interaction with controls
+        function markUserInteraction() {
+            userIsInteracting = true;
+            lastInteractionTime = Date.now();
+            // Clear interaction flag after 5 seconds of no activity
+            setTimeout(() => {
+                if (Date.now() - lastInteractionTime >= 5000) {
+                    userIsInteracting = false;
+                }
+            }, 5000);
+        }
 
         // Initialize
         async function init() {
             await checkServerStatus();
             await loadCurrentModel();
+
+            // Add interaction listeners to all input controls
+            const controls = document.querySelectorAll('input, select');
+            controls.forEach(control => {
+                control.addEventListener('focus', markUserInteraction);
+                control.addEventListener('input', markUserInteraction);
+                control.addEventListener('change', markUserInteraction);
+            });
+
             startAutoRefresh();
         }
 
@@ -450,45 +473,50 @@
             try {
                 const response = await fetch(`${API_BASE}/model`);
                 currentModel = await response.json();
-                updateStats(currentModel);
+                // Only update UI controls if user is not actively interacting
+                updateStats(currentModel, !userIsInteracting);
             } catch (error) {
                 console.error('Failed to load model:', error);
             }
         }
 
         // Update statistics display and load current options
-        function updateStats(model) {
+        function updateStats(model, updateControls = true) {
             if (!model) return;
 
+            // Always update statistics (non-interactive)
             document.getElementById('stat-elements').textContent = model.elements?.length || 0;
             document.getElementById('stat-relationships').textContent = model.relationships?.length || 0;
 
-            // Load title from model (keep current value if model.title is null/empty)
-            if (model.title && model.title.trim() !== '') {
-                document.getElementById('title').value = model.title;
-            } else if (model.title === null || model.title === '') {
-                // Model has no title, keep whatever user entered or leave empty
-                // Don't overwrite with empty string
-            }
-
-            // Load current layout options from model
-            if (model.options) {
-                const opts = model.options;
-
-                // Direction and spacing are already in viewer format in the state
-                if (opts.direction) {
-                    document.getElementById('direction').value = opts.direction;
-                }
-                if (opts.spacing) {
-                    document.getElementById('spacing').value = opts.spacing;
+            // Only update controls if user is not actively interacting
+            if (updateControls) {
+                // Load title from model (keep current value if model.title is null/empty)
+                if (model.title && model.title.trim() !== '') {
+                    document.getElementById('title').value = model.title;
+                } else if (model.title === null || model.title === '') {
+                    // Model has no title, keep whatever user entered or leave empty
+                    // Don't overwrite with empty string
                 }
 
-                // Set checkboxes
-                document.getElementById('show_legend').checked = opts.show_legend !== false;
-                document.getElementById('show_title').checked = opts.show_title !== false;
-                document.getElementById('group_by_layer').checked = opts.group_by_layer === true;
-                document.getElementById('show_element_types').checked = opts.show_element_types === true;
-                document.getElementById('show_relationship_labels').checked = opts.show_relationship_labels !== false;
+                // Load current layout options from model
+                if (model.options) {
+                    const opts = model.options;
+
+                    // Direction and spacing are already in viewer format in the state
+                    if (opts.direction) {
+                        document.getElementById('direction').value = opts.direction;
+                    }
+                    if (opts.spacing) {
+                        document.getElementById('spacing').value = opts.spacing;
+                    }
+
+                    // Set checkboxes
+                    document.getElementById('show_legend').checked = opts.show_legend !== false;
+                    document.getElementById('show_title').checked = opts.show_title !== false;
+                    document.getElementById('group_by_layer').checked = opts.group_by_layer === true;
+                    document.getElementById('show_element_types').checked = opts.show_element_types === true;
+                    document.getElementById('show_relationship_labels').checked = opts.show_relationship_labels !== false;
+                }
             }
 
             const now = new Date().toLocaleTimeString();
@@ -528,6 +556,8 @@
 
                 if (result.success) {
                     updateStatus('✓ Diagram regenerated successfully!', 'success');
+                    // Clear interaction flag so next refresh loads new values
+                    userIsInteracting = false;
                     await loadCurrentModel();
                     refreshDiagram();
                 } else {
