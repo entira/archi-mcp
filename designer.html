@@ -57,17 +57,26 @@
         select, input[type="text"] {
             width: 100%;
             padding: 8px 12px;
-            background: #1e1e1e;
+            background: #1e1e1e !important;
             border: 1px solid #3a3a3a;
             border-radius: 4px;
-            color: #e0e0e0;
+            color: #e0e0e0 !important;
             font-size: 13px;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
         }
 
         select option {
-            background: #1e1e1e;
-            color: #e0e0e0;
+            background: #1e1e1e !important;
+            color: #e0e0e0 !important;
             padding: 8px;
+        }
+
+        select option:checked,
+        select option:hover {
+            background: #2d2d2d !important;
+            color: #ffffff !important;
         }
 
         select:hover, input[type="text"]:hover {
