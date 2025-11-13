@@ -348,6 +348,107 @@ current_model_state = {
     "latest_export_dir": None
 }
 
+def regenerate_diagram_from_state():
+    """Regenerate diagram from current_model_state.
+
+    Returns:
+        dict: Result with success status and export directory
+    """
+    global current_model_state
+
+    # Check if we have a model to regenerate
+    if not current_model_state["elements"]:
+        return {
+            "success": False,
+            "error": "No diagram to regenerate. Create a diagram first using Claude Desktop."
+        }
+
+    try:
+        # Create fresh generator instance
+        gen = ArchiMateGenerator()
+
+        # Add elements from state
+        for elem_data in current_model_state["elements"]:
+            elem = ArchiMateElement(
+                id=elem_data["id"],
+                name=elem_data["name"],
+                element_type=elem_data["element_type"],
+                layer=ArchiMateLayer[elem_data["layer"]],
+                aspect=ArchiMateAspect[elem_data["aspect"]],
+                description=elem_data.get("description")
+            )
+            gen.add_element(elem)
+
+        # Add relationships from state
+        for rel_data in current_model_state["relationships"]:
+            rel = ArchiMateRelationship(
+                id=rel_data["id"],
+                from_element=rel_data["from_element"],
+                to_element=rel_data["to_element"],
+                relationship_type=rel_data["relationship_type"],
+                label=rel_data.get("label"),
+                description=rel_data.get("description")
+            )
+            gen.add_relationship(rel)
+
+        # Get options
+        options = current_model_state["options"]
+        title = current_model_state.get("title") or "Architecture Diagram"
+
+        # Generate PlantUML code
+        puml_code = gen.generate_plantuml(
+            title=title,
+            direction=options.get("direction", "top-bottom"),
+            spacing=options.get("spacing", "comfortable")
+        )
+
+        # Create export directory
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        export_dir = os.path.join(os.getcwd(), "exports", timestamp)
+        os.makedirs(export_dir, exist_ok=True)
+
+        # Save PlantUML file
+        puml_file = os.path.join(export_dir, "diagram.puml")
+        with open(puml_file, 'w', encoding='utf-8') as f:
+            f.write(puml_code)
+
+        # Render PNG with PlantUML
+        plantuml_jar = os.path.join(os.getcwd(), "plantuml.jar")
+        if not os.path.exists(plantuml_jar):
+            return {
+                "success": False,
+                "error": "PlantUML JAR not found. Please ensure plantuml.jar exists in project root."
+            }
+
+        png_file = os.path.join(export_dir, "diagram.png")
+        subprocess.run([
+            "java", "-Djava.awt.headless=true", "-jar", plantuml_jar,
+            "-tpng", puml_file
+        ], check=True, capture_output=True)
+
+        # Create/update latest symlink
+        latest_link = os.path.join(os.getcwd(), "exports", "latest")
+        if os.path.exists(latest_link):
+            os.remove(latest_link)
+        os.symlink(timestamp, latest_link)
+
+        # Update state
+        current_model_state["latest_export_dir"] = export_dir
+        current_model_state["last_updated"] = datetime.now().isoformat()
+
+        return {
+            "success": True,
+            "export_dir": export_dir,
+            "timestamp": timestamp
+        }
+
+    except Exception as e:
+        logger.error(f"Regeneration failed: {e}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
 def find_free_port():
     """Find a free port for the HTTP server."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -400,14 +501,24 @@ def start_http_server():
                 # Update current model options
                 current_model_state["options"].update(options)
 
-                # TODO: Trigger actual regeneration
-                # For now, just return success
-                return JSONResponse({
-                    "success": True,
-                    "message": "Regeneration queued",
-                    "options": current_model_state["options"]
-                })
+                # Trigger actual regeneration
+                result = regenerate_diagram_from_state()
+
+                if result["success"]:
+                    return JSONResponse({
+                        "success": True,
+                        "message": "Diagram regenerated successfully",
+                        "export_dir": result["export_dir"],
+                        "timestamp": result["timestamp"]
+                    })
+                else:
+                    return JSONResponse({
+                        "success": False,
+                        "error": result["error"]
+                    }, status_code=400)
+
             except Exception as e:
+                logger.error(f"API regenerate error: {e}")
                 return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
         async def serve_viewer(request):
@@ -2078,7 +2189,53 @@ The jar should be placed in the project root directory or one of these locations
                 success_message += f"\n\n🔗 **View SVG diagram:** {diagram_urls['svg']}"
             elif "png" in diagram_urls:
                 success_message += f"\n\n🔗 **View PNG diagram:** {diagram_urls['png']}"
-        
+
+        # Add interactive viewer URL
+        if http_server_port:
+            viewer_url = f"http://127.0.0.1:{http_server_port}/viewer"
+            success_message += f"\n\n🖼️ **Interactive Viewer:** {viewer_url}\n   (Auto-updates when you regenerate with different options)"
+
+        # Update global state for interactive viewer
+        try:
+            global current_model_state
+            current_model_state["title"] = title
+            current_model_state["elements"] = [
+                {
+                    "id": elem.id,
+                    "name": elem.name,
+                    "element_type": elem.element_type,
+                    "layer": elem.layer.value,
+                    "aspect": elem.aspect.value,
+                    "description": elem.description
+                }
+                for elem in generator_with_translator.elements.values()
+            ]
+            current_model_state["relationships"] = [
+                {
+                    "id": rel.id,
+                    "from_element": rel.from_element,
+                    "to_element": rel.to_element,
+                    "relationship_type": rel.relationship_type,
+                    "label": rel.label,
+                    "description": rel.description
+                }
+                for rel in generator_with_translator.relationships
+            ]
+            current_model_state["options"]["direction"] = layout.get("direction", "top-bottom")
+            current_model_state["options"]["spacing"] = layout.get("spacing", "comfortable")
+            current_model_state["latest_export_dir"] = str(export_dir)
+            current_model_state["last_updated"] = datetime.now().isoformat()
+
+            # Create/update latest symlink for viewer
+            exports_base = Path(os.getcwd()) / "exports"
+            latest_link = exports_base / "latest"
+            if latest_link.exists() or latest_link.is_symlink():
+                latest_link.unlink()
+            latest_link.symlink_to(export_dir.name)
+            log_debug('INFO', f'Updated latest symlink for interactive viewer')
+        except Exception as state_error:
+            log_debug('WARNING', f'Failed to update global state: {state_error}')
+
         return json.dumps({
             "status": "success",
             "exports_dir": str(export_dir),
