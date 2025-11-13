@@ -396,10 +396,27 @@ def regenerate_diagram_from_state():
         options = current_model_state["options"]
         title = current_model_state.get("title") or "Architecture Diagram"
 
+        # Map viewer direction values to generator values
+        direction_map = {
+            "top-bottom": "vertical",
+            "bottom-top": "vertical",
+            "left-right": "horizontal",
+            "right-left": "horizontal"
+        }
+        direction = direction_map.get(options.get("direction", "top-bottom"), "vertical")
+
+        # Map viewer spacing to generator spacing
+        spacing_map = {
+            "compact": "compact",
+            "comfortable": "normal",
+            "spacious": "spacious"
+        }
+        spacing = spacing_map.get(options.get("spacing", "comfortable"), "normal")
+
         # Set layout options
         layout = DiagramLayout(
-            direction=options.get("direction", "top-bottom"),
-            spacing=options.get("spacing", "comfortable"),
+            direction=direction,
+            spacing=spacing,
             show_legend=True,
             show_title=True,
             group_by_layer=False,
