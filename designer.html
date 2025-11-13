@@ -437,6 +437,26 @@
             color: #4ec9b0;
         }
 
+        /* View Mode Close Button */
+        #view-mode-close {
+            background: transparent;
+            border: 1px solid #3a3a3a;
+            border-radius: 4px;
+            color: #808080;
+            cursor: pointer;
+            padding: 6px 8px;
+            font-size: 18px;
+            width: 32px;
+            height: 32px;
+            transition: all 0.2s ease;
+        }
+
+        #view-mode-close:hover {
+            background: rgba(78,201,176,0.1);
+            border-color: #4ec9b0;
+            color: #4ec9b0;
+        }
+
         /* Zoom Controls */
         .zoom-controls {
             position: absolute;
@@ -940,6 +960,9 @@
             <button class="zoom-btn" onclick="zoomOut()" title="Zoom out">-</button>
             <button class="zoom-btn" onclick="zoomReset()" title="Reset zoom" style="font-size: 12px;">⟲</button>
         </div>
+
+        <!-- Close button for viewing historical diagrams -->
+        <button id="view-mode-close" onclick="exitViewMode()" title="Back to current diagram" style="display: none; position: absolute; top: 20px; right: 20px; align-items: center; justify-content: center; z-index: 100;">✕</button>
 
         <!-- Diagram View -->
         <img id="diagram" src="exports/latest/diagram.png" alt="ArchiMate Diagram">
@@ -1455,6 +1478,22 @@
             // Hide history, show diagram
             closeHistory();
 
+            // Show close button for view mode
+            document.getElementById('view-mode-close').style.display = 'flex';
+
+            // Reset zoom
+            zoomReset();
+        }
+
+        // Exit view mode and return to current diagram
+        function exitViewMode() {
+            // Load current diagram
+            const img = document.getElementById('diagram');
+            img.src = `exports/latest/diagram.png?t=${Date.now()}`;
+
+            // Hide close button
+            document.getElementById('view-mode-close').style.display = 'none';
+
             // Reset zoom
             zoomReset();
         }
@@ -1559,7 +1598,9 @@
                 return `
                     <tr style="border-bottom: 1px solid #3a3a3a; ${rowStyle}" data-timestamp="${item.timestamp}">
                         <td style="padding: 12px; color: #e0e0e0;">
-                            ${isLatest ? '⚡ ' : ''}${item.title || 'Untitled Diagram'}
+                            <a href="javascript:void(0)" onclick="viewDiagram('${item.timestamp}')" style="color: #4ec9b0; text-decoration: none; cursor: pointer;">
+                                ${isLatest ? '⚡ ' : ''}${item.title || 'Untitled Diagram'}
+                            </a>
                         </td>
                         <td style="padding: 12px; color: #c0c0c0;">
                             ${formatDate(item.generated_at)}
@@ -1571,7 +1612,6 @@
                             ${item.relationship_count}
                         </td>
                         <td style="padding: 12px; text-align: center;">
-                            <button onclick="viewDiagram('${item.timestamp}')" style="padding: 6px 12px; margin: 0 4px; background: #4ec9b0; border: none; border-radius: 4px; color: #1a1a1a; cursor: pointer;">View</button>
                             ${isLatest ?
                                 '<button disabled style="padding: 6px 12px; margin: 0 4px; background: #444; border: none; border-radius: 4px; color: #888; cursor: not-allowed;">Current</button>' :
                                 `<button onclick="forkDiagram('${item.timestamp}')" style="padding: 6px 12px; margin: 0 4px; background: #2a2a2a; border: 1px solid #4ec9b0; border-radius: 4px; color: #4ec9b0; cursor: pointer;">Fork</button>`
