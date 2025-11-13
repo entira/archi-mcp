@@ -297,7 +297,7 @@
 
         <div class="control-group">
             <label for="title">Diagram Title</label>
-            <input type="text" id="title" placeholder="">
+            <input type="text" id="title">
         </div>
 
         <div class="control-group">
@@ -454,8 +454,12 @@
             document.getElementById('stat-elements').textContent = model.elements?.length || 0;
             document.getElementById('stat-relationships').textContent = model.relationships?.length || 0;
 
-            if (model.title) {
+            // Load title from model (keep current value if model.title is null/empty)
+            if (model.title && model.title.trim() !== '') {
                 document.getElementById('title').value = model.title;
+            } else if (model.title === null || model.title === '') {
+                // Model has no title, keep whatever user entered or leave empty
+                // Don't overwrite with empty string
             }
 
             // Load current layout options from model
