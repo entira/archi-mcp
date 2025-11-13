@@ -369,10 +369,23 @@
         #sidebar.collapsed {
             width: 50px;
             padding: 10px;
+            overflow: hidden;
         }
 
         #sidebar.collapsed .sidebar-content {
-            display: none;
+            display: none !important;
+            visibility: hidden;
+            opacity: 0;
+        }
+
+        #sidebar.collapsed h1,
+        #sidebar.collapsed .subtitle,
+        #sidebar.collapsed .stats,
+        #sidebar.collapsed .controls,
+        #sidebar.collapsed .history-btn,
+        #sidebar.collapsed .spacer,
+        #sidebar.collapsed .footer {
+            display: none !important;
         }
 
         #sidebar-toggle {
@@ -1466,20 +1479,9 @@
 
                 historyOffset = data.offset + data.items.length;
 
-                // Update history count
-                document.getElementById('history-count').textContent = `(${data.total})`;
-
                 // Update pagination info
                 document.getElementById('pagination-info').textContent =
                     `Showing ${Math.min(1, data.total)}-${Math.min(historyOffset, data.total)} of ${data.total}`;
-
-                // Show/hide load more button
-                const loadMoreBtn = document.getElementById('load-more-btn');
-                if (data.has_more) {
-                    loadMoreBtn.style.display = 'block';
-                } else {
-                    loadMoreBtn.style.display = 'none';
-                }
 
                 // Render items
                 renderHistoryItems();
@@ -1664,11 +1666,15 @@
                     // Close history view
                     closeHistory();
 
-                    // Reload current model
+                    // Force refresh - bypass user interaction check
+                    userIsInteracting = false;
+
+                    // Reload current model (will update controls)
                     await loadCurrentModel();
 
                     // Refresh diagram
-                    refreshDiagram();
+                    const img = document.getElementById('diagram');
+                    img.src = `exports/latest/diagram.png?t=${Date.now()}`;
 
                     updateStatus('✓ Diagram forked successfully', 'success');
                     alert('Diagram forked successfully! You can now edit it.');
@@ -1788,9 +1794,9 @@
 
         // Update history status
         function updateHistoryStatus(message) {
-            const container = document.getElementById('history-items');
-            if (container && historyData.length === 0) {
-                container.innerHTML = `<div class="history-loading">${message}</div>`;
+            const container = document.getElementById('history-table-body');
+            if (container) {
+                container.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: #808080;">${message}</td></tr>`;
             }
         }
 
