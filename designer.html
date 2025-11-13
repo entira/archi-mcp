@@ -377,8 +377,8 @@
 
         #sidebar-toggle {
             position: absolute;
-            top: 15px;
-            right: 15px;
+            top: 80px;
+            right: 10px;
             background: #1e1e1e;
             border: 1px solid #3a3a3a;
             border-radius: 4px;
@@ -398,7 +398,7 @@
 
         #sidebar.collapsed #sidebar-toggle {
             right: 5px;
-            top: 10px;
+            top: 15px;
         }
 
         /* Zoom Controls */
@@ -762,19 +762,6 @@
         <div class="sidebar-content">
         <h1>🎨 ArchiMate Interactive Designer</h1>
         <div class="subtitle">Real-time diagram visualization & control</div>
-
-        <!-- Tab Navigation -->
-        <div class="tab-navigation">
-            <button class="tab-btn active" data-tab="editor" onclick="switchTab('editor')">
-                ✏️ Editor
-            </button>
-            <button class="tab-btn" data-tab="history" onclick="switchTab('history')">
-                📜 History <span id="history-count">(0)</span>
-            </button>
-        </div>
-
-        <!-- Editor Tab Content -->
-        <div class="tab-content active" id="editor-tab">
         <div class="stats" id="model-stats">
             <div class="stat-item">
                 <span class="stat-label">Elements:</span>
@@ -881,64 +868,10 @@
         </div>
         <!-- End Editor Tab -->
 
-        <!-- History Tab Content -->
-        <div class="tab-content" id="history-tab" style="display:none;">
-            <!-- History Filters -->
-            <div class="history-filters">
-                <input type="text" id="history-search" placeholder="🔍 Search by title...">
-
-                <div class="filter-row">
-                    <input type="date" id="history-from-date" placeholder="From date">
-                    <input type="date" id="history-to-date" placeholder="To date">
-                </div>
-
-                <div class="filter-row">
-                    <input type="number" id="history-min-elements" placeholder="Min elements" min="0">
-                    <input type="number" id="history-max-elements" placeholder="Max elements" min="0">
-                </div>
-
-                <button onclick="applyHistoryFilters()" class="filter-btn">Apply Filters</button>
-                <button onclick="clearHistoryFilters()" class="filter-btn-secondary">Clear</button>
-            </div>
-
-            <!-- History Table -->
-            <div class="history-table">
-                <!-- Table Header -->
-                <div class="history-table-header">
-                    <div class="col-select"><input type="checkbox" id="select-all-history" onclick="toggleSelectAll()"></div>
-                    <div class="col-thumbnail">Preview</div>
-                    <div class="col-title" onclick="sortHistoryBy('title')">Title ↕</div>
-                    <div class="col-date" onclick="sortHistoryBy('date')">Date ↕</div>
-                    <div class="col-count" onclick="sortHistoryBy('elements')">Elem ↕</div>
-                    <div class="col-count" onclick="sortHistoryBy('relations')">Rel ↕</div>
-                    <div class="col-actions">Actions</div>
-                </div>
-
-                <!-- Table Body (scrollable) -->
-                <div class="history-table-body" id="history-items">
-                    <div class="history-loading">Loading history...</div>
-                </div>
-            </div>
-
-            <!-- History Footer (Pagination & Bulk Actions) -->
-            <div class="history-footer">
-                <div class="bulk-actions">
-                    <button onclick="bulkDeleteHistory()" id="bulk-delete-btn" disabled>
-                        Delete Selected (0)
-                    </button>
-                    <button onclick="cleanupOldDiagrams()" class="cleanup-btn">
-                        🗑️ Cleanup Old (>30 days)
-                    </button>
-                </div>
-                <div class="pagination-info" id="pagination-info">
-                    Showing 0-0 of 0
-                </div>
-                <button onclick="loadMoreHistory()" id="load-more-btn" style="display:none;">
-                    Load More
-                </button>
-            </div>
-        </div>
-        <!-- End History Tab -->
+        <!-- History Button -->
+        <button onclick="showHistory()" class="history-btn" style="margin-top: 20px; width: 100%; padding: 12px; background: #2a2a2a; border: 1px solid #4ec9b0; border-radius: 6px; color: #4ec9b0; cursor: pointer; font-size: 14px;">
+            📜 View Diagram History
+        </button>
 
         <div class="spacer"></div>
 
@@ -966,14 +899,65 @@
         <div id="status" class="loading">Connecting to server...</div>
 
         <!-- Zoom Controls -->
-        <div class="zoom-controls">
+        <div class="zoom-controls" id="zoom-controls">
             <button class="zoom-btn" onclick="zoomIn()" title="Zoom in">+</button>
             <div class="zoom-level" id="zoom-level">100%</div>
             <button class="zoom-btn" onclick="zoomOut()" title="Zoom out">-</button>
             <button class="zoom-btn" onclick="zoomReset()" title="Reset zoom" style="font-size: 12px;">⟲</button>
         </div>
 
+        <!-- Diagram View -->
         <img id="diagram" src="exports/latest/diagram.png" alt="ArchiMate Diagram">
+
+        <!-- History View (hidden by default) -->
+        <div id="history-view" style="display: none; width: 100%; height: 100%; background: #1a1a1a; overflow: auto; padding: 20px; box-sizing: border-box;">
+            <!-- Close button -->
+            <button onclick="closeHistory()" style="position: absolute; top: 20px; right: 20px; background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0; padding: 8px 16px; cursor: pointer;">
+                ✕ Close
+            </button>
+
+            <h2 style="color: #e0e0e0; margin: 0 0 20px 0;">📜 Diagram History</h2>
+
+            <!-- Filters -->
+            <div style="background: #252525; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+                <input type="text" id="history-search" placeholder="🔍 Search by title..." style="width: 100%; padding: 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0; margin-bottom: 10px;">
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input type="date" id="history-from-date" style="flex: 1; padding: 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0;">
+                    <input type="date" id="history-to-date" style="flex: 1; padding: 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0;">
+                </div>
+                <button onclick="applyHistoryFilters()" style="padding: 10px 20px; background: #4ec9b0; border: none; border-radius: 4px; color: #1a1a1a; cursor: pointer; margin-right: 10px;">Apply Filters</button>
+                <button onclick="clearHistoryFilters()" style="padding: 10px 20px; background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0; cursor: pointer;">Clear</button>
+            </div>
+
+            <!-- Simple Table without thumbnails -->
+            <table id="history-table" style="width: 100%; border-collapse: collapse; background: #252525; border-radius: 6px;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #3a3a3a;">
+                        <th style="padding: 12px; text-align: left; color: #808080; cursor: pointer;" onclick="sortHistoryBy('title')">Title ↕</th>
+                        <th style="padding: 12px; text-align: left; color: #808080; cursor: pointer;" onclick="sortHistoryBy('date')">Date ↕</th>
+                        <th style="padding: 12px; text-align: center; color: #808080; cursor: pointer;" onclick="sortHistoryBy('elements')">Elements ↕</th>
+                        <th style="padding: 12px; text-align: center; color: #808080; cursor: pointer;" onclick="sortHistoryBy('relations')">Relations ↕</th>
+                        <th style="padding: 12px; text-align: center; color: #808080;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="history-table-body">
+                    <tr><td colspan="5" style="padding: 20px; text-align: center; color: #808080;">Loading...</td></tr>
+                </tbody>
+            </table>
+
+            <!-- Bulk actions footer -->
+            <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <button onclick="bulkDeleteHistory()" id="bulk-delete-btn" disabled style="padding: 10px 20px; background: #d44; border: none; border-radius: 4px; color: white; cursor: pointer; margin-right: 10px;">
+                        Delete Selected (0)
+                    </button>
+                    <button onclick="cleanupOldDiagrams()" style="padding: 10px 20px; background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0; cursor: pointer;">
+                        🗑️ Cleanup Old (>30 days)
+                    </button>
+                </div>
+                <span id="pagination-info" style="color: #808080;">Showing 0-0 of 0</span>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1414,26 +1398,31 @@
             }, { passive: false });
         }
 
-        // Tab switching
-        function switchTab(tabName) {
-            // Update tab buttons
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.tab === tabName);
-            });
+        // Show/hide history view
+        function showHistory() {
+            document.getElementById('diagram').style.display = 'none';
+            document.getElementById('zoom-controls').style.display = 'none';
+            document.getElementById('history-view').style.display = 'block';
+            loadHistory();
+        }
 
-            // Show/hide tab content (CSS handles display via .active class)
-            document.querySelectorAll('.tab-content').forEach(content => {
-                if (content.id === `${tabName}-tab`) {
-                    content.classList.add('active');
-                } else {
-                    content.classList.remove('active');
-                }
-            });
+        function closeHistory() {
+            document.getElementById('history-view').style.display = 'none';
+            document.getElementById('diagram').style.display = 'block';
+            document.getElementById('zoom-controls').style.display = 'flex';
+        }
 
-            // Load history when switching to history tab
-            if (tabName === 'history') {
-                loadHistory();
-            }
+        // View diagram from history
+        function viewDiagram(timestamp) {
+            // Show diagram in canvas with zoom enabled
+            const img = document.getElementById('diagram');
+            img.src = `exports/${timestamp}/diagram.png?t=${Date.now()}`;
+
+            // Hide history, show diagram
+            closeHistory();
+
+            // Reset zoom
+            zoomReset();
         }
 
         // Load history from API
@@ -1500,10 +1489,10 @@
 
         // Render history items
         function renderHistoryItems() {
-            const container = document.getElementById('history-items');
+            const container = document.getElementById('history-table-body');
 
             if (historyData.length === 0) {
-                container.innerHTML = '<div class="history-empty">No diagrams found</div>';
+                container.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center; color: #808080;">No diagrams found</td></tr>';
                 return;
             }
 
@@ -1539,45 +1528,34 @@
                 }
             });
 
-            // Render items
+            // Render table rows - simple design without thumbnails
             container.innerHTML = sorted.map(item => {
-                const isSelected = selectedHistoryItems.has(item.timestamp);
                 const isLatest = item.is_latest;
+                const rowStyle = isLatest ? 'background: rgba(78,201,176,0.15);' : '';
 
                 return `
-                    <div class="history-item ${isLatest ? 'is-latest' : ''}" data-timestamp="${item.timestamp}">
-                        <div class="col-select">
-                            <input type="checkbox"
-                                   ${isSelected ? 'checked' : ''}
-                                   onchange="toggleHistoryItem('${item.timestamp}')">
-                        </div>
-                        <div class="history-item-thumbnail">
-                            <img src="exports/${item.timestamp}/diagram.png"
-                                 alt="${item.title || 'Diagram'}"
-                                 loading="lazy">
-                            ${isLatest ? '<span class="badge-latest">⚡ Current</span>' : ''}
-                        </div>
-                        <div class="history-item-title" title="${item.title || 'Untitled Diagram'}">
-                            ${item.title || 'Untitled Diagram'}
-                        </div>
-                        <div class="history-item-date">
+                    <tr style="border-bottom: 1px solid #3a3a3a; ${rowStyle}" data-timestamp="${item.timestamp}">
+                        <td style="padding: 12px; color: #e0e0e0;">
+                            ${isLatest ? '⚡ ' : ''}${item.title || 'Untitled Diagram'}
+                        </td>
+                        <td style="padding: 12px; color: #c0c0c0;">
                             ${formatDate(item.generated_at)}
-                        </div>
-                        <div class="history-item-count">${item.element_count}</div>
-                        <div class="history-item-count">${item.relationship_count}</div>
-                        <div class="history-item-actions">
+                        </td>
+                        <td style="padding: 12px; text-align: center; color: #c0c0c0;">
+                            ${item.element_count}
+                        </td>
+                        <td style="padding: 12px; text-align: center; color: #c0c0c0;">
+                            ${item.relationship_count}
+                        </td>
+                        <td style="padding: 12px; text-align: center;">
+                            <button onclick="viewDiagram('${item.timestamp}')" style="padding: 6px 12px; margin: 0 4px; background: #4ec9b0; border: none; border-radius: 4px; color: #1a1a1a; cursor: pointer;">View</button>
                             ${isLatest ?
-                                '<button disabled title="Already loaded">Current</button>' :
-                                `<button class="btn-fork" onclick="forkDiagram('${item.timestamp}')">Fork & Edit</button>`
+                                '<button disabled style="padding: 6px 12px; margin: 0 4px; background: #444; border: none; border-radius: 4px; color: #888; cursor: not-allowed;">Current</button>' :
+                                `<button onclick="forkDiagram('${item.timestamp}')" style="padding: 6px 12px; margin: 0 4px; background: #2a2a2a; border: 1px solid #4ec9b0; border-radius: 4px; color: #4ec9b0; cursor: pointer;">Fork</button>`
                             }
-                            <button onclick="viewDiagram('${item.timestamp}')">View</button>
-                            <button class="btn-delete"
-                                    onclick="deleteDiagram('${item.timestamp}')"
-                                    ${isLatest ? 'disabled title="Cannot delete current"' : ''}>
-                                Delete
-                            </button>
-                        </div>
-                    </div>
+                            <button onclick="deleteDiagram('${item.timestamp}')" ${isLatest ? 'disabled' : ''} style="padding: 6px 12px; margin: 0 4px; background: ${isLatest ? '#444' : '#d44'}; border: none; border-radius: 4px; color: ${isLatest ? '#888' : 'white'}; cursor: ${isLatest ? 'not-allowed' : 'pointer'};">Delete</button>
+                        </td>
+                    </tr>
                 `;
             }).join('');
         }
@@ -1668,13 +1646,11 @@
 
         // Fork diagram (Load & Edit)
         async function forkDiagram(timestamp) {
-            if (!confirm('Fork this diagram? This will load it into the editor (current changes may be lost).')) {
+            if (!confirm('Fork this diagram? This will create a new version based on the historical diagram.')) {
                 return;
             }
 
             try {
-                updateHistoryStatus('Forking diagram...');
-
                 const response = await fetch(`${API_BASE}/history/${timestamp}/fork`, {
                     method: 'POST'
                 });
@@ -1682,8 +1658,8 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    // Switch to editor tab
-                    switchTab('editor');
+                    // Close history view
+                    closeHistory();
 
                     // Reload current model
                     await loadCurrentModel();
@@ -1692,6 +1668,7 @@
                     refreshDiagram();
 
                     updateStatus('✓ Diagram forked successfully', 'success');
+                    alert('Diagram forked successfully! You can now edit it.');
                 } else {
                     alert(`Failed to fork diagram: ${result.error || result.message}`);
                 }
@@ -1702,10 +1679,7 @@
             }
         }
 
-        // View diagram (open in new window)
-        function viewDiagram(timestamp) {
-            window.open(`exports/${timestamp}/diagram.png`, '_blank');
-        }
+        // viewDiagram is already defined above in showHistory/closeHistory section
 
         // Delete diagram
         async function deleteDiagram(timestamp) {
