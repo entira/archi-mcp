@@ -289,7 +289,8 @@
     <div id="refresh-indicator">↻ Refreshing...</div>
 
     <script>
-        const API_BASE = 'http://localhost:8080/api';
+        // Auto-detect API base from current location
+        const API_BASE = `${window.location.protocol}//${window.location.host}/api`;
         let autoRefreshInterval;
         let currentModel = null;
 
@@ -352,9 +353,16 @@
             try {
                 const response = await fetch(`${API_BASE}/regenerate`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify(options)
                 });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
 
                 const result = await response.json();
 
@@ -366,6 +374,7 @@
                     updateStatus(`✗ Error: ${result.error}`, 'error');
                 }
             } catch (error) {
+                console.error('Regenerate error:', error);
                 updateStatus(`✗ Failed to regenerate: ${error.message}`, 'error');
             }
         }

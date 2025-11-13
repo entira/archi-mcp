@@ -1,0 +1,23 @@
+[project]
+name = "archimate-diagrams-skill"
+version = "1.0.0"
+description = "Claude Agent Skill for ArchiMate diagram generation"
+authors = [{name = "Mgr. Patrik Skovajsa"}]
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+
+[tool.uv]
+dev-dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
