@@ -125,14 +125,18 @@ ENV_DEFAULTS = {
     # Layout Settings (these are the only configurable parameters)
     "ARCHI_MCP_DEFAULT_DIRECTION": "vertical",
     "ARCHI_MCP_DEFAULT_SHOW_LEGEND": "false",
-    "ARCHI_MCP_DEFAULT_SHOW_TITLE": "false", 
+    "ARCHI_MCP_DEFAULT_SHOW_TITLE": "false",
     "ARCHI_MCP_DEFAULT_GROUP_BY_LAYER": "true",
     "ARCHI_MCP_DEFAULT_SPACING": "compact",
-    
+
     # Display Settings
     "ARCHI_MCP_DEFAULT_SHOW_ELEMENT_TYPES": "false",
     "ARCHI_MCP_DEFAULT_SHOW_RELATIONSHIP_LABELS": "true",
-    
+
+    # Interactive Designer Settings
+    "ARCHI_MCP_DESIGNER_ENABLED": "false",  # Opt-in: must be explicitly enabled
+    "ARCHI_MCP_DESIGNER_PORT": "8080",
+
     # Logging Settings
     "ARCHI_MCP_LOG_LEVEL": "INFO"
 }
@@ -579,20 +583,20 @@ def start_http_server(port: int = 8080):
                 logger.error(f"API regenerate error: {e}")
                 return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
-        async def serve_viewer(request):
-            """Serve the interactive viewer HTML"""
-            viewer_path = os.path.join(os.getcwd(), "viewer.html")
-            if os.path.exists(viewer_path):
-                return FileResponse(viewer_path)
-            return JSONResponse({"error": "Viewer not found"}, status_code=404)
+        async def serve_designer(request):
+            """Serve the interactive designer HTML"""
+            designer_path = os.path.join(os.getcwd(), "designer.html")
+            if os.path.exists(designer_path):
+                return FileResponse(designer_path)
+            return JSONResponse({"error": "Designer not found"}, status_code=404)
 
         # Create Starlette app
         app = Starlette(
             routes=[
-                # Viewer
-                Route("/", serve_viewer),
-                Route("/viewer", serve_viewer),
-                Route("/viewer.html", serve_viewer),
+                # Designer
+                Route("/", serve_designer),
+                Route("/designer", serve_designer),
+                Route("/designer.html", serve_designer),
                 # REST API
                 Route("/api/status", api_status),
                 Route("/api/model", api_get_model),
@@ -619,7 +623,7 @@ def start_http_server(port: int = 8080):
         http_server_running = True
 
         logger.info(f"HTTP server started on http://127.0.0.1:{http_server_port}")
-        logger.info(f"Interactive viewer: http://127.0.0.1:{http_server_port}/viewer")
+        logger.info(f"Interactive designer: http://127.0.0.1:{http_server_port}/designer")
         return http_server_port
 
     except ImportError as e:
@@ -2248,10 +2252,10 @@ The jar should be placed in the project root directory or one of these locations
             elif "png" in diagram_urls:
                 success_message += f"\n\n🔗 **View PNG diagram:** {diagram_urls['png']}"
 
-        # Add interactive viewer URL
+        # Add interactive designer URL
         if http_server_port:
-            viewer_url = f"http://127.0.0.1:{http_server_port}/viewer"
-            success_message += f"\n\n🖼️ **Interactive Viewer:** {viewer_url}\n   (Auto-updates when you regenerate with different options)"
+            designer_url = f"http://127.0.0.1:{http_server_port}/designer"
+            success_message += f"\n\n🎨 **Interactive Designer:** {designer_url}\n   (Auto-updates when you regenerate with different options)"
 
         # Update global state for interactive viewer
         try:
@@ -2401,14 +2405,20 @@ def main():
     logger.info("Starting ArchiMate MCP Server with FastMCP")
     logger.info(f"Available tools: create_archimate_diagram, test_element_normalization")
 
-    # Start HTTP server immediately on fixed port (8080)
-    try:
-        port = start_http_server(port=8080)
-        logger.info(f"✓ HTTP server started on http://127.0.0.1:{port}")
-        logger.info(f"✓ Interactive viewer: http://127.0.0.1:{port}/viewer.html")
-    except Exception as e:
-        logger.warning(f"Failed to start HTTP server: {e}")
-        logger.warning("Viewer will not be available, but diagram generation will still work")
+    # Start HTTP server if designer is enabled
+    designer_enabled = get_env_setting('ARCHI_MCP_DESIGNER_ENABLED').lower() in ['true', '1', 'yes']
+    designer_port = int(get_env_setting('ARCHI_MCP_DESIGNER_PORT') or '8080')
+
+    if designer_enabled:
+        try:
+            port = start_http_server(port=designer_port)
+            if port:
+                logger.info(f"✓ Interactive designer enabled: http://127.0.0.1:{port}/designer.html")
+        except Exception as e:
+            logger.warning(f"Failed to start designer server: {e}")
+            logger.warning("Designer will not be available, but diagram generation will still work")
+    else:
+        logger.info("ℹ Interactive designer disabled (set ARCHI_MCP_DESIGNER_ENABLED=true to enable)")
 
     try:
         mcp.run()

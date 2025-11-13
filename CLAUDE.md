@@ -195,6 +195,82 @@ plantuml.jar               # PlantUML JAR file (download separately)
 }
 ```
 
+## Interactive Designer Configuration
+
+The ArchiMate MCP Server includes an optional **Interactive Designer** - a web-based UI for real-time diagram visualization and editing. By default, the designer is **disabled** (opt-in) to avoid unnecessary resource usage.
+
+### Configuration Options
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `ARCHI_MCP_DESIGNER_ENABLED` | boolean | `false` | Enable/disable interactive designer |
+| `ARCHI_MCP_DESIGNER_PORT` | integer | `8080` | HTTP server port (falls back to 8081-8089 if busy) |
+
+### Enable Interactive Designer
+
+**Minimal Configuration (Enable Designer):**
+```json
+{
+  "mcpServers": {
+    "archi-mcp": {
+      "command": "uv",
+      "args": ["run", "--directory", "/Users/patrik/Projects/archi-mcp", "python", "-m", "archi_mcp.server"],
+      "cwd": "/Users/patrik/Projects/archi-mcp",
+      "env": {
+        "ARCHI_MCP_DESIGNER_ENABLED": "true",
+        "ARCHI_MCP_DESIGNER_PORT": "8080"
+      }
+    }
+  }
+}
+```
+
+**Full Configuration (Designer + Defaults):**
+```json
+{
+  "mcpServers": {
+    "archi-mcp": {
+      "command": "uv",
+      "args": ["run", "--directory", "/Users/patrik/Projects/archi-mcp", "python", "-m", "archi_mcp.server"],
+      "cwd": "/Users/patrik/Projects/archi-mcp",
+      "env": {
+        "ARCHI_MCP_LOG_LEVEL": "INFO",
+        "ARCHI_MCP_DESIGNER_ENABLED": "true",
+        "ARCHI_MCP_DESIGNER_PORT": "8080",
+        "ARCHI_MCP_DEFAULT_DIRECTION": "top-bottom",
+        "ARCHI_MCP_DEFAULT_SPACING": "comfortable",
+        "ARCHI_MCP_DEFAULT_SHOW_TITLE": "true",
+        "ARCHI_MCP_DEFAULT_SHOW_LEGEND": "false",
+        "ARCHI_MCP_DEFAULT_GROUP_BY_LAYER": "false"
+      }
+    }
+  }
+}
+```
+
+### Using the Interactive Designer
+
+When enabled, the designer is accessible at:
+- **URL:** `http://127.0.0.1:8080/designer.html` (or configured port)
+- **Auto-start:** Server starts automatically when MCP server launches
+- **Features:** Real-time preview, layout controls, export downloads (PNG/SVG/XML/MD)
+
+**Designer Features:**
+- 🎨 Real-time diagram visualization with auto-refresh (2s)
+- 🎛️ Interactive layout controls (direction, spacing, grouping)
+- 💾 One-click export (PNG, SVG, PlantUML, XML, Markdown)
+- 🔄 Auto-regeneration of missing exports
+- 📊 Diagram statistics (elements, relationships, layers)
+
+**Workflow:**
+1. Start Claude Desktop (designer starts on port 8080)
+2. Open `http://127.0.0.1:8080/designer.html` in browser
+3. Generate diagrams via Claude Code conversation
+4. Designer auto-updates with new diagrams
+5. Adjust layout options in designer → regenerates automatically
+
+**Note:** Designer is disabled by default to reduce resource usage. Enable only when needed for interactive visualization.
+
 ## Architecture Examples
 > 📖 **For complete architecture examples and demonstrations, see [README.md](README.md#complete-architecture-demonstration)**
 
