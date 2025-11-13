@@ -417,7 +417,7 @@ def regenerate_diagram_from_state():
         spacing_map = {
             "compact": "compact",
             "comfortable": "normal",
-            "spacious": "spacious"
+            "spacious": "wide"
         }
         spacing = spacing_map.get(options.get("spacing", "comfortable"), "normal")
 
@@ -530,9 +530,13 @@ def start_http_server():
             global current_model_state
             try:
                 body = await request.json()
-                options = body
 
-                # Update current model options
+                # Extract title separately
+                if "title" in body:
+                    current_model_state["title"] = body["title"]
+
+                # Update layout options (everything except title)
+                options = {k: v for k, v in body.items() if k != "title"}
                 current_model_state["options"].update(options)
 
                 # Trigger actual regeneration

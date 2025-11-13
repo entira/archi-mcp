@@ -146,37 +146,6 @@
             font-size: 13px;
         }
 
-        /* Element Palette */
-        #palette {
-            background: #2d2d2d;
-            border-radius: 4px;
-            padding: 10px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .element-item {
-            padding: 8px 12px;
-            background: #1e1e1e;
-            border: 1px solid #3a3a3a;
-            border-radius: 4px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .element-item:hover {
-            background: #2a2a2a;
-            border-color: #007acc;
-        }
-
-        .element-icon {
-            font-size: 16px;
-        }
-
         /* Auto-refresh indicator */
         #refresh-indicator {
             position: fixed;
@@ -303,26 +272,12 @@
         <button class="secondary" onclick="exportDiagram()">💾 Export PNG</button>
         <button class="secondary" onclick="openPlantUML()">📝 View PlantUML Source</button>
 
-        <div class="control-group" style="margin-top: 30px;">
-            <label>Quick Elements</label>
-            <div id="palette">
-                <div class="element-item" onclick="quickAdd('Business_Actor')">
-                    <span class="element-icon">👤</span>
-                    <span>Business Actor</span>
-                </div>
-                <div class="element-item" onclick="quickAdd('Application_Component')">
-                    <span class="element-icon">📦</span>
-                    <span>Application Component</span>
-                </div>
-                <div class="element-item" onclick="quickAdd('Data_Object')">
-                    <span class="element-icon">💾</span>
-                    <span>Data Object</span>
-                </div>
-                <div class="element-item" onclick="quickAdd('Node')">
-                    <span class="element-icon">🖥️</span>
-                    <span>Technology Node</span>
-                </div>
-            </div>
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #3a3a3a; font-size: 11px; color: #707070; text-align: center;">
+            <a href="https://github.com/entira/archi-mcp" target="_blank" style="color: #007acc; text-decoration: none;">
+                ArchiMate MCP Server
+            </a>
+            <br>
+            <span style="font-size: 10px;">by Mgr. Patrik Skovajsa</span>
         </div>
     </div>
 
@@ -429,16 +384,6 @@
                 console.error('Regenerate error:', error);
                 updateStatus(`✗ Failed to regenerate: ${error.message}`, 'error');
             }
-        }
-
-        // Quick add element (placeholder - will integrate with Claude)
-        async function quickAdd(elementType) {
-            updateStatus(`Adding ${elementType}...`, 'loading');
-
-            // For MVP, just show message to use Claude
-            updateStatus(`💬 Use Claude Desktop to add elements: "Add a ${elementType} called..."`, 'success');
-
-            // TODO: Implement direct element addition via API
         }
 
         // Export diagram
