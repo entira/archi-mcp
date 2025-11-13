@@ -24,6 +24,8 @@
             width: 380px;
             background: #252525;
             padding: 20px;
+            transition: width 0.3s ease, padding 0.3s ease;
+            position: relative;
             overflow-y: auto;
             border-right: 1px solid #3a3a3a;
             display: flex;
@@ -363,6 +365,103 @@
             margin-bottom: 16px;
         }
 
+        /* Sidebar Collapse */
+        #sidebar.collapsed {
+            width: 50px;
+            padding: 10px;
+        }
+
+        #sidebar.collapsed .sidebar-content {
+            display: none;
+        }
+
+        #sidebar-toggle {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #1e1e1e;
+            border: 1px solid #3a3a3a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            cursor: pointer;
+            padding: 8px 12px;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+
+        #sidebar-toggle:hover {
+            background: #2a2a2a;
+            border-color: #4ec9b0;
+            color: #4ec9b0;
+        }
+
+        #sidebar.collapsed #sidebar-toggle {
+            right: 5px;
+            top: 10px;
+        }
+
+        /* Zoom Controls */
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: rgba(30, 30, 30, 0.9);
+            border: 1px solid #3a3a3a;
+            border-radius: 6px;
+            padding: 8px;
+            z-index: 100;
+        }
+
+        .zoom-btn {
+            background: #1e1e1e;
+            border: 1px solid #3a3a3a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            cursor: pointer;
+            padding: 8px 12px;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .zoom-btn:hover {
+            background: #2a2a2a;
+            border-color: #4ec9b0;
+            color: #4ec9b0;
+        }
+
+        .zoom-level {
+            text-align: center;
+            color: #808080;
+            font-size: 11px;
+            padding: 4px 0;
+            user-select: none;
+        }
+
+        /* Diagram zoom state */
+        #diagram {
+            transition: transform 0.2s ease;
+            cursor: grab;
+        }
+
+        #diagram:active {
+            cursor: grabbing;
+        }
+
+        #diagram-container {
+            overflow: auto;
+            position: relative;
+        }
+
         /* History Filters */
         .history-filters {
             display: flex;
@@ -655,6 +754,12 @@
 </head>
 <body>
     <div id="sidebar">
+        <!-- Sidebar Toggle Button -->
+        <button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
+            ◀
+        </button>
+
+        <div class="sidebar-content">
         <h1>🎨 ArchiMate Interactive Designer</h1>
         <div class="subtitle">Real-time diagram visualization & control</div>
 
@@ -853,11 +958,20 @@
                 </a>
             </div>
         </div>
+        </div> <!-- end sidebar-content -->
     </div>
 
     <div id="diagram-container">
         <!-- Status Bar (floating over canvas) -->
         <div id="status" class="loading">Connecting to server...</div>
+
+        <!-- Zoom Controls -->
+        <div class="zoom-controls">
+            <button class="zoom-btn" onclick="zoomIn()" title="Zoom in">+</button>
+            <div class="zoom-level" id="zoom-level">100%</div>
+            <button class="zoom-btn" onclick="zoomOut()" title="Zoom out">-</button>
+            <button class="zoom-btn" onclick="zoomReset()" title="Reset zoom" style="font-size: 12px;">⟲</button>
+        </div>
 
         <img id="diagram" src="exports/latest/diagram.png" alt="ArchiMate Diagram">
     </div>
@@ -886,6 +1000,9 @@
         async function init() {
             await checkServerStatus();
             await loadCurrentModel();
+
+            // Initialize zoom controls
+            initZoomControls();
 
             // Add interaction listeners to all input controls
             const controls = document.querySelectorAll('input, select');
@@ -1229,6 +1346,73 @@
         let historySortOrder = 'desc';
         let historyOffset = 0;
         let historyLimit = 50;
+
+        // Zoom state
+        let currentZoom = 1.0;
+        const minZoom = 0.25;
+        const maxZoom = 5.0;
+        const zoomStep = 0.25;
+
+        // Sidebar toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.getElementById('sidebar-toggle');
+
+            sidebar.classList.toggle('collapsed');
+
+            // Update button icon
+            if (sidebar.classList.contains('collapsed')) {
+                toggle.textContent = '▶';
+                toggle.title = 'Expand sidebar';
+            } else {
+                toggle.textContent = '◀';
+                toggle.title = 'Collapse sidebar';
+            }
+        }
+
+        // Zoom functions
+        function updateZoom() {
+            const diagram = document.getElementById('diagram');
+            const zoomLevel = document.getElementById('zoom-level');
+
+            diagram.style.transform = `scale(${currentZoom})`;
+            diagram.style.transformOrigin = 'center center';
+            zoomLevel.textContent = `${Math.round(currentZoom * 100)}%`;
+        }
+
+        function zoomIn() {
+            if (currentZoom < maxZoom) {
+                currentZoom = Math.min(currentZoom + zoomStep, maxZoom);
+                updateZoom();
+            }
+        }
+
+        function zoomOut() {
+            if (currentZoom > minZoom) {
+                currentZoom = Math.max(currentZoom - zoomStep, minZoom);
+                updateZoom();
+            }
+        }
+
+        function zoomReset() {
+            currentZoom = 1.0;
+            updateZoom();
+        }
+
+        // Mouse wheel zoom
+        function initZoomControls() {
+            const diagram = document.getElementById('diagram');
+
+            diagram.addEventListener('wheel', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+
+                    const delta = e.deltaY > 0 ? -zoomStep : zoomStep;
+                    currentZoom = Math.max(minZoom, Math.min(maxZoom, currentZoom + delta));
+                    updateZoom();
+                }
+            }, { passive: false });
+        }
 
         // Tab switching
         function switchTab(tabName) {
