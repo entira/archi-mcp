@@ -378,12 +378,15 @@ def regenerate_diagram_from_state():
 
         # Add elements from state
         for elem_data in current_model_state["elements"]:
+            # Normalize aspect string (replace spaces with underscores and uppercase)
+            aspect_str = elem_data["aspect"].upper().replace(" ", "_")
+
             elem = ArchiMateElement(
                 id=elem_data["id"],
                 name=elem_data["name"],
                 element_type=elem_data["element_type"],
                 layer=ArchiMateLayer[elem_data["layer"].upper()],
-                aspect=ArchiMateAspect[elem_data["aspect"].upper()],
+                aspect=ArchiMateAspect[aspect_str],
                 description=elem_data.get("description")
             )
             gen.add_element(elem)
