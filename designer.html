@@ -160,23 +160,6 @@
             font-size: 13px;
         }
 
-        /* Auto-refresh indicator */
-        #refresh-indicator {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            padding: 8px 12px;
-            background: #2d2d2d;
-            border-radius: 4px;
-            font-size: 12px;
-            display: none;
-        }
-
-        #refresh-indicator.active {
-            display: block;
-            background: #1e3a1e;
-            color: #4caf50;
-        }
 
         .stats {
             background: #2d2d2d;
@@ -314,7 +297,7 @@
 
         <div class="control-group">
             <label for="title">Diagram Title</label>
-            <input type="text" id="title" placeholder="Architecture Overview">
+            <input type="text" id="title" placeholder="">
         </div>
 
         <div class="control-group">
@@ -394,6 +377,10 @@
                 <svg fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/><path d="M8.646 6.646a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L10.293 9 8.646 7.354a.5.5 0 0 1 0-.708zm-1.292 0a.5.5 0 0 0-.708 0l-2 2a.5.5 0 0 0 0 .708l2 2a.5.5 0 0 0 .708-.708L5.707 9l1.647-1.646a.5.5 0 0 0 0-.708z"/></svg>
                 Markdown
             </a>
+            <a class="export-link" onclick="exportAllAsZip()" style="background: #1e3a1e; border-color: #4caf50;">
+                <svg fill="currentColor" viewBox="0 0 16 16"><path d="M6.5 7.5a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v.938l.4 1.599a1 1 0 0 1-.416 1.074l-.93.62a1 1 0 0 1-1.109 0l-.93-.62a1 1 0 0 1-.415-1.074l.4-1.599V7.5z"/><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm5.5 0H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h3.5v-2h-1v-1h1v-1h-1v-1h1v-1h-1v-1h1v-1h-1v-1h1V7.5h-1v-1h1v-1h-1v-1h1v-1h-1v-1h1V3zm1 0v1h-1v1h1v1h-1v1h1v1h-1v1h1v1h-1v1h1v1h-1v1h1v1h-1v1h1v1h-1v1h1v1h-1v1h1v1h-1v1h1V3h3.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1h-3z"/></svg>
+                All (ZIP)
+            </a>
         </div>
 
         <div class="spacer"></div>
@@ -421,12 +408,7 @@
         <div id="status" class="loading">Connecting to server...</div>
 
         <img id="diagram" src="exports/latest/diagram.png" alt="ArchiMate Diagram">
-        <div id="diagram-info">
-            Auto-refreshing every 2 seconds
-        </div>
     </div>
-
-    <div id="refresh-indicator">↻ Refreshing...</div>
 
     <script>
         // Auto-detect API base from current location
@@ -544,23 +526,120 @@
             }
         }
 
+        // Export all files as ZIP
+        async function exportAllAsZip() {
+            updateStatus('Creating ZIP archive...', 'loading');
+
+            try {
+                // Load JSZip library dynamically
+                if (typeof JSZip === 'undefined') {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+                    document.head.appendChild(script);
+                    await new Promise(resolve => script.onload = resolve);
+                }
+
+                const zip = new JSZip();
+                const files = ['png', 'svg', 'puml', 'xml', 'md'];
+                const serverFilenames = {
+                    'png': 'diagram.png',
+                    'svg': 'diagram.svg',
+                    'puml': 'diagram.puml',
+                    'xml': 'archimate_model.archimate',
+                    'md': 'architecture.md'
+                };
+
+                // Fetch all files
+                for (const type of files) {
+                    try {
+                        const response = await fetch(`exports/latest/${serverFilenames[type]}`);
+                        if (response.ok) {
+                            const blob = await response.blob();
+                            zip.file(serverFilenames[type], blob);
+                        }
+                    } catch (e) {
+                        console.warn(`Failed to add ${type} to ZIP:`, e);
+                    }
+                }
+
+                // Generate ZIP
+                const zipBlob = await zip.generateAsync({type: 'blob'});
+
+                // Build filename
+                const title = document.getElementById('title').value || currentModel?.title || 'diagram';
+                const sanitized = sanitizeFilename(title);
+                const now = new Date();
+                const timestamp = now.toISOString().slice(0,19).replace(/[-:T]/g, '').slice(0,14);
+                const zipFilename = `${sanitized}_${timestamp}.zip`;
+
+                // Download
+                const downloadUrl = window.URL.createObjectURL(zipBlob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = zipFilename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(downloadUrl);
+                document.body.removeChild(a);
+
+                updateStatus(`✓ Downloaded ${zipFilename}`, 'success');
+            } catch (error) {
+                console.error('ZIP export error:', error);
+                updateStatus('✗ Failed to create ZIP archive', 'error');
+            }
+        }
+
+        // Sanitize filename for safe download
+        function sanitizeFilename(title, maxLength = 50) {
+            if (!title || title.trim() === '') {
+                return 'diagram';
+            }
+
+            // Remove/replace unsafe characters
+            let safe = title
+                .replace(/[<>:"/\\|?*\x00-\x1F]/g, '') // Remove illegal chars
+                .replace(/\s+/g, '_')  // Replace spaces with underscores
+                .replace(/_{2,}/g, '_') // Remove multiple underscores
+                .replace(/^_+|_+$/g, '') // Trim underscores
+                .substring(0, maxLength); // Limit length
+
+            return safe || 'diagram';
+        }
+
         // Export files - download with auto-regeneration if missing
         async function exportFile(type) {
             const extensions = {
+                'png': '.png',
+                'svg': '.svg',
+                'puml': '.puml',
+                'xml': '.archimate',
+                'md': '.md'
+            };
+
+            const ext = extensions[type];
+            if (!ext) return;
+
+            // Build filename: sanitized_title_YYYYMMDD_HHMMSS.ext
+            const title = document.getElementById('title').value || currentModel?.title || 'diagram';
+            const sanitized = sanitizeFilename(title);
+            const now = new Date();
+            const timestamp = now.toISOString().slice(0,19).replace(/[-:T]/g, '').slice(0,14); // YYYYMMDDHHMMSS
+            const downloadFilename = `${sanitized}_${timestamp}${ext}`;
+
+            // Server filename (unchanged)
+            const serverFilenames = {
                 'png': 'diagram.png',
                 'svg': 'diagram.svg',
                 'puml': 'diagram.puml',
                 'xml': 'archimate_model.archimate',
                 'md': 'architecture.md'
             };
-
-            const filename = extensions[type];
-            if (!filename) return;
+            const serverFilename = serverFilenames[type];
 
             updateStatus(`Checking ${type.toUpperCase()} availability...`, 'loading');
 
             // Check if file exists
-            const url = `exports/latest/${filename}`;
+            const url = `exports/latest/${serverFilename}`;
             let response = await fetch(url);
 
             if (!response.ok) {
@@ -613,13 +692,13 @@
                 const downloadUrl = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = downloadUrl;
-                a.download = filename;
+                a.download = downloadFilename;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(downloadUrl);
                 document.body.removeChild(a);
 
-                updateStatus(`✓ Downloaded ${filename}`, 'success');
+                updateStatus(`✓ Downloaded ${downloadFilename}`, 'success');
 
                 // Refresh diagram display if it was regenerated
                 refreshDiagram();
@@ -637,16 +716,9 @@
         }
 
         function refreshDiagram() {
-            const indicator = document.getElementById('refresh-indicator');
-            indicator.classList.add('active');
-
             const img = document.getElementById('diagram');
             const timestamp = new Date().getTime();
             img.src = `exports/latest/diagram.png?t=${timestamp}`;
-
-            setTimeout(() => {
-                indicator.classList.remove('active');
-            }, 500);
         }
 
         // Update status message
