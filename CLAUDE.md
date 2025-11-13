@@ -260,6 +260,12 @@ When enabled, the designer is accessible at:
 - 🎛️ Interactive layout controls (direction, spacing, grouping)
 - 💾 One-click export (PNG, SVG, PlantUML, XML, Markdown)
 - 🔄 Auto-regeneration of missing exports
+- 📜 **Diagram History Browser** - Browse, filter, and manage all historical diagrams
+- 🔍 **Advanced Filtering** - Search by title, date range, element/relationship counts, layers
+- 🍴 **Fork Workflow** - Load historical diagrams for editing without modifying originals
+- 🗑️ **Bulk Operations** - Delete individual or multiple diagrams, auto-cleanup old exports
+- ◀️ **Collapsible Sidebar** - Maximize diagram viewing space with toggle button
+- 🔎 **Zoom Controls** - Zoom in/out (25%-500%), mouse wheel support (Ctrl+wheel)
 - 📊 Diagram statistics (elements, relationships, layers)
 
 **Workflow:**
@@ -268,8 +274,85 @@ When enabled, the designer is accessible at:
 3. Generate diagrams via Claude Code conversation
 4. Designer auto-updates with new diagrams
 5. Adjust layout options in designer → regenerates automatically
+6. Switch to History tab to browse all past diagrams
+7. Use filters to find specific diagrams by criteria
+8. Fork historical diagrams to create new versions
 
 **Note:** Designer is disabled by default to reduce resource usage. Enable only when needed for interactive visualization.
+
+### Diagram History Management
+
+The designer includes a comprehensive history management system accessible via the **History tab**:
+
+**Core Features:**
+- **History Index** - Fast cached index of all diagrams (`exports/history_index.json`)
+- **Tab Navigation** - Switch between Editor and History views
+- **Diagram Table** - Sortable table with title, element count, relationship count, date
+- **Thumbnails** - Lazy-loaded diagram previews (first 20-50)
+- **Protected Latest** - Current diagram cannot be deleted, marked with ⚡ badge
+
+**Filtering & Search:**
+- **Text Search** - Filter by diagram title (case-insensitive)
+- **Date Range** - From/to date pickers for temporal filtering
+- **Count Filters** - Min/max element and relationship count filters
+- **Layer Filter** - Multi-select layer filter (Business, Application, Technology, etc.)
+- **Apply/Clear** - Explicit filter application with clear button
+
+**Operations:**
+- **Fork & Edit** - Loads historical diagram title for creating new version
+- **Delete** - Remove individual diagrams (except latest)
+- **Bulk Delete** - Select multiple diagrams for batch deletion
+- **Auto-Cleanup** - Delete diagrams older than 30 days (configurable, keeps latest 50)
+- **Sort Columns** - Click column headers to sort by title, date, counts
+
+**Technical Details:**
+- **Backend API Endpoints:**
+  - `GET /api/history` - List diagrams with filters (limit, offset, search, dates, counts, layers)
+  - `GET /api/history/{timestamp}` - Get specific diagram metadata
+  - `POST /api/history/{timestamp}/fork` - Fork diagram to current
+  - `DELETE /api/history/{timestamp}` - Delete diagram export
+  - `POST /api/history/cleanup` - Bulk cleanup old diagrams
+- **Auto-Update** - Index rebuilds automatically after each diagram generation
+- **Persistence** - Index file tracks 143+ diagrams with metadata
+- **Performance** - Cached index enables sub-100ms loading for large histories
+
+**UI Components:**
+- **History Filters Panel** - Collapsible filter controls with apply/clear
+- **History Table** - Grid layout with thumbnail, title, counts, date, actions
+- **Bulk Actions Bar** - Shows selected count, delete button, cleanup button
+- **Status Messages** - Loading states, error handling, success feedback
+
+### Sidebar Collapse & Zoom
+
+**Sidebar Collapse:**
+- **Toggle Button** - Located top-right of sidebar (◀/▶ icon)
+- **Collapsed Width** - 50px (from 380px)
+- **Smooth Animation** - 0.3s ease transition
+- **Keyboard Shortcut** - Click button to toggle (future: Cmd+B)
+- **State Persistence** - Not saved across sessions (resets on reload)
+- **Use Case** - Maximize diagram viewing space for large/complex architectures
+
+**Zoom Controls:**
+- **Location** - Bottom-right overlay on diagram container
+- **Zoom Range** - 25% to 500% (min 0.25x, max 5x)
+- **Zoom Step** - 25% per click
+- **Controls:**
+  - **+ Button** - Zoom in
+  - **- Button** - Zoom out
+  - **⟲ Button** - Reset to 100%
+  - **Live Indicator** - Shows current zoom level (e.g., "150%")
+- **Mouse Wheel** - Hold Ctrl (Windows/Linux) or Cmd (Mac) + scroll wheel
+- **Transform** - CSS `transform: scale()` with center origin
+- **Cursor** - Changes to grab/grabbing during pan (future feature)
+- **Smooth Transitions** - 0.2s ease for button clicks
+
+**Technical Implementation:**
+- `toggleSidebar()` - Toggles `.collapsed` class, updates button icon
+- `zoomIn()` / `zoomOut()` - Adjusts `currentZoom` variable (0.25-5.0)
+- `zoomReset()` - Resets zoom to 1.0
+- `updateZoom()` - Applies `transform: scale()` and updates UI
+- `initZoomControls()` - Registers wheel event listener with `passive: false`
+- Zoom state stored in `currentZoom` variable (not persisted)
 
 ## Architecture Examples
 > 📖 **For complete architecture examples and demonstrations, see [README.md](README.md#complete-architecture-demonstration)**
