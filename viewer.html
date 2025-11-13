@@ -344,7 +344,7 @@
             }
         }
 
-        // Update statistics display
+        // Update statistics display and load current options
         function updateStats(model) {
             if (!model) return;
 
@@ -353,6 +353,35 @@
 
             if (model.title) {
                 document.getElementById('title').value = model.title;
+            }
+
+            // Load current layout options from model
+            if (model.options) {
+                const opts = model.options;
+
+                // Map backend direction to viewer format
+                const directionMap = {
+                    'vertical': 'top-bottom',
+                    'horizontal': 'left-right'
+                };
+                const viewerDirection = directionMap[opts.direction] || 'top-bottom';
+                document.getElementById('direction').value = viewerDirection;
+
+                // Map backend spacing to viewer format
+                const spacingMap = {
+                    'compact': 'compact',
+                    'normal': 'comfortable',
+                    'wide': 'spacious'
+                };
+                const viewerSpacing = spacingMap[opts.spacing] || 'comfortable';
+                document.getElementById('spacing').value = viewerSpacing;
+
+                // Set checkboxes
+                document.getElementById('show_legend').checked = opts.show_legend !== false;
+                document.getElementById('show_title').checked = opts.show_title !== false;
+                document.getElementById('group_by_layer').checked = opts.group_by_layer === true;
+                document.getElementById('show_element_types').checked = opts.show_element_types === true;
+                document.getElementById('show_relationship_labels').checked = opts.show_relationship_labels !== false;
             }
 
             const now = new Date().toLocaleTimeString();
