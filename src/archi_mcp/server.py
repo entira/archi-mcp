@@ -386,7 +386,7 @@ def load_history_index() -> dict:
             with open(index_path, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except Exception as e:
-            log_debug('WARNING', f'Failed to load history index: {e}')
+            logger.warning( f'Failed to load history index: {e}')
 
     # Build new index
     return build_history_index()
@@ -398,7 +398,7 @@ def build_history_index() -> dict:
     Returns:
         dict: History index with metadata for all diagrams
     """
-    log_debug('INFO', 'Building history index...')
+    logger.info( 'Building history index...')
 
     exports_dir = os.path.join(os.getcwd(), "exports")
     if not os.path.exists(exports_dir):
@@ -459,7 +459,7 @@ def build_history_index() -> dict:
             items.append(item)
 
         except Exception as e:
-            log_debug('WARNING', f'Failed to load metadata for {entry}: {e}')
+            logger.warning( f'Failed to load metadata for {entry}: {e}')
             continue
 
     # Sort by timestamp (newest first)
@@ -478,9 +478,9 @@ def build_history_index() -> dict:
         os.makedirs(os.path.dirname(index_path), exist_ok=True)
         with open(index_path, 'w', encoding='utf-8') as f:
             json.dump(index, f, indent=2)
-        log_debug('INFO', f'History index built: {len(items)} diagrams')
+        logger.info( f'History index built: {len(items)} diagrams')
     except Exception as e:
-        log_debug('WARNING', f'Failed to save history index: {e}')
+        logger.warning( f'Failed to save history index: {e}')
 
     return index
 
@@ -532,10 +532,10 @@ def update_history_index_with_new_export(timestamp: str, metadata: dict):
         with open(index_path, 'w', encoding='utf-8') as f:
             json.dump(index, f, indent=2)
 
-        log_debug('DEBUG', f'History index updated with {timestamp}')
+        logger.debug( f'History index updated with {timestamp}')
 
     except Exception as e:
-        log_debug('WARNING', f'Failed to update history index: {e}')
+        logger.warning( f'Failed to update history index: {e}')
 
 
 def remove_from_history_index(timestamp: str):
@@ -554,10 +554,10 @@ def remove_from_history_index(timestamp: str):
         with open(index_path, 'w', encoding='utf-8') as f:
             json.dump(index, f, indent=2)
 
-        log_debug('DEBUG', f'Removed {timestamp} from history index')
+        logger.debug( f'Removed {timestamp} from history index')
 
     except Exception as e:
-        log_debug('WARNING', f'Failed to remove from history index: {e}')
+        logger.warning( f'Failed to remove from history index: {e}')
 
 
 def delete_diagram_export(timestamp: str) -> bool:
@@ -580,7 +580,7 @@ def delete_diagram_export(timestamp: str) -> bool:
         if os.path.islink(latest_link):
             latest_target = os.readlink(latest_link)
             if latest_target == timestamp:
-                log_debug('WARNING', f'Cannot delete latest diagram: {timestamp}')
+                logger.warning( f'Cannot delete latest diagram: {timestamp}')
                 return False
 
         # Delete directory
@@ -590,11 +590,11 @@ def delete_diagram_export(timestamp: str) -> bool:
         # Remove from index
         remove_from_history_index(timestamp)
 
-        log_debug('INFO', f'Deleted diagram export: {timestamp}')
+        logger.info( f'Deleted diagram export: {timestamp}')
         return True
 
     except Exception as e:
-        log_debug('ERROR', f'Failed to delete {timestamp}: {e}')
+        logger.error( f'Failed to delete {timestamp}: {e}')
         return False
 
 
@@ -2297,16 +2297,16 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
         if language not in AVAILABLE_LANGUAGES:
             language = "en"  # Fallback to English
         translator = ArchiMateTranslator(language)
-        log_debug('INFO', f'Language detection: detected={detected_language}, final={language}')
+        logger.info( f'Language detection: detected={detected_language}, final={language}')
         
         # Override relationship labels with translations if non-English
         override_relationship_labels_with_translations(diagram, translator)
         if language != "en":
-            log_debug('INFO', f'Overrode relationship labels with {language} translations')
+            logger.info( f'Overrode relationship labels with {language} translations')
         
         # Create generator with translator
         generator_with_translator = ArchiMateGenerator(translator)
-        log_debug('INFO', f'Set up translator for language: {language}')
+        logger.info( f'Set up translator for language: {language}')
         
         # Configure layout with hybrid priority: config-locked vs client-configurable
         from .archimate.generator import DiagramLayout
@@ -2340,29 +2340,29 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
                 locked_params.append(f"{param_name}={get_env_setting(env_var)}")
         
         if locked_params:
-            log_debug('INFO', f'Config-locked parameters: {", ".join(locked_params)}')
+            logger.info( f'Config-locked parameters: {", ".join(locked_params)}')
         else:
-            log_debug('INFO', 'No config-locked parameters - client has full layout control')
+            logger.info( 'No config-locked parameters - client has full layout control')
         
         generator_with_translator.set_layout(layout)
-        log_debug('INFO', f'Set layout: direction={layout.direction}, legend={layout.show_legend}, group_by_layer={layout.group_by_layer}')
+        logger.info( f'Set layout: direction={layout.direction}, legend={layout.show_legend}, group_by_layer={layout.group_by_layer}')
         
         # Clear existing diagram first
         generator_with_translator.clear()
-        log_debug('INFO', 'Cleared existing diagram')
+        logger.info( 'Cleared existing diagram')
         
         # Validate and add elements
-        log_debug('INFO', f'Processing {len(diagram.elements)} elements')
+        logger.info( f'Processing {len(diagram.elements)} elements')
         for element_input in diagram.elements:
             is_valid, error_msg = validate_element_input(element_input)
             if not is_valid:
-                log_debug('ERROR', f'Element validation failed: {error_msg}', {'element_id': element_input.id})
+                logger.error( f'Element validation failed: {error_msg}', {'element_id': element_input.id})
                 raise ArchiMateValidationError(f"Element validation failed: {error_msg}")
             
             # Normalize inputs
             normalized_type = normalize_element_type(element_input.element_type)
             normalized_layer = normalize_layer(element_input.layer)
-            log_debug('DEBUG', f'Normalized element type: {element_input.element_type} -> {normalized_type}')
+            logger.debug( f'Normalized element type: {element_input.element_type} -> {normalized_type}')
             
             # Create ArchiMate element with proper aspect
             # Determine aspect based on element type
@@ -2385,14 +2385,14 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
             )
             
             generator_with_translator.add_element(element)
-        log_debug('INFO', f'Added {generator_with_translator.get_element_count()} elements successfully')
+        logger.info( f'Added {generator_with_translator.get_element_count()} elements successfully')
         
         # Validate and add relationships
-        log_debug('INFO', f'Processing {len(diagram.relationships)} relationships')
+        logger.info( f'Processing {len(diagram.relationships)} relationships')
         for rel_input in diagram.relationships:
             is_valid, error_msg = validate_relationship_input(rel_input, language)
             if not is_valid:
-                log_debug('ERROR', f'Relationship validation failed: {error_msg}', {'relationship_id': rel_input.id})
+                logger.error( f'Relationship validation failed: {error_msg}', {'relationship_id': rel_input.id})
                 raise ArchiMateValidationError(f"Relationship validation failed: {error_msg}")
             
             # Normalize relationship type
@@ -2410,30 +2410,30 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
             )
             
             generator_with_translator.add_relationship(relationship)
-        log_debug('INFO', f'Added {generator_with_translator.get_relationship_count()} relationships successfully')
+        logger.info( f'Added {generator_with_translator.get_relationship_count()} relationships successfully')
         
         # Generate PlantUML with proper title
         title = diagram.title or "ArchiMate Diagram"
         description = diagram.description or "Generated ArchiMate diagram"
         
-        log_debug('INFO', 'Generating PlantUML code')
+        logger.info( 'Generating PlantUML code')
         plantuml_code = generator_with_translator.generate_plantuml(title=title, description=description)
-        log_debug('INFO', f'Generated PlantUML code: {len(plantuml_code)} characters')
+        logger.info( f'Generated PlantUML code: {len(plantuml_code)} characters')
         
         # MANDATORY: Validate PlantUML before proceeding
         renders_ok, error_msg = _validate_plantuml_renders(plantuml_code)
         if not renders_ok:
-            log_debug('ERROR', f'PlantUML validation failed: {error_msg}')
+            logger.error( f'PlantUML validation failed: {error_msg}')
             raise ArchiMateGenerationError(f"Generated diagram failed validation - {error_msg}")
         
-        log_debug('INFO', f'PlantUML validation VERIFIED ✅: {error_msg}')
+        logger.info( f'PlantUML validation VERIFIED ✅: {error_msg}')
         
         # Always generate PNG/SVG (no configuration needed)
         generate_png = True  # Always generate PNG
         generate_svg = True  # Always generate SVG
         png_quality = "high"  # Always use high quality
         
-        log_debug('INFO', f'Generation settings: PNG={generate_png}, SVG={generate_svg}, quality={png_quality}')
+        logger.info( f'Generation settings: PNG={generate_png}, SVG={generate_svg}, quality={png_quality}')
         
         # First, test PNG generation to ensure it works before creating export directory
         png_file_path = None
@@ -2443,7 +2443,7 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
             # Detect Java version
             java_check = subprocess.run(['java', '-version'], capture_output=True, text=True, timeout=5)
             java_info = java_check.stderr if java_check.stderr else java_check.stdout
-            log_debug('INFO', 'Java environment detected', {'java_version': java_info.split('\n')[0]})
+            logger.info( 'Java environment detected', {'java_version': java_info.split('\n')[0]})
             
             # Try to find PlantUML jar
             possible_jars = [
@@ -2457,13 +2457,13 @@ def create_archimate_diagram(diagram: DiagramInput) -> str:
             for jar_path in possible_jars:
                 if os.path.exists(jar_path):
                     plantuml_jar = jar_path
-                    log_debug('INFO', f'Found PlantUML jar at: {jar_path}')
+                    logger.info( f'Found PlantUML jar at: {jar_path}')
                     
                     # Check PlantUML version
                     version_cmd = ['java', '-Djava.awt.headless=true', '-jar', jar_path, '-version']
                     version_result = subprocess.run(version_cmd, capture_output=True, text=True, timeout=10)
                     if version_result.returncode == 0:
-                        log_debug('INFO', 'PlantUML version info', {'version': version_result.stdout.strip()})
+                        logger.info( 'PlantUML version info', {'version': version_result.stdout.strip()})
                     break
             
             if not plantuml_jar:
@@ -2478,9 +2478,9 @@ The jar should be placed in the project root directory or one of these locations
             
             # Generate PNG using temporary file first (if enabled)
             if generate_png:
-                log_debug('INFO', 'Starting PNG generation test')
+                logger.info( 'Starting PNG generation test')
             else:
-                log_debug('INFO', 'PNG generation disabled by configuration')
+                logger.info( 'PNG generation disabled by configuration')
             generation_start = time.time()
             
             # Create temporary PlantUML file for testing
@@ -2499,21 +2499,21 @@ The jar should be placed in the project root directory or one of these locations
                 temp_puml_path
             ]
             
-            log_debug('DEBUG', 'Executing PlantUML PNG command', {'command': ' '.join(png_cmd)})
+            logger.debug( 'Executing PlantUML PNG command', {'command': ' '.join(png_cmd)})
             
             png_result = subprocess.run(png_cmd, capture_output=True, text=True, timeout=60)
             
             generation_time = time.time() - generation_start
-            log_debug('INFO', f'PNG generation completed in {generation_time:.2f} seconds', {
+            logger.info( f'PNG generation completed in {generation_time:.2f} seconds', {
                 'png_return_code': png_result.returncode,
                 'png_stdout_length': len(png_result.stdout),
                 'png_stderr_length': len(png_result.stderr)
             })
             
             if png_result.stdout:
-                log_debug('DEBUG', 'PlantUML PNG stdout', {'output': png_result.stdout[:500]})
+                logger.debug( 'PlantUML PNG stdout', {'output': png_result.stdout[:500]})
             if png_result.stderr:
-                log_debug('WARNING', 'PlantUML PNG stderr', {'output': png_result.stderr[:500]})
+                logger.warning( 'PlantUML PNG stderr', {'output': png_result.stderr[:500]})
             
             # Check PNG generation first - MUST succeed before creating export directory
             temp_png_path = Path(temp_puml_path).with_suffix('.png')
@@ -2524,7 +2524,7 @@ The jar should be placed in the project root directory or one of these locations
                 is_valid_png, png_validation_error = _validate_png_file(temp_png_path)
                 
                 if is_valid_png and file_size > 50:  # Minimum reasonable PNG size for actual diagrams
-                    log_debug('INFO', f'PNG test generation successful: {file_size} bytes')
+                    logger.info( f'PNG test generation successful: {file_size} bytes')
                     png_file_path = str(temp_png_path)  # Store path for later use
                 else:
                     # Save failure context before raising error
@@ -2532,7 +2532,7 @@ The jar should be placed in the project root directory or one of these locations
                     raise Exception(f"PNG validation failed: {png_validation_error}, file size: {file_size} bytes")
                 
                 # Only generate SVG after PNG success
-                log_debug('INFO', 'PNG successful, now generating SVG')
+                logger.info( 'PNG successful, now generating SVG')
                 svg_generation_start = time.time()
                 
                 svg_cmd = [
@@ -2544,30 +2544,30 @@ The jar should be placed in the project root directory or one of these locations
                     temp_puml_path
                 ]
                 
-                log_debug('DEBUG', 'Executing PlantUML SVG command', {'command': ' '.join(svg_cmd)})
+                logger.debug( 'Executing PlantUML SVG command', {'command': ' '.join(svg_cmd)})
                 
                 svg_result = subprocess.run(svg_cmd, capture_output=True, text=True, timeout=60)
                 
                 svg_generation_time = time.time() - svg_generation_start
-                log_debug('INFO', f'SVG generation completed in {svg_generation_time:.2f} seconds', {
+                logger.info( f'SVG generation completed in {svg_generation_time:.2f} seconds', {
                     'svg_return_code': svg_result.returncode,
                     'svg_stdout_length': len(svg_result.stdout),
                     'svg_stderr_length': len(svg_result.stderr)
                 })
                 
                 if svg_result.stdout:
-                    log_debug('DEBUG', 'PlantUML SVG stdout', {'output': svg_result.stdout[:500]})
+                    logger.debug( 'PlantUML SVG stdout', {'output': svg_result.stdout[:500]})
                 if svg_result.stderr:
-                    log_debug('WARNING', 'PlantUML SVG stderr', {'output': svg_result.stderr[:500]})
+                    logger.warning( 'PlantUML SVG stderr', {'output': svg_result.stderr[:500]})
                 
                 # Check SVG generation 
                 temp_svg_path = Path(temp_puml_path).with_suffix('.svg')
                 if svg_result.returncode == 0 and temp_svg_path.exists():
                     svg_file_size = temp_svg_path.stat().st_size
-                    log_debug('INFO', f'SVG generated successfully: {svg_file_size} bytes')
+                    logger.info( f'SVG generated successfully: {svg_file_size} bytes')
                     svg_file_path = str(temp_svg_path)  # Store path for later use
                 else:
-                    log_debug('WARNING', f'SVG generation failed: return code {svg_result.returncode}, stderr: {svg_result.stderr}')
+                    logger.warning( f'SVG generation failed: return code {svg_result.returncode}, stderr: {svg_result.stderr}')
             else:
                 # Save failure context before raising error
                 _save_failed_attempt(plantuml_code, diagram, debug_log, f"PNG generation failed: return code {png_result.returncode}, stderr: {png_result.stderr}")
@@ -2580,12 +2580,12 @@ The jar should be placed in the project root directory or one of these locations
                 pass
                 
         except subprocess.TimeoutExpired:
-            log_debug('ERROR', 'PNG and SVG generation timed out after 60 seconds')
+            logger.error( 'PNG and SVG generation timed out after 60 seconds')
             # Save failure context before raising error
             _save_failed_attempt(plantuml_code, diagram, debug_log, "PNG generation timed out after 60 seconds")
             raise ArchiMateGenerationError("PNG generation timed out after 60 seconds")
         except Exception as png_error:
-            log_debug('ERROR', f'PNG and SVG generation failed: {str(png_error)}', {
+            logger.error( f'PNG and SVG generation failed: {str(png_error)}', {
                 'error_type': type(png_error).__name__
             })
             # Save failure context before raising error
@@ -2593,28 +2593,28 @@ The jar should be placed in the project root directory or one of these locations
             raise ArchiMateGenerationError(f"PNG generation failed: {str(png_error)}")
         
         # PNG generation successful! Now create export directory and move files
-        log_debug('INFO', 'PNG generation successful, creating export directory')
+        logger.info( 'PNG generation successful, creating export directory')
         export_dir = create_diagram_export_directory()
-        log_debug('INFO', f'Created export directory: {export_dir}')
+        logger.info( f'Created export directory: {export_dir}')
         
         # Save PlantUML code to export directory
         puml_file = export_dir / "diagram.puml"
         with open(puml_file, 'w', encoding='utf-8') as f:
             f.write(plantuml_code)
-        log_debug('INFO', f'Saved PlantUML code to {puml_file}')
+        logger.info( f'Saved PlantUML code to {puml_file}')
         
         # Move PNG file to export directory
         png_file = export_dir / "diagram.png"
         import shutil
         shutil.move(png_file_path, str(png_file))
-        log_debug('INFO', f'Moved PNG file to {png_file}')
+        logger.info( f'Moved PNG file to {png_file}')
         
         # Move SVG file if generated
         svg_generated = False
         if svg_file_path:
             svg_file = export_dir / "diagram.svg"
             shutil.move(svg_file_path, str(svg_file))
-            log_debug('INFO', f'Moved SVG file to {svg_file}')
+            logger.info( f'Moved SVG file to {svg_file}')
             svg_generated = True
         
         # Generate ArchiMate XML Exchange export (only after successful PNG generation)
@@ -2635,12 +2635,12 @@ The jar should be placed in the project root directory or one of these locations
                 output_path=xml_file
             )
             
-            log_debug('INFO', f'Generated ArchiMate XML Exchange export: {xml_file}')
+            logger.info( f'Generated ArchiMate XML Exchange export: {xml_file}')
             
         except ImportError:
-            log_debug('INFO', 'XML export module not available (lxml not installed)')
+            logger.info( 'XML export module not available (lxml not installed)')
         except Exception as xml_error:
-            log_debug('WARNING', f'XML export failed: {str(xml_error)}')
+            logger.warning( f'XML export failed: {str(xml_error)}')
         
         # Save debug log
         log_file = save_debug_log(export_dir, debug_log)
@@ -2672,19 +2672,19 @@ The jar should be placed in the project root directory or one of these locations
         update_history_index_with_new_export(timestamp, metadata)
 
         # Generate markdown documentation (PNG was successful if we reach this point)
-        log_debug('INFO', 'Generating architecture documentation')
+        logger.info( 'Generating architecture documentation')
         markdown_content = generate_architecture_markdown(generator_with_translator, title, description, "diagram.png")
         markdown_file = export_dir / "architecture.md"
         with open(markdown_file, 'w', encoding='utf-8') as f:
             f.write(markdown_content)
-        log_debug('INFO', f'Saved architecture documentation to {markdown_file}')
+        logger.info( f'Saved architecture documentation to {markdown_file}')
         
         # Cleanup failed export attempts after successful generation
         try:
             cleanup_failed_exports()
-            log_debug('INFO', 'Cleaned up failed export attempts')
+            logger.info( 'Cleaned up failed export attempts')
         except Exception as cleanup_error:
-            log_debug('WARNING', f'Failed to cleanup exports: {str(cleanup_error)}')
+            logger.warning( f'Failed to cleanup exports: {str(cleanup_error)}')
         
         # Generate layout parameters information for the client
         layout_info = generate_layout_parameters_info()
@@ -2704,13 +2704,13 @@ The jar should be placed in the project root directory or one of these locations
             if port and svg_generated:
                 svg_relative_path = os.path.relpath(export_dir / "diagram.svg", os.getcwd())
                 diagram_urls["svg"] = f"http://127.0.0.1:{port}/{svg_relative_path}"
-                log_debug('INFO', f'HTTP server running on port {port}, SVG URL: {diagram_urls["svg"]}')
+                logger.info( f'HTTP server running on port {port}, SVG URL: {diagram_urls["svg"]}')
             elif port:
                 png_relative_path = os.path.relpath(export_dir / "diagram.png", os.getcwd()) 
                 diagram_urls["png"] = f"http://127.0.0.1:{port}/{png_relative_path}"
-                log_debug('INFO', f'HTTP server running on port {port}, PNG URL: {diagram_urls["png"]}')
+                logger.info( f'HTTP server running on port {port}, PNG URL: {diagram_urls["png"]}')
         except Exception as http_error:
-            log_debug('WARNING', f'Failed to start HTTP server: {http_error}')
+            logger.warning( f'Failed to start HTTP server: {http_error}')
         
         # Enhanced success message with URL
         success_message = f"✅ ArchiMate diagram created successfully in {export_dir}"
@@ -2779,9 +2779,9 @@ The jar should be placed in the project root directory or one of these locations
             if latest_link.exists() or latest_link.is_symlink():
                 latest_link.unlink()
             latest_link.symlink_to(export_dir.name)
-            log_debug('INFO', f'Updated latest symlink for interactive viewer')
+            logger.info( f'Updated latest symlink for interactive viewer')
         except Exception as state_error:
-            log_debug('WARNING', f'Failed to update global state: {state_error}')
+            logger.warning( f'Failed to update global state: {state_error}')
 
         return json.dumps({
             "status": "success",
@@ -2813,10 +2813,10 @@ The jar should be placed in the project root directory or one of these locations
         try:
             # Create minimal export directory just for the log
             error_export_dir = create_diagram_export_directory()
-            log_debug('INFO', f'Created error export directory for debugging: {error_export_dir}')
+            logger.info( f'Created error export directory for debugging: {error_export_dir}')
             
             # Save debug log with error information
-            log_debug('ERROR', f'Final error: {str(e)}', {
+            logger.error( f'Final error: {str(e)}', {
                 'error_type': type(e).__name__,
                 'total_generation_time': round(time.time() - start_time, 2)
             })
