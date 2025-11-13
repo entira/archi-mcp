@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ArchiMate Diagram Viewer - Live</title>
+    <title>ArchiMate Interactive Designer</title>
     <style>
         * {
             margin: 0;
@@ -21,21 +21,29 @@
 
         /* Sidebar Controls */
         #sidebar {
-            width: 300px;
+            width: 320px;
             background: #252525;
             padding: 20px;
             overflow-y: auto;
             border-right: 1px solid #3a3a3a;
+            display: flex;
+            flex-direction: column;
         }
 
         h1 {
             font-size: 18px;
-            margin-bottom: 20px;
+            margin-bottom: 8px;
             color: #fff;
         }
 
+        .subtitle {
+            font-size: 12px;
+            color: #808080;
+            margin-bottom: 20px;
+        }
+
         .control-group {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         .control-group label {
@@ -79,7 +87,7 @@
 
         button {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             background: #007acc;
             border: none;
             border-radius: 4px;
@@ -98,21 +106,13 @@
             background: #004578;
         }
 
-        button.secondary {
-            background: #3a3a3a;
-        }
-
-        button.secondary:hover {
-            background: #4a4a4a;
-        }
-
         /* Status */
         #status {
             padding: 10px;
             background: #2d2d2d;
             border-radius: 4px;
             font-size: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         #status.success { background: #1e3a1e; color: #4caf50; }
@@ -186,13 +186,101 @@
             color: #007acc;
             font-weight: 600;
         }
+
+        /* Export links */
+        .export-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .export-link {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 10px;
+            background: #2d2d2d;
+            border: 1px solid #3a3a3a;
+            border-radius: 4px;
+            color: #b0b0b0;
+            text-decoration: none;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .export-link:hover {
+            background: #3a3a3a;
+            border-color: #007acc;
+            color: #007acc;
+        }
+
+        .export-link svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* Spacer to push footer to bottom */
+        .spacer {
+            flex-grow: 1;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #3a3a3a;
+            font-size: 11px;
+            color: #707070;
+            text-align: center;
+        }
+
+        .footer-title {
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .footer-title a {
+            color: #007acc;
+            text-decoration: none;
+        }
+
+        .footer-author {
+            font-size: 10px;
+            margin-bottom: 8px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 8px;
+        }
+
+        .footer-links a {
+            color: #b0b0b0;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+        }
+
+        .footer-links a:hover {
+            color: #007acc;
+        }
+
+        .footer-links svg {
+            width: 14px;
+            height: 14px;
+        }
     </style>
 </head>
 <body>
     <div id="sidebar">
-        <h1>🏗️ ArchiMate Viewer</h1>
-
-        <div id="status" class="loading">Connecting to server...</div>
+        <h1>🎨 ArchiMate Interactive Designer</h1>
+        <div class="subtitle">Real-time diagram visualization & control</div>
 
         <div class="stats" id="model-stats">
             <div class="stat-item">
@@ -207,6 +295,11 @@
                 <span class="stat-label">Last Updated:</span>
                 <span class="stat-value" id="stat-updated">-</span>
             </div>
+        </div>
+
+        <div class="control-group">
+            <label for="title">Diagram Title</label>
+            <input type="text" id="title" placeholder="Architecture Overview">
         </div>
 
         <div class="control-group">
@@ -226,11 +319,6 @@
                 <option value="comfortable" selected>Comfortable</option>
                 <option value="spacious">Spacious</option>
             </select>
-        </div>
-
-        <div class="control-group">
-            <label for="title">Diagram Title</label>
-            <input type="text" id="title" placeholder="Architecture Overview">
         </div>
 
         <div class="control-group">
@@ -268,30 +356,47 @@
             </label>
         </div>
 
-        <button onclick="regenerate()">🔄 Regenerate Diagram</button>
-        <button class="secondary" onclick="exportDiagram()">💾 Export PNG</button>
-        <button class="secondary" onclick="openPlantUML()">📝 View PlantUML Source</button>
+        <div id="status" class="loading">Connecting to server...</div>
 
-        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #3a3a3a; font-size: 11px; color: #707070; text-align: center;">
-            <div style="margin-bottom: 8px;">
-                <a href="https://github.com/entira/archi-mcp" target="_blank" style="color: #007acc; text-decoration: none; font-weight: 600;">
-                    ArchiMate MCP Server
-                </a>
+        <button onclick="regenerate()">🔄 Regenerate Diagram</button>
+
+        <div class="export-links">
+            <a class="export-link" onclick="exportFile('png')">
+                <svg fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+                PNG
+            </a>
+            <a class="export-link" onclick="exportFile('svg')">
+                <svg fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+                SVG
+            </a>
+            <a class="export-link" onclick="exportFile('puml')">
+                <svg fill="currentColor" viewBox="0 0 16 16"><path d="M5 4a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm-.5 2.5A.5.5 0 0 1 5 6h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zM5 8a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm0 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1H5z"/><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm10-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/></svg>
+                PlantUML
+            </a>
+            <a class="export-link" onclick="exportFile('xml')">
+                <svg fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 7a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zM5 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5z"/><path d="M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5L9.5 0zm0 1v2A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/></svg>
+                XML
+            </a>
+            <a class="export-link" onclick="exportFile('md')">
+                <svg fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/><path d="M8.646 6.646a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L10.293 9 8.646 7.354a.5.5 0 0 1 0-.708zm-1.292 0a.5.5 0 0 0-.708 0l-2 2a.5.5 0 0 0 0 .708l2 2a.5.5 0 0 0 .708-.708L5.707 9l1.647-1.646a.5.5 0 0 0 0-.708z"/></svg>
+                Markdown
+            </a>
+        </div>
+
+        <div class="spacer"></div>
+
+        <div class="footer">
+            <div class="footer-title">
+                <a href="https://github.com/entira/archi-mcp" target="_blank">ArchiMate MCP Server</a>
             </div>
-            <div style="font-size: 10px; margin-bottom: 8px;">
-                by Mgr. Patrik Skovajsa
-            </div>
-            <div style="display: flex; gap: 12px; justify-content: center; margin-top: 8px;">
-                <a href="https://github.com/entira/archi-mcp" target="_blank" style="color: #b0b0b0; text-decoration: none; display: flex; align-items: center; gap: 4px; font-size: 10px;" title="GitHub Repository">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
-                    </svg>
+            <div class="footer-author">by Mgr. Patrik Skovajsa</div>
+            <div class="footer-links">
+                <a href="https://github.com/entira/archi-mcp" target="_blank" title="GitHub Repository">
+                    <svg fill="currentColor" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
                     GitHub
                 </a>
-                <a href="https://www.linkedin.com/in/patrikskovajsa/" target="_blank" style="color: #b0b0b0; text-decoration: none; display: flex; align-items: center; gap: 4px; font-size: 10px;" title="LinkedIn Profile">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M0 1.146C0 .513.526 0 1.175 0h13.65C15.474 0 16 .513 16 1.146v13.708c0 .633-.526 1.146-1.175 1.146H1.175C.526 16 0 15.487 0 14.854V1.146zm4.943 12.248V6.169H2.542v7.225h2.401zm-1.2-8.212c.837 0 1.358-.554 1.358-1.248-.015-.709-.52-1.248-1.342-1.248-.822 0-1.359.54-1.359 1.248 0 .694.521 1.248 1.327 1.248h.016zm4.908 8.212V9.359c0-.216.016-.432.08-.586.173-.431.568-.878 1.232-.878.869 0 1.216.662 1.216 1.634v3.865h2.401V9.25c0-2.22-1.184-3.252-2.764-3.252-1.274 0-1.845.7-2.165 1.193v.025h-.016a5.54 5.54 0 0 1 .016-.025V6.169h-2.4c.03.678 0 7.225 0 7.225h2.4z"/>
-                    </svg>
+                <a href="https://www.linkedin.com/in/patrikskovajsa/" target="_blank" title="LinkedIn Profile">
+                    <svg fill="currentColor" viewBox="0 0 16 16"><path d="M0 1.146C0 .513.526 0 1.175 0h13.65C15.474 0 16 .513 16 1.146v13.708c0 .633-.526 1.146-1.175 1.146H1.175C.526 16 0 15.487 0 14.854V1.146zm4.943 12.248V6.169H2.542v7.225h2.401zm-1.2-8.212c.837 0 1.358-.554 1.358-1.248-.015-.709-.52-1.248-1.342-1.248-.822 0-1.359.54-1.359 1.248 0 .694.521 1.248 1.327 1.248h.016zm4.908 8.212V9.359c0-.216.016-.432.08-.586.173-.431.568-.878 1.232-.878.869 0 1.216.662 1.216 1.634v3.865h2.401V9.25c0-2.22-1.184-3.252-2.764-3.252-1.274 0-1.845.7-2.165 1.193v.025h-.016a5.54 5.54 0 0 1 .016-.025V6.169h-2.4c.03.678 0 7.225 0 7.225h2.4z"/></svg>
                     LinkedIn
                 </a>
             </div>
@@ -359,22 +464,13 @@
             if (model.options) {
                 const opts = model.options;
 
-                // Map backend direction to viewer format
-                const directionMap = {
-                    'vertical': 'top-bottom',
-                    'horizontal': 'left-right'
-                };
-                const viewerDirection = directionMap[opts.direction] || 'top-bottom';
-                document.getElementById('direction').value = viewerDirection;
-
-                // Map backend spacing to viewer format
-                const spacingMap = {
-                    'compact': 'compact',
-                    'normal': 'comfortable',
-                    'wide': 'spacious'
-                };
-                const viewerSpacing = spacingMap[opts.spacing] || 'comfortable';
-                document.getElementById('spacing').value = viewerSpacing;
+                // Direction and spacing are already in viewer format in the state
+                if (opts.direction) {
+                    document.getElementById('direction').value = opts.direction;
+                }
+                if (opts.spacing) {
+                    document.getElementById('spacing').value = opts.spacing;
+                }
 
                 // Set checkboxes
                 document.getElementById('show_legend').checked = opts.show_legend !== false;
@@ -432,14 +528,20 @@
             }
         }
 
-        // Export diagram
-        function exportDiagram() {
-            window.open('exports/latest/diagram.png', '_blank');
-        }
+        // Export files
+        function exportFile(type) {
+            const extensions = {
+                'png': 'diagram.png',
+                'svg': 'diagram.svg',
+                'puml': 'diagram.puml',
+                'xml': 'archimate_model.archimate',
+                'md': 'architecture.md'
+            };
 
-        // Open PlantUML source
-        function openPlantUML() {
-            window.open('exports/latest/diagram.puml', '_blank');
+            const filename = extensions[type];
+            if (filename) {
+                window.open(`exports/latest/${filename}`, '_blank');
+            }
         }
 
         // Auto-refresh diagram
