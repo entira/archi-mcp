@@ -2283,9 +2283,20 @@ The jar should be placed in the project root directory or one of these locations
                 }
                 for rel in generator_with_translator.relationships
             ]
-            # Store all layout options in state
-            current_model_state["options"]["direction"] = layout.direction
-            current_model_state["options"]["spacing"] = layout.spacing
+            # Store all layout options in state (convert generator values back to designer values)
+            # Reverse direction mapping: generator → designer
+            reverse_direction_map = {
+                "vertical": "top-bottom",
+                "horizontal": "left-right"
+            }
+            # Reverse spacing mapping: generator → designer
+            reverse_spacing_map = {
+                "compact": "compact",
+                "normal": "comfortable",
+                "wide": "spacious"
+            }
+            current_model_state["options"]["direction"] = reverse_direction_map.get(layout.direction, "top-bottom")
+            current_model_state["options"]["spacing"] = reverse_spacing_map.get(layout.spacing, "comfortable")
             current_model_state["options"]["show_legend"] = layout.show_legend
             current_model_state["options"]["show_title"] = layout.show_title
             current_model_state["options"]["group_by_layer"] = layout.group_by_layer

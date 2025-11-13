@@ -723,15 +723,19 @@
 
         // Auto-refresh diagram
         function startAutoRefresh() {
-            autoRefreshInterval = setInterval(() => {
-                refreshDiagram();
+            autoRefreshInterval = setInterval(async () => {
+                await refreshDiagram();
             }, 2000);
         }
 
-        function refreshDiagram() {
+        async function refreshDiagram() {
+            // Refresh diagram image
             const img = document.getElementById('diagram');
             const timestamp = new Date().getTime();
             img.src = `exports/latest/diagram.png?t=${timestamp}`;
+
+            // Also refresh model state and UI controls
+            await loadCurrentModel();
         }
 
         // Update status message
