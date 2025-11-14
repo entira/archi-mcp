@@ -820,12 +820,195 @@
         #load-more-btn:hover {
             background: #5fd9c0;
         }
+
+        /* Right Panel for Element Renaming */
+        #rename-panel {
+            width: 380px;
+            background: #252525;
+            border-left: 1px solid #3a3a3a;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-y: auto;
+            transition: width 0.3s ease, padding 0.3s ease;
+        }
+
+        #rename-panel.collapsed {
+            width: 50px;
+        }
+
+        #rename-panel.collapsed .rename-panel-content {
+            display: none;
+        }
+
+        #rename-panel-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: transparent;
+            border: 1px solid #3a3a3a;
+            border-radius: 4px;
+            color: #808080;
+            cursor: pointer;
+            padding: 6px 8px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            z-index: 1000;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #rename-panel-toggle:hover {
+            background: rgba(78,201,176,0.1);
+            border-color: #4ec9b0;
+            color: #4ec9b0;
+        }
+
+        #rename-panel.collapsed #rename-panel-toggle {
+            right: 5px;
+            top: 10px;
+        }
+
+        .rename-panel-content {
+            padding: 60px 20px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .rename-panel-content h2 {
+            font-size: 16px;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .rename-panel-content h3 {
+            font-size: 14px;
+            color: #b0b0b0;
+            margin-bottom: 10px;
+            margin-top: 10px;
+        }
+
+        #rename-panel textarea {
+            width: 100%;
+            padding: 8px 12px;
+            background: #1e1e1e;
+            border: 1px solid #3a3a3a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 13px;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        #rename-panel textarea:hover {
+            border-color: #4a4a4a;
+        }
+
+        #rename-panel textarea:focus {
+            outline: none;
+            border-color: #007acc;
+        }
+
+        #relationships-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .rename-panel-content h3 {
+            font-size: 14px;
+            color: #4ec9b0;
+            margin: 15px 0 10px 0;
+            font-weight: 500;
+        }
+
+        .relationship-item {
+            background: #1e1e1e;
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid #3a3a3a;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        .relationship-item .rel-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .relationship-item .rel-type {
+            color: #4ec9b0;
+            font-weight: 500;
+            font-size: 11px;
+            background: rgba(78, 201, 176, 0.15);
+            padding: 2px 8px;
+            border-radius: 3px;
+        }
+
+        .relationship-item .rel-arrow {
+            color: #808080;
+            font-size: 14px;
+        }
+
+        .relationship-item .rel-target {
+            color: #dcdcaa;
+            font-weight: 500;
+        }
+
+        .relationship-item input,
+        .relationship-item textarea {
+            width: 100%;
+            padding: 6px 10px;
+            background: #252525;
+            border: 1px solid #3a3a3a;
+            border-radius: 3px;
+            color: #e0e0e0;
+            font-size: 12px;
+            font-family: inherit;
+            margin-top: 4px;
+        }
+
+        .relationship-item textarea {
+            resize: vertical;
+            min-height: 50px;
+        }
+
+        .relationship-item input:focus,
+        .relationship-item textarea:focus {
+            outline: none;
+            border-color: #007acc;
+        }
+
+        .relationship-item label {
+            display: block;
+            font-size: 11px;
+            color: #808080;
+            margin-top: 8px;
+            margin-bottom: 2px;
+        }
+
+        #rename-apply-btn:hover {
+            background: #5fd9c0 !important;
+        }
+
+        #rename-apply-btn:disabled {
+            background: #3a3a3a !important;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
-    <div id="sidebar">
+    <div id="sidebar" class="collapsed">
         <!-- Sidebar Toggle Button (icon only) -->
-        <button id="sidebar-toggle" onclick="toggleSidebar()" title="Collapse sidebar">◀</button>
+        <button id="sidebar-toggle" onclick="toggleSidebar()" title="Expand sidebar">▶</button>
 
         <div class="sidebar-content">
         <h1>🎨 ArchiMate Interactive Designer</h1>
@@ -851,7 +1034,7 @@
 
         <div class="control-group">
             <label for="title">Diagram Title</label>
-            <input type="text" id="title">
+            <input type="text" id="title" autocomplete="off">
         </div>
 
         <div class="control-group">
@@ -908,9 +1091,14 @@
             </label>
         </div>
 
+        <!-- Debug: Show current diagram mode -->
+        <div id="debug-mode" style="width: 100%; padding: 8px; margin-bottom: 8px; background: #1a1a1a; border: 1px solid #555; border-radius: 4px; color: #888; font-size: 12px; text-align: center;">
+            Mode: <span id="debug-timestamp">AI</span>
+        </div>
+
         <!-- Regenerate button - visibility controlled by JavaScript -->
         <button id="regenerate-btn" onclick="regenerate()" style="width: 100%; padding: 12px; margin-bottom: 12px; background: #2a2a2a; border: 1px solid #ce9178; border-radius: 6px; color: #ce9178; cursor: pointer; font-size: 14px;">
-            🔄 Regenerate Diagram
+            💾 Save Diagram
         </button>
 
         <div class="export-links">
@@ -993,7 +1181,7 @@
         <button id="view-mode-close" onclick="exitViewMode()" title="Back to current diagram" style="display: none; position: absolute; top: 20px; right: 20px; align-items: center; justify-content: center; z-index: 100;">✕</button>
 
         <!-- Diagram View -->
-        <img id="diagram" src="exports/latest/diagram.png" alt="ArchiMate Diagram">
+        <img id="diagram" src="exports/AI/diagram.png" alt="ArchiMate Diagram">
 
         <!-- History View (hidden by default) -->
         <div id="history-view" style="display: none; width: 100%; height: 100%; background: #1a1a1a; overflow: auto; padding: 20px; box-sizing: border-box; position: relative;">
@@ -1088,11 +1276,74 @@
         </div>
     </div>
 
+    <!-- Right Panel for Element Renaming -->
+    <div id="rename-panel" class="collapsed">
+        <button id="rename-panel-toggle" onclick="toggleRenamePanel()" title="Expand editor panel">◀</button>
+        <div class="rename-panel-content">
+            <h2>📝 Editor</h2>
+
+            <!-- Diagram-level editor (always visible when panel is open) -->
+            <div id="diagram-edit-section">
+                <h3>📐 Diagram</h3>
+                <div class="control-group">
+                    <label for="diagram-title">Title:</label>
+                    <input type="text" id="diagram-title" placeholder="Diagram title..." autocomplete="off" />
+                </div>
+                <div class="control-group">
+                    <label for="diagram-description">Description:</label>
+                    <textarea id="diagram-description" rows="2" placeholder="Diagram description..." autocomplete="off"></textarea>
+                </div>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid #3a3a3a; margin: 15px 0;">
+
+            <!-- Element Selector -->
+            <div class="control-group">
+                <label for="element-select">Select Element:</label>
+                <select id="element-select" onchange="loadElementForEdit()">
+                    <option value="">-- Choose Element --</option>
+                </select>
+            </div>
+
+            <!-- Element Edit Form -->
+            <div id="element-edit-form" style="display: none;">
+                <h3>🔷 Element</h3>
+                <div class="control-group">
+                    <label for="element-name">Name:</label>
+                    <input type="text" id="element-name" autocomplete="off" />
+                </div>
+
+                <div class="control-group">
+                    <label for="element-description">Description:</label>
+                    <textarea id="element-description" rows="2" autocomplete="off"></textarea>
+                </div>
+
+                <div class="stat-item">
+                    <span class="stat-label">Type:</span>
+                    <span id="element-type-display" class="stat-value"></span>
+                </div>
+            </div>
+
+            <!-- Relationships Section -->
+            <div id="relationships-section" style="display: none;">
+                <h3>🔗 Relationships</h3>
+                <div id="relationships-list"></div>
+            </div>
+
+            <!-- Apply Button -->
+            <button id="rename-apply-btn" onclick="applyRename()"
+                    style="width: 100%; margin-top: 20px; padding: 12px; background: #4ec9b0; border: none; border-radius: 6px; color: #1e1e1e; cursor: pointer; font-size: 14px; font-weight: 500;">
+                💾 Save
+            </button>
+        </div>
+    </div>
+
     <script>
         // Auto-detect API base from current location
         const API_BASE = `${window.location.protocol}//${window.location.host}/api`;
         let autoRefreshInterval;
         let currentModel = null;
+        let currentDiagramTimestamp = 'AI'; // Track which diagram is currently displayed
         let userIsInteracting = false;
         let lastInteractionTime = 0;
 
@@ -1111,20 +1362,24 @@
         // Initialize
         async function init() {
             await checkServerStatus();
-            // Force update controls on initial page load
+
+            // Load history FIRST to get the full list of diagrams
+            await loadHistory();
+
+            // Then load the current model (AI/ should be first after sorting)
             await loadCurrentModel(true);
 
             // Initialize zoom controls
             initZoomControls();
 
-            // Show navigation controls on canvas (hidden when browsing history)
+            // Show navigation controls for browsing diagrams
             document.getElementById('nav-controls').style.display = 'flex';
 
-            // Show regenerate button for current diagram (hidden when browsing history)
+            // Show regenerate button for current diagram
             document.getElementById('regenerate-btn').style.display = 'block';
 
-            // Add interaction listeners to all input controls
-            const controls = document.querySelectorAll('input, select');
+            // Add interaction listeners to all input controls (including right panel)
+            const controls = document.querySelectorAll('input, select, textarea');
             controls.forEach(control => {
                 control.addEventListener('focus', markUserInteraction);
                 control.addEventListener('input', markUserInteraction);
@@ -1139,10 +1394,23 @@
             try {
                 const response = await fetch(`${API_BASE}/status`);
                 const data = await response.json();
-                updateStatus('Connected to MCP server', 'success');
+
+                // Update status based on server mode
+                if (data.mcp_active) {
+                    updateStatus('✅ MCP Server Running', 'success');
+                    document.getElementById('diagram-container').style.display = 'flex';
+                } else if (data.has_diagram) {
+                    updateStatus('📊 HTTP Server (Browse Mode)', 'success');
+                    document.getElementById('diagram-container').style.display = 'flex';
+                } else {
+                    updateStatus('⚠️ No diagrams available', 'error');
+                    // Hide diagram container when no diagrams exist
+                    document.getElementById('diagram-container').style.display = 'none';
+                }
+
                 return true;
             } catch (error) {
-                updateStatus('Server not running. Start MCP server first.', 'error');
+                updateStatus('❌ Server not running', 'error');
                 return false;
             }
         }
@@ -1151,23 +1419,15 @@
 
         // Load current model state
         async function loadCurrentModel(forceUpdate = false) {
+            console.log('[loadCurrentModel] Starting, forceUpdate:', forceUpdate, 'timestamp:', currentDiagramTimestamp);
             try {
-                // Try to fetch from MCP server API first (has current state)
-                try {
-                    const response = await fetch(`${API_BASE}/model`);
-                    if (response.ok) {
-                        currentModel = await response.json();
-                        updateStats(currentModel, forceUpdate || !userIsInteracting);
-                        return;
-                    }
-                } catch (apiError) {
-                    // API not available, fall through to JSON file
-                }
-
-                // Fallback to input.json file (always available after generation)
-                const jsonResponse = await fetch('exports/latest/input.json');
+                // Try input.json FIRST (has complete data including description)
+                // This ensures we always load the full model with all fields
+                console.log('[loadCurrentModel] Fetching input.json for timestamp:', currentDiagramTimestamp);
+                const jsonResponse = await fetch(`exports/${currentDiagramTimestamp}/input.json`);
                 if (jsonResponse.ok) {
                     const inputData = await jsonResponse.json();
+                    console.log('[loadCurrentModel] Loaded input.json, title:', inputData.title);
 
                     // Normalize layout options (handle both designer and generator formats)
                     const layout = inputData.layout || {};
@@ -1191,13 +1451,19 @@
                     // Convert input.json format to model format
                     currentModel = {
                         title: inputData.title || '',
+                        description: inputData.description || '',
                         elements: inputData.elements || [],
                         relationships: inputData.relationships || [],
                         options: normalizedLayout,
                         element_count: inputData.elements?.length || 0,
                         relationship_count: inputData.relationships?.length || 0
                     };
+                    console.log('[loadCurrentModel] Created currentModel, title:', currentModel.title);
+                    console.log('[loadCurrentModel] Calling updateStats with forceUpdate:', forceUpdate || !userIsInteracting);
                     updateStats(currentModel, forceUpdate || !userIsInteracting);
+                    console.log('[loadCurrentModel] Calling populateElementDropdown with autoSelectFirst=true');
+                    populateElementDropdown(true); // Update dropdown and auto-select first element
+                    loadDiagramFields(); // Load diagram title and description
                     return;
                 }
 
@@ -1228,7 +1494,7 @@
                 console.log(`[updateStats] Updating controls with options:`, model.options);
 
                 // Temporarily remove event listeners to prevent them from triggering during update
-                const controls = document.querySelectorAll('input, select');
+                const controls = document.querySelectorAll('input, select, textarea');
                 console.log(`[updateStats] Removing event listeners from ${controls.length} controls`);
                 controls.forEach(control => {
                     control.removeEventListener('focus', markUserInteraction);
@@ -1236,12 +1502,16 @@
                     control.removeEventListener('change', markUserInteraction);
                 });
 
-                // Load title from model (keep current value if model.title is null/empty)
-                if (model.title && model.title.trim() !== '') {
-                    document.getElementById('title').value = model.title;
-                } else if (model.title === null || model.title === '') {
-                    // Model has no title, keep whatever user entered or leave empty
-                    // Don't overwrite with empty string
+                // Load title from model
+                const titleElem = document.getElementById('title');
+                console.log('[updateStats] Title element:', titleElem);
+                console.log('[updateStats] Model title:', model.title);
+                if (model.title !== undefined && model.title !== null) {
+                    console.log('[updateStats] Setting title to:', model.title);
+                    titleElem.value = model.title;
+                    console.log('[updateStats] Title element value after set:', titleElem.value);
+                } else {
+                    console.log('[updateStats] Skipping title update (undefined/null)');
                 }
 
                 // Load current layout options from model
@@ -1290,49 +1560,110 @@
 
         // Regenerate diagram with current options
         async function regenerate() {
+            console.log('[Regenerate] Button clicked');
             updateStatus('Regenerating diagram...', 'loading');
 
             // Detect if we're in browse mode (viewing historical diagram)
-            const img = document.getElementById('diagram');
-            const currentSrc = img.src;
-            const match = currentSrc.match(/exports\/([^\/]+)\/diagram\.png/);
-
-            // Check if viewing a specific timestamp (not 'latest')
-            const inBrowseMode = match && match[1] !== 'latest';
+            // Use currentDiagramTimestamp instead of img.src for browse mode detection
+            // This ensures we detect browse mode correctly even after forking
+            const inBrowseMode = currentDiagramTimestamp !== 'AI';
+            console.log('[Regenerate] Browse mode detection:');
+            console.log('  currentDiagramTimestamp:', currentDiagramTimestamp);
+            console.log('  inBrowseMode:', inBrowseMode);
 
             if (inBrowseMode) {
-                // Browse mode - regenerate from PlantUML file without MCP
-                const timestamp = match[1];
+                // Browse mode - fork to AI/ then regenerate with new parameters
+                const timestamp = currentDiagramTimestamp;
+                console.log('[Regenerate] BROWSE MODE - Forking diagram', timestamp, 'to AI/ and regenerating');
 
                 try {
-                    const response = await fetch(`${API_BASE}/regenerate_puml`, {
+                    // Step 1: Fork the diagram to AI/
+                    console.log('[Regenerate] Step 1: Forking diagram to AI/');
+                    const forkResponse = await fetch(`${API_BASE}/history/${timestamp}/fork`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    console.log('[Regenerate] Fork response status:', forkResponse.status, forkResponse.statusText);
+
+                    if (!forkResponse.ok) {
+                        const errorText = await forkResponse.text();
+                        console.error('[Regenerate] Fork error response:', errorText);
+                        throw new Error(`Fork failed: HTTP ${forkResponse.status}: ${forkResponse.statusText}`);
+                    }
+
+                    const forkResult = await forkResponse.json();
+                    console.log('[Regenerate] Fork success:', forkResult);
+
+                    // Step 2: Regenerate with new parameters
+                    console.log('[Regenerate] Step 2: Regenerating with new parameters');
+                    const options = {
+                        direction: document.getElementById('direction').value,
+                        spacing: document.getElementById('spacing').value,
+                        title: document.getElementById('title').value || undefined,
+                        show_legend: document.getElementById('show_legend').checked,
+                        show_title: document.getElementById('show_title').checked,
+                        group_by_layer: document.getElementById('group_by_layer').checked,
+                        show_element_types: document.getElementById('show_element_types').checked,
+                        show_relationship_labels: document.getElementById('show_relationship_labels').checked
+                    };
+
+                    console.log('[Regenerate] Options:', options);
+
+                    const response = await fetch(`${API_BASE}/regenerate`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'Accept': 'application/json'
                         },
-                        body: JSON.stringify({ timestamp: timestamp })
+                        body: JSON.stringify(options)
                     });
 
+                    console.log('[Regenerate] Regenerate response status:', response.status, response.statusText);
+
                     if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('[Regenerate] Error response:', errorText);
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
 
                     const result = await response.json();
+                    console.log('[Regenerate] Success result:', result);
 
                     if (result.success) {
-                        updateStatus('✓ Diagram regenerated from PlantUML!', 'success');
-                        // Refresh the image to show regenerated version
+                        updateStatus('✓ Diagram forked to AI/ and regenerated!', 'success');
+                        // Switch to AI diagram - CRITICAL: update timestamp BEFORE loading model
+                        currentDiagramTimestamp = 'AI';
+                        document.getElementById('debug-timestamp').textContent = 'AI';
+                        // Clear interaction flag and reload model FIRST
+                        userIsInteracting = false;
+                        await loadCurrentModel();
+                        // Update sidebar with new elements
+                        populateElementDropdown();
+                        // THEN update image after model is loaded with aggressive cache busting
+                        const img = document.getElementById('diagram');
+                        const cacheBuster = Date.now() + Math.random();
+                        img.src = `exports/AI/diagram.png?nocache=${cacheBuster}`;
+                        // Force browser to reload the image
+                        img.onload = function() {
+                            console.log('[Regenerate] Image reloaded successfully');
+                        };
                         refreshDiagram();
                     } else {
+                        console.error('[Regenerate] Result has success=false:', result.error);
                         updateStatus(`✗ Error: ${result.error}`, 'error');
                     }
                 } catch (error) {
-                    console.error('Regenerate error:', error);
-                    updateStatus(`✗ Failed to regenerate: ${error.message}`, 'error');
+                    console.error('[Regenerate] Exception in browse mode:', error);
+                    updateStatus(`✗ Failed to fork/regenerate: ${error.message}`, 'error');
                 }
             } else {
                 // Normal mode - regenerate with MCP context
+                console.log('[Regenerate] NORMAL MODE - Regenerating with MCP context');
+
                 const options = {
                     direction: document.getElementById('direction').value,
                     spacing: document.getElementById('spacing').value,
@@ -1344,6 +1675,8 @@
                     show_relationship_labels: document.getElementById('show_relationship_labels').checked
                 };
 
+                console.log('[Regenerate] Options:', options);
+
                 try {
                     const response = await fetch(`${API_BASE}/regenerate`, {
                         method: 'POST',
@@ -1354,23 +1687,37 @@
                         body: JSON.stringify(options)
                     });
 
+                    console.log('[Regenerate] Response status:', response.status, response.statusText);
+
                     if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('[Regenerate] Error response:', errorText);
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
 
                     const result = await response.json();
+                    console.log('[Regenerate] Success result:', result);
 
                     if (result.success) {
                         updateStatus('✓ Diagram regenerated successfully!', 'success');
-                        // Clear interaction flag so next refresh loads new values
+                        // Wait for file system to sync before reloading
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        // Clear interaction flag and force reload model to update sidebars
                         userIsInteracting = false;
-                        await loadCurrentModel();
-                        refreshDiagram();
+                        await loadCurrentModel(true); // forceUpdate = true
+                        // Reload image with aggressive cache busting
+                        const img = document.getElementById('diagram');
+                        const cacheBuster = Date.now() + Math.random();
+                        img.src = `exports/AI/diagram.png?nocache=${cacheBuster}`;
+                        img.onload = function() {
+                            console.log('[Regenerate] Image reloaded successfully (normal mode)');
+                        };
                     } else {
+                        console.error('[Regenerate] Result has success=false:', result.error);
                         updateStatus(`✗ Error: ${result.error}`, 'error');
                     }
                 } catch (error) {
-                    console.error('Regenerate error:', error);
+                    console.error('[Regenerate] Exception in normal mode:', error);
                     updateStatus(`✗ Failed to regenerate: ${error.message}`, 'error');
                 }
             }
@@ -1393,8 +1740,8 @@
                 const img = document.getElementById('diagram');
                 const currentSrc = img.src;
                 const match = currentSrc.match(/exports\/([^\/]+)\/diagram\.png/);
-                const diagramTimestamp = match ? match[1] : 'latest';
-                const inBrowseMode = diagramTimestamp !== 'latest';
+                const diagramTimestamp = match ? match[1] : 'AI';
+                const inBrowseMode = diagramTimestamp !== 'AI';
 
                 const zip = new JSZip();
                 const files = ['png', 'svg', 'puml', 'xml', 'md', 'json'];
@@ -1580,7 +1927,7 @@
             const img = document.getElementById('diagram');
             const currentSrc = img.src;
             const match = currentSrc.match(/exports\/([^\/]+)\/diagram\.png/);
-            const diagramTimestamp = match ? match[1] : 'latest';
+            const diagramTimestamp = match ? match[1] : 'AI';
 
             // Check if file exists (use current diagram's timestamp)
             const url = `exports/${diagramTimestamp}/${serverFilename}`;
@@ -1592,7 +1939,7 @@
 
                 try {
                     // Check if we're in browse mode (viewing historical diagram)
-                    const inBrowseMode = diagramTimestamp !== 'latest';
+                    const inBrowseMode = diagramTimestamp !== 'AI';
 
                     if (inBrowseMode) {
                         // Browse mode - regenerate from PlantUML file
@@ -1682,6 +2029,12 @@
         }
 
         async function refreshDiagram() {
+            // Don't refresh if user is editing (interacting with input fields)
+            if (userIsInteracting) {
+                console.log('[refreshDiagram] Skipping refresh - user is editing');
+                return;
+            }
+
             // Don't refresh if history is open or viewing a historical diagram
             const historyView = document.getElementById('history-view');
             const viewModeClose = document.getElementById('view-mode-close');
@@ -1696,10 +2049,13 @@
                 return;
             }
 
+            // Check server status - updates status message and diagram visibility
+            await checkServerStatus();
+
             // Check if diagram has changed by fetching metadata
             let diagramChanged = false;
             try {
-                const response = await fetch('exports/latest/metadata.json');
+                const response = await fetch('exports/AI/metadata.json');
                 const metadata = await response.json();
                 const newTimestamp = metadata.generated_at;
 
@@ -1716,7 +2072,7 @@
             // Normal refresh logic - only for main canvas view
             const img = document.getElementById('diagram');
             const timestamp = new Date().getTime();
-            img.src = `exports/latest/diagram.png?t=${timestamp}`;
+            img.src = `exports/${currentDiagramTimestamp}/diagram.png?t=${timestamp}`;
 
             // Force update if diagram changed (new diagram from Claude)
             await loadCurrentModel(diagramChanged);
@@ -1840,7 +2196,7 @@
                     let currentTimestamp = match[1];
 
                     // If viewing "latest", resolve to actual timestamp
-                    if (currentTimestamp === 'latest') {
+                    if (currentTimestamp === 'AI') {
                         // Latest is the first (newest) in sorted array
                         currentTimestamp = diagramTimestamps[0];
                     }
@@ -1898,9 +2254,15 @@
         }
 
         async function closeHistory() {
+            // Update current diagram timestamp tracker
+            currentDiagramTimestamp = 'AI';
+            console.log(`[closeHistory] Set currentDiagramTimestamp to: ${currentDiagramTimestamp}`);
+
             document.getElementById('history-view').style.display = 'none';
             document.getElementById('diagram').style.display = 'block';
             document.getElementById('zoom-controls').style.display = 'flex';
+
+            // Show navigation controls for browsing diagrams
             document.getElementById('nav-controls').style.display = 'flex';
 
             // Show regenerate button for current diagram
@@ -1908,7 +2270,7 @@
 
             // Reload current (latest) diagram image and model
             const img = document.getElementById('diagram');
-            img.src = `exports/latest/diagram.png?t=${Date.now()}`;
+            img.src = `exports/AI/diagram.png?t=${Date.now()}`;
 
             await loadCurrentModel(true);
             zoomReset();
@@ -1917,6 +2279,12 @@
         // View diagram from history
         async function viewDiagram(timestamp) {
             console.log(`[viewDiagram] Starting for timestamp: ${timestamp}`);
+
+            // Update current diagram timestamp tracker
+            currentDiagramTimestamp = timestamp;
+            console.log(`[viewDiagram] Set currentDiagramTimestamp to: ${currentDiagramTimestamp}`);
+            // Update debug indicator
+            document.getElementById('debug-timestamp').textContent = timestamp;
 
             // Show diagram in canvas with zoom enabled
             const img = document.getElementById('diagram');
@@ -1953,6 +2321,7 @@
                     // Convert input.json format to model format
                     currentModel = {
                         title: inputData.title || '',
+                        description: inputData.description || '',
                         elements: inputData.elements || [],
                         relationships: inputData.relationships || [],
                         options: normalizedLayout,
@@ -1963,12 +2332,19 @@
                     console.log(`[viewDiagram] Calling updateStats with updateControls=true`);
                     // Force update controls (updateStats will handle event listener management)
                     updateStats(currentModel, true);
+                    console.log(`[viewDiagram] Calling loadDiagramFields`);
+                    loadDiagramFields(); // Load diagram title and description
+                    console.log(`[viewDiagram] Calling resetEditForm`);
+                    resetEditForm(); // Clear edit form BEFORE auto-select
+                    console.log(`[viewDiagram] Calling populateElementDropdown with autoSelectFirst=true`);
+                    populateElementDropdown(true); // Update dropdown and auto-select first element (must be AFTER resetEditForm)
                     console.log(`[viewDiagram] updateStats completed`);
                 } else {
                     // input.json doesn't exist (old diagram) - use default layout
                     console.log(`[viewDiagram] input.json not found (404), using default layout for old diagram`);
                     currentModel = {
                         title: '',
+                        description: '',
                         elements: [],
                         relationships: [],
                         options: {
@@ -1985,12 +2361,16 @@
                     };
                     // Don't update controls for old diagrams - keep current sidebar values
                     updateStats(currentModel, false);
+                    loadDiagramFields(); // Load diagram fields for old diagrams
+                    resetEditForm(); // Clear edit form BEFORE auto-select
+                    populateElementDropdown(true); // Update dropdown and auto-select first element (must be AFTER resetEditForm)
                 }
             } catch (error) {
                 console.warn(`Failed to load model for ${timestamp}:`, error);
                 // On error, use default layout and don't update controls
                 currentModel = {
                     title: '',
+                    description: '',
                     elements: [],
                     relationships: [],
                     options: {
@@ -2006,6 +2386,9 @@
                     relationship_count: 0
                 };
                 updateStats(currentModel, false);
+                populateElementDropdown(true); // Update dropdown and auto-select first element
+                loadDiagramFields(); // Load diagram fields even on error
+                resetEditForm(); // Clear edit form on error too
             }
 
             // Hide history, show diagram (without reloading latest - we want to show the selected one)
@@ -2029,15 +2412,15 @@
             // Hide close button
             document.getElementById('view-mode-close').style.display = 'none';
 
-            // Hide navigation controls
-            document.getElementById('nav-controls').style.display = 'none';
+            // Keep navigation controls visible (allow browsing from latest)
+            document.getElementById('nav-controls').style.display = 'flex';
 
             // Show regenerate button for current diagram
             document.getElementById('regenerate-btn').style.display = 'block';
 
             // Load latest diagram
             const img = document.getElementById('diagram');
-            img.src = `exports/latest/diagram.png?t=${Date.now()}`;
+            img.src = `exports/AI/diagram.png?t=${Date.now()}`;
 
             // Reload current model
             await loadCurrentModel(true);
@@ -2053,7 +2436,7 @@
             const currentSrc = img.src;
             const match = currentSrc.match(/exports\/([^\/]+)\/diagram\.png/);
 
-            if (!match || match[1] === 'latest') {
+            if (!match || match[1] === 'AI') {
                 updateStatus('❌ Cannot delete current diagram', 'error');
                 return;
             }
@@ -2138,6 +2521,15 @@
 
                 // Load all diagrams at once (no pagination)
                 historyData = data.items;
+
+                // Sort: AI/ first, then by timestamp descending
+                historyData.sort((a, b) => {
+                    // AI/ always first
+                    if (a.timestamp === 'AI') return -1;
+                    if (b.timestamp === 'AI') return 1;
+                    // Then sort by timestamp (newest first)
+                    return b.timestamp.localeCompare(a.timestamp);
+                });
 
                 // Update pagination info
                 document.getElementById('pagination-info').textContent =
@@ -2278,10 +2670,6 @@
                             ${item.relationship_count}
                         </td>
                         <td style="padding: 12px; text-align: center;">
-                            ${isLatest ?
-                                '<button disabled style="padding: 6px 12px; margin: 0 4px; background: #444; border: none; border-radius: 4px; color: #888; cursor: not-allowed;">Latest</button>' :
-                                `<button onclick="forkDiagram('${item.timestamp}')" style="padding: 6px 12px; margin: 0 4px; background: #2a2a2a; border: 1px solid #4ec9b0; border-radius: 4px; color: #4ec9b0; cursor: pointer;">Fork</button>`
-                            }
                             <button onclick="deleteDiagram('${item.timestamp}')" ${isLatest ? 'disabled' : ''}
                                     style="padding: 6px 12px; margin: 0 4px; background: ${isLatest ? '#444' : '#d44'}; border: none; border-radius: 4px; color: ${isLatest ? '#888' : 'white'}; cursor: ${isLatest ? 'not-allowed' : 'pointer'}; font-size: 16px;">
                                 🗑️
@@ -2463,44 +2851,6 @@
             loadHistory(true);
         }
 
-        // Fork diagram (Load & Edit)
-        async function forkDiagram(timestamp) {
-            if (!confirm('Fork this diagram? This will create a new version based on the historical diagram.')) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE}/history/${timestamp}/fork`, {
-                    method: 'POST'
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    // Close history view (will reload latest diagram)
-                    await closeHistory();
-
-                    // Force refresh - bypass user interaction check
-                    userIsInteracting = false;
-
-                    // Reload current model with force update (will update controls)
-                    await loadCurrentModel(true);
-
-                    // Refresh diagram
-                    const img = document.getElementById('diagram');
-                    img.src = `exports/latest/diagram.png?t=${Date.now()}`;
-
-                    updateStatus('✓ Diagram forked successfully', 'success');
-                    alert('Diagram forked successfully! You can now edit it.');
-                } else {
-                    alert(`Failed to fork diagram: ${result.error || result.message}`);
-                }
-
-            } catch (error) {
-                console.error('Fork error:', error);
-                alert(`Failed to fork diagram: ${error.message}`);
-            }
-        }
 
         // viewDiagram is already defined above in showHistory/closeHistory section
 
@@ -2510,7 +2860,7 @@
             try {
                 updateHistoryStatus('Deleting diagram...');
 
-                const response = await fetch(`${API_BASE}/delete?timestamp=${timestamp}`, {
+                const response = await fetch(`${API_BASE}/history/${timestamp}`, {
                     method: 'DELETE'
                 });
 
@@ -2544,17 +2894,13 @@
             const count = selectedHistoryItems.size;
             if (count === 0) return;
 
-            if (!confirm(`Delete ${count} diagrams? This cannot be undone.`)) {
-                return;
-            }
-
             // Show status message
             updateHistoryStatus(`Deleting ${count} diagrams...`);
 
             let deleted = 0;
             for (const timestamp of selectedHistoryItems) {
                 try {
-                    const response = await fetch(`${API_BASE}/delete?timestamp=${timestamp}`, {
+                    const response = await fetch(`${API_BASE}/history/${timestamp}`, {
                         method: 'DELETE'
                     });
 
@@ -2583,6 +2929,436 @@
             const container = document.getElementById('history-table-body');
             if (container) {
                 container.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: #808080;">${message}</td></tr>`;
+            }
+        }
+
+        // ========================================
+        // Right Panel: Element Renaming Functions
+        // ========================================
+
+        /**
+         * Toggle the rename panel collapsed/expanded state
+         */
+        function toggleRenamePanel() {
+            const panel = document.getElementById('rename-panel');
+            const toggle = document.getElementById('rename-panel-toggle');
+
+            panel.classList.toggle('collapsed');
+
+            // Update toggle button arrow direction
+            // Right panel: ◀ when collapsed (points left to expand), ▶ when open (points right to collapse)
+            if (panel.classList.contains('collapsed')) {
+                toggle.textContent = '◀';
+                toggle.title = 'Expand editor panel';
+            } else {
+                toggle.textContent = '▶';
+                toggle.title = 'Collapse editor panel';
+            }
+        }
+
+        /**
+         * Populate the element dropdown from currentModel
+         * @param {boolean} autoSelectFirst - If true, automatically select first element
+         */
+        function populateElementDropdown(autoSelectFirst = false) {
+            const select = document.getElementById('element-select');
+
+            console.log('[populateElementDropdown] currentModel:', currentModel, 'autoSelectFirst:', autoSelectFirst);
+
+            if (!currentModel || !currentModel.elements) {
+                console.log('[populateElementDropdown] No model or elements');
+                select.innerHTML = '<option value="">-- No elements available --</option>';
+                return;
+            }
+
+            console.log('[populateElementDropdown] Elements count:', currentModel.elements.length);
+
+            // Remember currently selected element
+            const currentlySelected = select.value;
+            console.log('[populateElementDropdown] Currently selected:', currentlySelected);
+
+            // Clear existing options
+            select.innerHTML = '<option value="">-- Choose Element --</option>';
+
+            // Sort elements by name
+            const sortedElements = [...currentModel.elements].sort((a, b) =>
+                (a.name || '').localeCompare(b.name || '')
+            );
+
+            // Add options
+            sortedElements.forEach(elem => {
+                const option = document.createElement('option');
+                option.value = elem.id;
+                option.textContent = `${elem.name} (${elem.type || elem.element_type || 'unknown'})`;
+                select.appendChild(option);
+            });
+
+            // Restore previously selected element if it still exists
+            if (currentlySelected && currentModel.elements.find(e => e.id === currentlySelected)) {
+                select.value = currentlySelected;
+                console.log('[populateElementDropdown] Restored selection:', currentlySelected);
+            } else if (autoSelectFirst && sortedElements.length > 0) {
+                // Auto-select first element if requested and no previous selection
+                select.value = sortedElements[0].id;
+                console.log('[populateElementDropdown] Auto-selected first element:', sortedElements[0].id);
+                // Trigger loadElementForEdit to show the element details
+                loadElementForEdit();
+            }
+
+            console.log('[populateElementDropdown] Dropdown populated with', sortedElements.length, 'elements');
+        }
+
+        /**
+         * HTML escape helper function to prevent XSS and display issues
+         */
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        /**
+         * Load diagram-level fields (title and description)
+         */
+        function loadDiagramFields() {
+            if (!currentModel) return;
+
+            console.log('[loadDiagramFields] Loading diagram title:', currentModel.title);
+            console.log('[loadDiagramFields] Loading diagram description:', currentModel.description);
+            document.getElementById('diagram-title').value = currentModel.title || '';
+            document.getElementById('diagram-description').value = currentModel.description || '';
+        }
+
+        /**
+         * Load selected element for editing
+         */
+        function loadElementForEdit() {
+            const select = document.getElementById('element-select');
+            const elementId = select.value;
+
+            const editForm = document.getElementById('element-edit-form');
+            const relSection = document.getElementById('relationships-section');
+            const applyBtn = document.getElementById('rename-apply-btn');
+
+            if (!elementId) {
+                editForm.style.display = 'none';
+                relSection.style.display = 'none';
+                applyBtn.disabled = true;
+                return;
+            }
+
+            // Find the element
+            const element = currentModel.elements.find(e => e.id === elementId);
+            if (!element) {
+                console.error('Element not found:', elementId);
+                return;
+            }
+
+            // Populate form
+            console.log('[loadElementForEdit] Element data:', element);
+            console.log('[loadElementForEdit] Element name:', element.name);
+            console.log('[loadElementForEdit] Element description:', element.description);
+            console.log('[loadElementForEdit] Element type:', element.type || element.element_type);
+
+            document.getElementById('element-name').value = element.name || '';
+            document.getElementById('element-description').value = element.description || '';
+            document.getElementById('element-type-display').textContent = element.type || element.element_type || 'unknown';
+
+            editForm.style.display = 'block';
+            applyBtn.disabled = false;
+
+            // Load relationships
+            loadRelationshipsForElement(elementId);
+        }
+
+        /**
+         * Load and display relationships for the selected element
+         */
+        function loadRelationshipsForElement(elementId) {
+            const relSection = document.getElementById('relationships-section');
+            const relList = document.getElementById('relationships-list');
+
+            if (!currentModel || !currentModel.relationships) {
+                relSection.style.display = 'none';
+                return;
+            }
+
+            // Find relationships where this element is the source or target
+            const elementRels = currentModel.relationships.filter(rel =>
+                rel.source === elementId || rel.target === elementId ||
+                rel.from_element === elementId || rel.to_element === elementId
+            );
+
+            if (elementRels.length === 0) {
+                relSection.style.display = 'none';
+                return;
+            }
+
+            // Build relationship list HTML
+            relList.innerHTML = '';
+
+            elementRels.forEach(rel => {
+                const isSource = (rel.source === elementId || rel.from_element === elementId);
+                const otherId = isSource ? (rel.target || rel.to_element) : (rel.source || rel.from_element);
+                const otherElement = currentModel.elements.find(e => e.id === otherId);
+                const otherName = otherElement ? otherElement.name : otherId;
+
+                const relType = rel.type || rel.relationship_type || 'unknown';
+                const relLabel = rel.label || '';
+                const relDescription = rel.description || '';
+
+                console.log('[loadRelationshipsForElement] Relationship:', {
+                    id: rel.id,
+                    type: relType,
+                    label: relLabel,
+                    description: relDescription
+                });
+
+                const item = document.createElement('div');
+                item.className = 'relationship-item';
+                item.innerHTML = `
+                    <div class="rel-header">
+                        <span class="rel-type">${escapeHtml(relType)}</span>
+                        <span class="rel-arrow">${isSource ? '→' : '←'}</span>
+                        <span class="rel-target">${escapeHtml(otherName)}</span>
+                    </div>
+                    <label>Label:</label>
+                    <input type="text"
+                           value="${escapeHtml(relLabel)}"
+                           placeholder="Relationship label..."
+                           data-rel-id="${escapeHtml(rel.id)}"
+                           data-field="label"
+                           onchange="updateRelationshipField('${escapeHtml(rel.id)}', 'label', this.value)" />
+                    <label>Description:</label>
+                    <textarea
+                           data-rel-id="${escapeHtml(rel.id)}"
+                           data-field="description"
+                           placeholder="Relationship description..."
+                           onchange="updateRelationshipField('${escapeHtml(rel.id)}', 'description', this.value)">${escapeHtml(relDescription)}</textarea>
+                `;
+                relList.appendChild(item);
+            });
+
+            relSection.style.display = 'block';
+        }
+
+        /**
+         * Update relationship field in currentModel (in-memory only)
+         */
+        function updateRelationshipField(relId, field, newValue) {
+            if (!currentModel || !currentModel.relationships) return;
+
+            const rel = currentModel.relationships.find(r => r.id === relId);
+            if (rel) {
+                rel[field] = newValue;
+                console.log(`[updateRelationshipField] Updated ${field} for relationship ${relId}:`, newValue);
+            }
+        }
+
+        /**
+         * Reset edit form to default state (called when navigating between diagrams)
+         */
+        function resetEditForm() {
+            console.log('[resetEditForm] Resetting edit panel fields');
+
+            // Reset dropdown to default option
+            const select = document.getElementById('element-select');
+            select.value = '';
+
+            // Hide edit form and relationships section
+            const editForm = document.getElementById('element-edit-form');
+            const relSection = document.getElementById('relationships-section');
+            editForm.style.display = 'none';
+            relSection.style.display = 'none';
+
+            // Clear element input fields
+            document.getElementById('element-name').value = '';
+            document.getElementById('element-description').value = '';
+            document.getElementById('element-type-display').textContent = '';
+
+            // Clear relationships list
+            const relList = document.getElementById('relationships-list');
+            relList.innerHTML = '';
+
+            // Note: Diagram-level fields (title, description) are NOT reset here
+            // They will be updated by loadDiagramFields() when new diagram loads
+
+            console.log('[resetEditForm] Edit panel reset complete (element fields only)');
+        }
+
+        /**
+         * Apply rename changes: save to input.json and regenerate diagram
+         */
+        async function applyRename() {
+            if (!currentModel) {
+                alert('No diagram loaded');
+                return;
+            }
+
+            // Get updated diagram-level values (always update these)
+            const newDiagramTitle = document.getElementById('diagram-title').value.trim();
+            const newDiagramDescription = document.getElementById('diagram-description').value.trim();
+
+            if (!newDiagramTitle) {
+                alert('Diagram title cannot be empty');
+                return;
+            }
+
+            // Update diagram-level fields in currentModel
+            currentModel.title = newDiagramTitle;
+            currentModel.description = newDiagramDescription;
+
+            // Get element-level values (if element is selected)
+            const select = document.getElementById('element-select');
+            const elementId = select.value;
+
+            if (elementId) {
+                const newName = document.getElementById('element-name').value.trim();
+                const newDescription = document.getElementById('element-description').value.trim();
+
+                if (!newName) {
+                    alert('Element name cannot be empty');
+                    return;
+                }
+
+                // Update element in currentModel
+                const element = currentModel.elements.find(e => e.id === elementId);
+                if (!element) {
+                    alert('Element not found');
+                    return;
+                }
+
+                element.name = newName;
+                element.description = newDescription;
+            }
+
+            // Prepare input.json structure
+            const inputData = {
+                title: currentModel.title,
+                description: currentModel.description,
+                elements: currentModel.elements,
+                relationships: currentModel.relationships,
+                layout: currentModel.options || {
+                    direction: 'top-bottom',
+                    spacing: 'comfortable',
+                    show_legend: true,
+                    show_title: true,
+                    group_by_layer: false,
+                    show_element_types: false,
+                    show_relationship_labels: true
+                },
+                language: currentModel.language || 'en'
+            };
+
+            try {
+                // If viewing historical diagram, fork it first (copy to AI/)
+                if (currentDiagramTimestamp !== 'AI') {
+                    console.log(`[applyRename] Forking historical diagram ${currentDiagramTimestamp} to AI/`);
+                    updateStatus(`🔀 Forking diagram ${currentDiagramTimestamp} to AI/...`, 'info');
+
+                    const forkResponse = await fetch(`${API_BASE}/history/${currentDiagramTimestamp}/fork`, {
+                        method: 'POST'
+                    });
+
+                    if (!forkResponse.ok) {
+                        throw new Error('Failed to fork historical diagram');
+                    }
+
+                    console.log('[applyRename] Fork successful, now editing AI/ version');
+                    // Switch to AI/ mode after fork
+                    currentDiagramTimestamp = 'AI';
+                }
+
+                // Save to input.json (always to AI/ directory)
+                updateStatus('💾 Saving changes...', 'info');
+                const saveResponse = await fetch(`${API_BASE}/save_input`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(inputData)
+                });
+
+                if (!saveResponse.ok) {
+                    throw new Error('Failed to save input.json');
+                }
+
+                // Regenerate diagram with current layout options
+                updateStatus('🔄 Regenerating diagram...', 'info');
+                const regenOptions = {
+                    title: currentModel.title,
+                    direction: currentModel.options?.direction || 'top-bottom',
+                    spacing: currentModel.options?.spacing || 'comfortable',
+                    show_legend: currentModel.options?.show_legend !== false,
+                    show_title: currentModel.options?.show_title !== false,
+                    group_by_layer: currentModel.options?.group_by_layer === true,
+                    show_element_types: currentModel.options?.show_element_types === true,
+                    show_relationship_labels: currentModel.options?.show_relationship_labels !== false
+                };
+
+                console.log('[applyRename] Regenerating with options:', regenOptions);
+
+                const regenResponse = await fetch(`${API_BASE}/regenerate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(regenOptions)
+                });
+
+                if (!regenResponse.ok) {
+                    const errorText = await regenResponse.text();
+                    console.error('[applyRename] Regenerate error:', errorText);
+                    throw new Error('Failed to regenerate diagram');
+                }
+
+                const regenResult = await regenResponse.json();
+                console.log('[applyRename] Regenerate result:', regenResult);
+
+                // Reload the diagram and refresh image
+                updateStatus('✅ Diagram regenerated successfully', 'success');
+
+                // After fork, we're now in AI/ mode, so reload history to show the new AI/ version
+                if (currentDiagramTimestamp === 'AI') {
+                    await loadHistory();
+                }
+
+                // Wait for file system to sync and PlantUML to finish writing PNG
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // Reload the image from AI/ directory
+                const img = document.getElementById('diagram');
+                img.src = `exports/AI/diagram.png?t=${Date.now()}`;
+                console.log('[applyRename] Image refreshed:', img.src);
+
+                // Reload the model from AI/ to get the updated diagram with generated metadata
+                setTimeout(async () => {
+                    console.log('[applyRename] Reloading model after regeneration');
+
+                    // Remember which element was selected before reload
+                    const select = document.getElementById('element-select');
+                    const selectedElementId = select.value;
+                    console.log('[applyRename] Previously selected element:', selectedElementId);
+
+                    await loadCurrentModel();
+
+                    // Update right sidebar with new values
+                    loadDiagramFields();
+
+                    // Repopulate element dropdown to refresh element list
+                    populateElementDropdown(false); // Don't auto-select first element
+
+                    // Restore the previously selected element (if still exists)
+                    if (selectedElementId && currentModel.elements.find(e => e.id === selectedElementId)) {
+                        select.value = selectedElementId;
+                        console.log('[applyRename] Restored selection:', selectedElementId);
+                        // Reload the element fields to show updated values
+                        loadElementForEdit();
+                    } else {
+                        console.log('[applyRename] Element no longer exists or was not selected');
+                    }
+                }, 500);
+
+            } catch (error) {
+                console.error('Rename error:', error);
+                updateStatus(`❌ Failed to apply changes: ${error.message}`, 'error');
             }
         }
 

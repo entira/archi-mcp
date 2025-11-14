@@ -14,6 +14,7 @@ import logging
 import threading
 import socket
 import re
+import shutil
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Literal, Union
 from pathlib import Path
@@ -407,7 +408,7 @@ def build_history_index() -> dict:
 
     items = []
 
-    # Scan all timestamp directories
+    # Scan all timestamp directories (including AI/)
     for entry in os.listdir(exports_dir):
         entry_path = os.path.join(exports_dir, entry)
 
@@ -417,20 +418,57 @@ def build_history_index() -> dict:
         if entry == "failed_attempts":
             continue
 
-        # Try to parse timestamp
-        if not re.match(r'^\d{8}_\d{6}', entry):
+        # Accept both timestamp format (YYYYMMDD_HHMMSS) and AI/ directory
+        is_timestamp = bool(re.match(r'^\d{8}_\d{6}', entry))
+        is_ai_dir = (entry == "AI")
+
+        if not (is_timestamp or is_ai_dir):
+            # Skip directories that are neither timestamp nor AI/
             continue
 
-        # Load metadata.json if exists
-        metadata_path = os.path.join(entry_path, "metadata.json")
-        if not os.path.exists(metadata_path):
-            # No metadata, skip this entry
+        # Check if input.json exists (required for all diagrams)
+        input_json_path = os.path.join(entry_path, "input.json")
+        if not os.path.exists(input_json_path):
+            logger.debug(f'Skipping {entry}: no input.json')
             continue
+
+        # Load metadata.json if exists, otherwise generate minimal metadata from input.json
+        metadata_path = os.path.join(entry_path, "metadata.json")
+        metadata = None
+
+        if os.path.exists(metadata_path):
+            # Load existing metadata
+            try:
+                with open(metadata_path, 'r', encoding='utf-8') as f:
+                    metadata = json.load(f)
+            except Exception as e:
+                logger.warning(f'Failed to load metadata for {entry}: {e}')
+
+        if metadata is None:
+            # Generate minimal metadata from input.json
+            try:
+                with open(input_json_path, 'r', encoding='utf-8') as f:
+                    input_data = json.load(f)
+
+                metadata = {
+                    "title": input_data.get("title", "Untitled Diagram"),
+                    "description": input_data.get("description", ""),
+                    "generated_at": datetime.fromtimestamp(os.path.getmtime(input_json_path)).isoformat(),
+                    "statistics": {
+                        "elements": len(input_data.get("elements", [])),
+                        "relationships": len(input_data.get("relationships", [])),
+                        "layers": list(set(e.get("layer", "") for e in input_data.get("elements", [])))
+                    },
+                    "generation_time_seconds": 0,
+                    "png_generated": os.path.exists(os.path.join(entry_path, "diagram.png")),
+                    "svg_generated": os.path.exists(os.path.join(entry_path, "diagram.svg"))
+                }
+                logger.info(f'Generated minimal metadata for {entry} from input.json')
+            except Exception as e:
+                logger.warning(f'Failed to generate metadata for {entry}: {e}')
+                continue
 
         try:
-            with open(metadata_path, 'r', encoding='utf-8') as f:
-                metadata = json.load(f)
-
             # Calculate directory size
             dir_size = sum(
                 os.path.getsize(os.path.join(entry_path, f))
@@ -456,7 +494,7 @@ def build_history_index() -> dict:
             items.append(item)
 
         except Exception as e:
-            logger.warning( f'Failed to load metadata for {entry}: {e}')
+            logger.warning(f'Failed to build item for {entry}: {e}')
             continue
 
     # Sort by timestamp (newest first)
@@ -572,13 +610,10 @@ def delete_diagram_export(timestamp: str) -> bool:
         if not os.path.exists(export_dir):
             return False
 
-        # Prevent deleting latest
-        latest_link = os.path.join(os.getcwd(), "exports", "latest")
-        if os.path.islink(latest_link):
-            latest_target = os.readlink(latest_link)
-            if latest_target == timestamp:
-                logger.warning( f'Cannot delete latest diagram: {timestamp}')
-                return False
+        # Prevent deleting AI directory (current working diagram)
+        if timestamp == 'AI':
+            logger.warning(f'Cannot delete current working diagram: {timestamp}')
+            return False
 
         # Delete directory
         import shutil
@@ -616,15 +651,28 @@ def regenerate_diagram_from_state():
 
         # Add elements from state
         for elem_data in current_model_state["elements"]:
-            # Normalize aspect string (replace spaces with underscores and uppercase)
-            aspect_str = elem_data["aspect"].upper().replace(" ", "_")
+            # Handle both formats: with aspect (from MCP) or without (from input.json)
+            if "aspect" in elem_data:
+                # Format from MCP - has explicit aspect
+                aspect_str = elem_data["aspect"].upper().replace(" ", "_")
+                aspect = ArchiMateAspect[aspect_str]
+            else:
+                # Format from input.json - derive aspect from element_type name
+                element_type = elem_data["element_type"]
+                # Try to guess aspect from element type name
+                if "actor" in element_type.lower() or "role" in element_type.lower():
+                    aspect = ArchiMateAspect.ACTIVE_STRUCTURE
+                elif "service" in element_type.lower() or "function" in element_type.lower() or "process" in element_type.lower() or "interaction" in element_type.lower() or "event" in element_type.lower():
+                    aspect = ArchiMateAspect.BEHAVIOR
+                else:
+                    aspect = ArchiMateAspect.PASSIVE_STRUCTURE
 
             elem = ArchiMateElement(
                 id=elem_data["id"],
                 name=elem_data["name"],
                 element_type=elem_data["element_type"],
                 layer=ArchiMateLayer[elem_data["layer"].upper()],
-                aspect=ArchiMateAspect[aspect_str],
+                aspect=aspect,
                 description=elem_data.get("description")
             )
             gen.add_element(elem)
@@ -677,17 +725,22 @@ def regenerate_diagram_from_state():
         # Generate PlantUML code
         puml_code = gen.generate_plantuml(title=title)
 
-        # Create export directory
+        # Create timestamped export directory
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        export_dir = os.path.join(os.getcwd(), "exports", timestamp)
-        os.makedirs(export_dir, exist_ok=True)
+        timestamp_dir = os.path.join(os.getcwd(), "exports", timestamp)
+        os.makedirs(timestamp_dir, exist_ok=True)
 
-        # Save PlantUML file
-        puml_file = os.path.join(export_dir, "diagram.puml")
-        with open(puml_file, 'w', encoding='utf-8') as f:
-            f.write(puml_code)
+        # Create AI directory
+        ai_dir = os.path.join(os.getcwd(), "exports", "AI")
+        os.makedirs(ai_dir, exist_ok=True)
 
-        # Render PNG with PlantUML
+        # Save PlantUML file to BOTH locations
+        for export_dir in [timestamp_dir, ai_dir]:
+            puml_file = os.path.join(export_dir, "diagram.puml")
+            with open(puml_file, 'w', encoding='utf-8') as f:
+                f.write(puml_code)
+
+        # Render PNG with PlantUML for BOTH locations
         plantuml_jar = os.path.join(os.getcwd(), "plantuml.jar")
         if not os.path.exists(plantuml_jar):
             return {
@@ -695,25 +748,34 @@ def regenerate_diagram_from_state():
                 "error": "PlantUML JAR not found. Please ensure plantuml.jar exists in project root."
             }
 
-        png_file = os.path.join(export_dir, "diagram.png")
-        subprocess.run([
-            "java", "-Djava.awt.headless=true", "-jar", plantuml_jar,
-            "-tpng", puml_file
-        ], check=True, capture_output=True)
+        for export_dir in [timestamp_dir, ai_dir]:
+            puml_file = os.path.join(export_dir, "diagram.puml")
+            subprocess.run([
+                "java", "-Djava.awt.headless=true", "-jar", plantuml_jar,
+                "-tpng", puml_file
+            ], check=True, capture_output=True)
 
-        # Create/update latest symlink
-        latest_link = os.path.join(os.getcwd(), "exports", "latest")
-        if os.path.exists(latest_link):
-            os.remove(latest_link)
-        os.symlink(timestamp, latest_link)
+        # Save input.json to BOTH locations
+        input_data = {
+            "elements": current_model_state["elements"],
+            "relationships": current_model_state["relationships"],
+            "title": title,
+            "description": current_model_state.get("description", ""),
+            "layout": options,
+            "language": "sk"
+        }
+        for export_dir in [timestamp_dir, ai_dir]:
+            input_file = os.path.join(export_dir, "input.json")
+            with open(input_file, 'w', encoding='utf-8') as f:
+                json.dump(input_data, f, indent=2, ensure_ascii=False)
 
         # Update state
-        current_model_state["latest_export_dir"] = export_dir
+        current_model_state["latest_export_dir"] = ai_dir
         current_model_state["last_updated"] = datetime.now().isoformat()
 
         return {
             "success": True,
-            "export_dir": export_dir,
+            "export_dir": ai_dir,
             "timestamp": timestamp
         }
 
@@ -774,9 +836,26 @@ def start_http_server(port: int = 8080):
 
         # REST API Endpoints
         async def api_status(request):
-            """Health check endpoint"""
+            """Health check endpoint with MCP server detection"""
             global current_model_state
-            return JSONResponse({"status": "ok", "server": "archi-mcp"})
+
+            # Check if MCP server has been used (elements in memory or input.json exists)
+            mcp_active = bool(current_model_state["elements"])
+
+            if not mcp_active:
+                # Check if exports/AI/input.json exists (HTTP-only mode)
+                ai_input = os.path.join(exports_dir, "AI", "input.json")
+                has_diagram = os.path.exists(ai_input)
+            else:
+                has_diagram = True
+
+            return JSONResponse({
+                "status": "ok",
+                "server": "archi-mcp",
+                "mcp_active": mcp_active,
+                "has_diagram": has_diagram,
+                "mode": "mcp" if mcp_active else ("http-only" if has_diagram else "empty")
+            })
 
         async def api_get_model(request):
             """Get current model state"""
@@ -788,6 +867,22 @@ def start_http_server(port: int = 8080):
             global current_model_state
             try:
                 body = await request.json()
+
+                # If current_model_state is empty, try loading from exports/AI/input.json
+                if not current_model_state["elements"]:
+                    ai_input = os.path.join(exports_dir, "AI", "input.json")
+                    if os.path.exists(ai_input):
+                        logger.info(f"Loading model state from {ai_input}")
+                        with open(ai_input, 'r', encoding='utf-8') as f:
+                            input_data = json.load(f)
+
+                        # Populate current_model_state from input.json
+                        current_model_state["title"] = input_data.get("title", "")
+                        current_model_state["description"] = input_data.get("description", "")
+                        current_model_state["elements"] = input_data.get("elements", [])
+                        current_model_state["relationships"] = input_data.get("relationships", [])
+                        current_model_state["options"] = input_data.get("layout", {})
+                        logger.info(f"Loaded {len(current_model_state['elements'])} elements and description from input.json")
 
                 # Extract title separately
                 if "title" in body:
@@ -817,6 +912,65 @@ def start_http_server(port: int = 8080):
                 logger.error(f"API regenerate error: {e}")
                 return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
+        async def api_regenerate_puml(request):
+            """Regenerate diagram from existing PlantUML file (for historical diagrams)"""
+            try:
+                body = await request.json()
+                timestamp = body.get("timestamp")
+
+                if not timestamp:
+                    return JSONResponse({"success": False, "error": "Missing timestamp parameter"}, status_code=400)
+
+                # Find the PlantUML file in the specified export directory
+                export_dir = os.path.join(os.getcwd(), "exports", timestamp)
+                puml_file = os.path.join(export_dir, "diagram.puml")
+
+                if not os.path.exists(puml_file):
+                    return JSONResponse({
+                        "success": False,
+                        "error": f"PlantUML file not found: {puml_file}"
+                    }, status_code=404)
+
+                # Check PlantUML JAR exists
+                plantuml_jar = os.path.join(os.getcwd(), "plantuml.jar")
+                if not os.path.exists(plantuml_jar):
+                    return JSONResponse({
+                        "success": False,
+                        "error": "PlantUML JAR not found. Please ensure plantuml.jar exists in project root."
+                    }, status_code=500)
+
+                # Regenerate PNG from PlantUML file
+                png_file = os.path.join(export_dir, "diagram.png")
+                result = subprocess.run([
+                    "java", "-Djava.awt.headless=true", "-jar", plantuml_jar,
+                    "-tpng", puml_file
+                ], check=True, capture_output=True, text=True)
+
+                if not os.path.exists(png_file):
+                    return JSONResponse({
+                        "success": False,
+                        "error": "PNG generation failed - output file not created"
+                    }, status_code=500)
+
+                logger.info(f"Successfully regenerated PNG from PlantUML: {png_file}")
+
+                return JSONResponse({
+                    "success": True,
+                    "message": "Diagram regenerated from PlantUML successfully",
+                    "export_dir": export_dir,
+                    "timestamp": timestamp
+                })
+
+            except subprocess.CalledProcessError as e:
+                logger.error(f"PlantUML generation failed: {e.stderr}")
+                return JSONResponse({
+                    "success": False,
+                    "error": f"PlantUML generation failed: {e.stderr}"
+                }, status_code=500)
+            except Exception as e:
+                logger.error(f"API regenerate_puml error: {e}")
+                return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
         async def api_get_history(request):
             """Get diagram history with optional filtering"""
             try:
@@ -834,15 +988,17 @@ def start_http_server(port: int = 8080):
                 # Load history index
                 index = load_history_index()
 
-                # Get latest timestamp for marking
-                latest_link = os.path.join(os.getcwd(), "exports", "latest")
-                latest_timestamp = None
-                if os.path.islink(latest_link):
-                    latest_timestamp = os.readlink(latest_link)
+                # Mark AI directory as current working diagram
+                latest_timestamp = 'AI'
 
                 # Filter items
                 filtered_items = []
                 for item in index["items"]:
+                    # Check if diagram directory still exists (filter out deleted diagrams)
+                    export_dir = os.path.join(os.getcwd(), "exports", item["timestamp"])
+                    if not os.path.exists(export_dir):
+                        continue  # Skip deleted diagrams
+
                     # Search filter
                     if search and search not in (item.get("title") or "").lower():
                         continue
@@ -915,44 +1071,81 @@ def start_http_server(port: int = 8080):
                 return JSONResponse({"error": str(e)}, status_code=500)
 
         async def api_fork_diagram(request):
-            """Fork a historical diagram (load into editor as new current)"""
+            """Fork a historical diagram (copy all files from timestamp to AI/)"""
             global current_model_state
 
             try:
                 timestamp = request.path_params['timestamp']
-                export_dir = os.path.join(os.getcwd(), "exports", timestamp)
+                source_dir = os.path.join(os.getcwd(), "exports", timestamp)
+                ai_dir = os.path.join(os.getcwd(), "exports", "AI")
 
-                if not os.path.exists(export_dir):
+                if not os.path.exists(source_dir):
                     return JSONResponse({"error": "Diagram not found"}, status_code=404)
 
+                # Create AI/ directory if it doesn't exist
+                os.makedirs(ai_dir, exist_ok=True)
+
+                # List of files to copy
+                files_to_copy = [
+                    "input.json",
+                    "diagram.puml",
+                    "diagram.png",
+                    "metadata.json"
+                ]
+
+                # Optional files (copy if they exist)
+                optional_files = ["diagram.svg", "architecture.md", "generation.log"]
+
+                # Copy required files
+                copied_files = []
+                for filename in files_to_copy:
+                    source_file = os.path.join(source_dir, filename)
+                    dest_file = os.path.join(ai_dir, filename)
+
+                    if os.path.exists(source_file):
+                        shutil.copy2(source_file, dest_file)
+                        copied_files.append(filename)
+                        logger.info(f"Forked file: {filename}")
+                    else:
+                        logger.warning(f"Fork: file not found: {filename}")
+
+                # Copy optional files if they exist
+                for filename in optional_files:
+                    source_file = os.path.join(source_dir, filename)
+                    dest_file = os.path.join(ai_dir, filename)
+
+                    if os.path.exists(source_file):
+                        shutil.copy2(source_file, dest_file)
+                        copied_files.append(filename)
+                        logger.info(f"Forked optional file: {filename}")
+
+                # Load input.json to update current_model_state
+                input_json_path = os.path.join(ai_dir, "input.json")
+                if os.path.exists(input_json_path):
+                    with open(input_json_path, 'r', encoding='utf-8') as f:
+                        loaded_data = json.load(f)
+                        current_model_state["elements"] = loaded_data.get("elements", [])
+                        current_model_state["relationships"] = loaded_data.get("relationships", [])
+                        current_model_state["title"] = loaded_data.get("title", "")
+                        # Load layout options into "options" (not "layout") for consistency with regenerate endpoint
+                        current_model_state["options"] = loaded_data.get("layout", {})
+                        logger.info(f"Loaded model state from {timestamp}: {len(current_model_state['elements'])} elements, {len(current_model_state['relationships'])} relationships, layout: {current_model_state['options']}")
+
                 # Load metadata
-                metadata_path = os.path.join(export_dir, "metadata.json")
-                if not os.path.exists(metadata_path):
-                    return JSONResponse({"error": "Metadata not found"}, status_code=404)
-
-                with open(metadata_path, 'r', encoding='utf-8') as f:
-                    metadata = json.load(f)
-
-                # Load PlantUML to extract model (if available)
-                puml_path = os.path.join(export_dir, "diagram.puml")
-                if not os.path.exists(puml_path):
-                    return JSONResponse({"error": "PlantUML file not found"}, status_code=404)
-
-                # For now, we'll create a new diagram with same title/description
-                # Full model reconstruction would require parsing PlantUML or storing model_state
-                # This is simplified - just copy title and trigger regeneration notice
-
-                # Update current state title
-                current_model_state["title"] = metadata.get("title")
-
-                # Note: Elements and relationships are NOT loaded (PlantUML parsing would be needed)
-                # User will need to recreate via Claude or we'd need to store full model_state
+                metadata_path = os.path.join(ai_dir, "metadata.json")
+                title = current_model_state.get("title", "Forked Diagram")
+                if os.path.exists(metadata_path):
+                    with open(metadata_path, 'r', encoding='utf-8') as f:
+                        metadata = json.load(f)
+                        title = metadata.get("title", title)
 
                 return JSONResponse({
                     "success": True,
-                    "message": f"Forked diagram '{metadata.get('title')}' - title loaded. Recreate elements via Claude.",
-                    "title": metadata.get("title"),
-                    "note": "Full model reconstruction not yet implemented. Only title was loaded."
+                    "message": f"Forked diagram '{title}' to AI/",
+                    "title": title,
+                    "files_copied": copied_files,
+                    "elements_loaded": len(current_model_state.get("elements", [])),
+                    "relationships_loaded": len(current_model_state.get("relationships", []))
                 })
 
             except Exception as e:
@@ -964,13 +1157,11 @@ def start_http_server(port: int = 8080):
             try:
                 timestamp = request.path_params['timestamp']
 
-                # Check if latest
-                latest_link = os.path.join(os.getcwd(), "exports", "latest")
-                if os.path.islink(latest_link):
-                    if os.readlink(latest_link) == timestamp:
-                        return JSONResponse({
-                            "error": "Cannot delete the latest diagram"
-                        }, status_code=403)
+                # Cannot delete AI directory (current working diagram)
+                if timestamp == 'AI':
+                    return JSONResponse({
+                        "error": "Cannot delete the current working diagram"
+                    }, status_code=403)
 
                 # Delete the export
                 success = delete_diagram_export(timestamp)
@@ -999,19 +1190,13 @@ def start_http_server(port: int = 8080):
                 # Load index
                 index = load_history_index()
 
-                # Get latest timestamp
-                latest_link = os.path.join(os.getcwd(), "exports", "latest")
-                latest_timestamp = None
-                if os.path.islink(latest_link):
-                    latest_timestamp = os.readlink(latest_link)
-
                 # Filter old diagrams
                 cutoff_date = datetime.now() - timedelta(days=older_than_days)
                 deleted_count = 0
 
                 for item in index["items"]:
-                    # Skip latest
-                    if item["timestamp"] == latest_timestamp:
+                    # Skip AI directory (current working diagram)
+                    if item["timestamp"] == 'AI':
                         continue
 
                     # Check age
@@ -1039,6 +1224,51 @@ def start_http_server(port: int = 8080):
                 logger.error(f"API cleanup error: {e}")
                 return JSONResponse({"error": str(e)}, status_code=500)
 
+        async def api_save_input(request):
+            """Save input.json for current diagram"""
+            try:
+                body = await request.json()
+
+                # Validate structure
+                required_fields = ['elements', 'relationships', 'layout']
+                if not all(k in body for k in required_fields):
+                    return JSONResponse({
+                        "success": False,
+                        "error": f"Missing required fields: {required_fields}"
+                    }, status_code=400)
+
+                # Always save to the AI directory (current working directory)
+                ai_dir = os.path.join(exports_dir, "AI")
+                os.makedirs(ai_dir, exist_ok=True)
+
+                input_path = os.path.join(ai_dir, "input.json")
+
+                # Save input.json to AI directory
+                with open(input_path, 'w', encoding='utf-8') as f:
+                    json.dump(body, f, indent=2, ensure_ascii=False)
+
+                logger.info(f"Saved input.json with {len(body.get('elements', []))} elements to AI and updated current_model_state")
+
+                # UPDATE current_model_state with the new data
+                current_model_state["title"] = body.get("title", "")
+                current_model_state["description"] = body.get("description", "")
+                current_model_state["elements"] = body.get("elements", [])
+                current_model_state["relationships"] = body.get("relationships", [])
+                current_model_state["options"] = body.get("layout", {})
+
+                return JSONResponse({
+                    "success": True,
+                    "message": "Input saved successfully",
+                    "path": input_path
+                })
+
+            except Exception as e:
+                logger.error(f"Save input error: {e}")
+                return JSONResponse({
+                    "success": False,
+                    "error": str(e)
+                }, status_code=500)
+
         async def serve_designer(request):
             """Serve the interactive designer HTML"""
             designer_path = os.path.join(os.getcwd(), "designer.html")
@@ -1057,6 +1287,8 @@ def start_http_server(port: int = 8080):
                 Route("/api/status", api_status),
                 Route("/api/model", api_get_model),
                 Route("/api/regenerate", api_regenerate, methods=["POST"]),
+                Route("/api/regenerate_puml", api_regenerate_puml, methods=["POST"]),
+                Route("/api/save_input", api_save_input, methods=["POST"]),
                 # History API
                 Route("/api/history", api_get_history),
                 Route("/api/history/cleanup", api_cleanup_old_diagrams, methods=["POST"]),
@@ -2812,13 +3044,8 @@ The jar should be placed in the project root directory or one of these locations
             current_model_state["latest_export_dir"] = str(export_dir)
             current_model_state["last_updated"] = datetime.now().isoformat()
 
-            # Create/update latest symlink for viewer
-            exports_base = Path(os.getcwd()) / "exports"
-            latest_link = exports_base / "latest"
-            if latest_link.exists() or latest_link.is_symlink():
-                latest_link.unlink()
-            latest_link.symlink_to(export_dir.name)
-            logger.info( f'Updated latest symlink for interactive viewer')
+            # No longer using latest symlink - AI/ directory is the current working diagram
+            # (Keeping this comment for reference during migration)
         except Exception as state_error:
             logger.warning( f'Failed to update global state: {state_error}')
 
