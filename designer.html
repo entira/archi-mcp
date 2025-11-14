@@ -1771,8 +1771,19 @@
                 const currentSrc = img.src;
                 const match = currentSrc.match(/exports\/([^\/]+)\/diagram\.png/);
                 if (match) {
-                    const currentTimestamp = match[1];
+                    let currentTimestamp = match[1];
+
+                    // If viewing "latest", resolve to actual timestamp
+                    if (currentTimestamp === 'latest') {
+                        // Latest is the first (newest) in sorted array
+                        currentTimestamp = diagramTimestamps[0];
+                    }
+
                     currentDiagramIndex = diagramTimestamps.indexOf(currentTimestamp);
+                    if (currentDiagramIndex === -1) {
+                        // Not found, default to first (latest)
+                        currentDiagramIndex = 0;
+                    }
                 }
 
                 updateNavigationButtons();
@@ -1840,12 +1851,25 @@
             const img = document.getElementById('diagram');
             img.src = `exports/${timestamp}/diagram.png?t=${Date.now()}`;
 
-            // Load settings from this diagram's PlantUML
-            const pumlModel = await parsePlantUML(timestamp);
-            if (pumlModel) {
-                currentModel = pumlModel;
-                userIsInteracting = false; // Allow control updates
-                updateStats(currentModel, true); // Force update controls
+            // Load settings from this diagram's input.json
+            try {
+                const jsonResponse = await fetch(`exports/${timestamp}/input.json`);
+                if (jsonResponse.ok) {
+                    const inputData = await jsonResponse.json();
+                    // Convert input.json format to model format
+                    currentModel = {
+                        title: inputData.title || '',
+                        elements: inputData.elements || [],
+                        relationships: inputData.relationships || [],
+                        options: inputData.layout || {},
+                        element_count: inputData.elements?.length || 0,
+                        relationship_count: inputData.relationships?.length || 0
+                    };
+                    userIsInteracting = false; // Allow control updates
+                    updateStats(currentModel, true); // Force update controls
+                }
+            } catch (error) {
+                console.warn(`Failed to load model for ${timestamp}:`, error);
             }
 
             // Hide history, show diagram (without reloading latest - we want to show the selected one)
