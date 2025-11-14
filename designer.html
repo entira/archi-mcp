@@ -1725,6 +1725,18 @@
                     </tr>
                 `;
             }).join('');
+
+            // Update pagination info to reflect filtered results
+            const paginationInfo = document.getElementById('pagination-info');
+            if (paginationInfo) {
+                const totalFiltered = filtered.length;
+                const totalAll = historyData.length;
+                if (totalFiltered < totalAll) {
+                    paginationInfo.textContent = `Showing ${totalFiltered} of ${totalAll} (filtered)`;
+                } else {
+                    paginationInfo.textContent = `Showing 1-${totalAll} of ${totalAll}`;
+                }
+            }
         }
 
         // Format date
