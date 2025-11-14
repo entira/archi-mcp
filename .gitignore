@@ -50,6 +50,7 @@ Thumbs.db
 .pytest_cache/
 .coverage
 coverage.xml
+coverage.json
 htmlcov/
 .tox/
 .nox/
