@@ -2602,7 +2602,48 @@ The jar should be placed in the project root directory or one of these locations
         with open(puml_file, 'w', encoding='utf-8') as f:
             f.write(plantuml_code)
         logger.info( f'Saved PlantUML code to {puml_file}')
-        
+
+        # Save input JSON for future editing and regeneration
+        input_json_file = export_dir / "input.json"
+        input_data = {
+            "elements": [
+                {
+                    "id": elem.id,
+                    "name": elem.name,
+                    "element_type": elem.element_type,
+                    "layer": elem.layer.value,
+                    "description": elem.description
+                }
+                for elem in diagram.elements
+            ],
+            "relationships": [
+                {
+                    "id": rel.id,
+                    "from_element": rel.from_element,
+                    "to_element": rel.to_element,
+                    "relationship_type": rel.relationship_type,
+                    "label": rel.label,
+                    "description": rel.description
+                }
+                for rel in diagram.relationships
+            ],
+            "title": title,
+            "description": description,
+            "layout": {
+                "direction": layout.direction,
+                "spacing": layout.spacing,
+                "show_legend": layout.show_legend,
+                "show_title": layout.show_title,
+                "group_by_layer": layout.group_by_layer,
+                "show_element_types": layout.show_element_types,
+                "show_relationship_labels": layout.show_relationship_labels
+            },
+            "language": language
+        }
+        with open(input_json_file, 'w', encoding='utf-8') as f:
+            json.dump(input_data, f, indent=2, ensure_ascii=False)
+        logger.info( f'Saved input JSON to {input_json_file}')
+
         # Move PNG file to export directory
         png_file = export_dir / "diagram.png"
         import shutil
@@ -2792,7 +2833,8 @@ The jar should be placed in the project root directory or one of these locations
                 "svg": "diagram.svg" if svg_generated else None,
                 "markdown": "architecture.md",
                 "log": "generation.log",
-                "metadata": "metadata.json"
+                "metadata": "metadata.json",
+                "input": "input.json"
             },
             "diagram_urls": diagram_urls,
             "statistics": metadata["statistics"],

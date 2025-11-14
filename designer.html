@@ -934,6 +934,10 @@
                 <svg fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/><path d="M8.646 6.646a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L10.293 9 8.646 7.354a.5.5 0 0 1 0-.708zm-1.292 0a.5.5 0 0 0-.708 0l-2 2a.5.5 0 0 0 0 .708l2 2a.5.5 0 0 0 .708-.708L5.707 9l1.647-1.646a.5.5 0 0 0 0-.708z"/></svg>
                 Markdown
             </a>
+            <a class="export-link" onclick="exportFile('json')">
+                <svg fill="currentColor" viewBox="0 0 16 16"><path d="M5 4a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm-.5 2.5A.5.5 0 0 1 5 6h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zM5 8a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm0 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1H5z"/><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm10-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/></svg>
+                JSON
+            </a>
             <a class="export-link" onclick="exportAllAsZip()" style="background: #1e3a1e; border-color: #4caf50;">
                 <svg fill="currentColor" viewBox="0 0 16 16"><path d="M6.5 7.5a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v.938l.4 1.599a1 1 0 0 1-.416 1.074l-.93.62a1 1 0 0 1-1.109 0l-.93-.62a1 1 0 0 1-.415-1.074l.4-1.599V7.5z"/><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm5.5 0H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h3.5v-2h-1v-1h1v-1h-1v-1h1v-1h-1v-1h1v-1h-1v-1h1V7.5h-1v-1h1v-1h-1v-1h1v-1h-1v-1h1V3zm1 0v1h-1v1h1v1h-1v1h1v1h-1v1h1v1h-1v1h1v1h-1v1h1v1h-1v1h1v1h-1v1h1v1h-1v1h1v1h-1v1h1V3h3.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1h-3z"/></svg>
                 All (ZIP)
@@ -1376,13 +1380,14 @@
                 const inBrowseMode = diagramTimestamp !== 'latest';
 
                 const zip = new JSZip();
-                const files = ['png', 'svg', 'puml', 'xml', 'md'];
+                const files = ['png', 'svg', 'puml', 'xml', 'md', 'json'];
                 const serverFilenames = {
                     'png': 'diagram.png',
                     'svg': 'diagram.svg',
                     'puml': 'diagram.puml',
                     'xml': 'archimate_model.archimate',
-                    'md': 'architecture.md'
+                    'md': 'architecture.md',
+                    'json': 'input.json'
                 };
 
                 // First, check which files are missing and regenerate if needed
@@ -1519,7 +1524,8 @@
                 'svg': '.svg',
                 'puml': '.puml',
                 'xml': '.archimate',
-                'md': '.md'
+                'md': '.md',
+                'json': '.json'
             };
 
             const ext = extensions[type];
@@ -1538,7 +1544,8 @@
                 'svg': 'diagram.svg',
                 'puml': 'diagram.puml',
                 'xml': 'archimate_model.archimate',
-                'md': 'architecture.md'
+                'md': 'architecture.md',
+                'json': 'input.json'
             };
             const serverFilename = serverFilenames[type];
 
