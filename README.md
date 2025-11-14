@@ -27,15 +27,17 @@ ArchiMate MCP Server fills a crucial gap in the MCP ecosystem by providing dedic
 
 - **Complete ArchiMate 3.2 Support**: All 55+ elements across **100% of 7 layers** (Motivation, Strategy, Business, Application, Technology, Physical, Implementation)
 - **Universal PlantUML Generation**: All layers now supported with official PlantUML ArchiMate sprites and syntax
+- **Interactive Web Viewer**: Full-featured diagram browser with history management, chronological navigation, zoom/pan, and standalone regeneration
 - **Intelligent Input Normalization**: Case-insensitive inputs with automatic correction and helpful error messages
 - **Built-in Validation**: Comprehensive 4-step validation pipeline with real-time error detection
 - **macOS-Optimized PNG/SVG Generation**: Headless mode prevents cursor interference + live HTTP server for instant viewing (uses up-to-date PlantUML 1.2025.4)
 - **2 Core MCP Tools**: Focused diagram creation and element normalization testing
 - **Real-time Error Analysis**: Actionable troubleshooting guidance with pattern recognition and fix suggestions
 - **FastMCP 2.8+ Integration**: Modern MCP protocol implementation with comprehensive schema discovery
-- **Production-Ready Testing**: 182 passing tests with 70% coverage and comprehensive test suites across all layers
+- **Production-Ready Testing**: 194 passing tests with 66% coverage and comprehensive test suites across all layers
 - **Multi-Language Support**: Automatic language detection (Slovak/English) with customizable relationship labels
 - **Advanced Layout Control**: Configurable direction, spacing, grouping with environment variable defaults
+- **Multi-Format Export**: PNG, SVG, PlantUML, XML (ArchiMate Exchange), Markdown documentation with one-click ZIP packaging
 
 ## 🚀 Quick Start
 
@@ -181,6 +183,133 @@ The server automatically:
 - Starts an HTTP server for instant viewing
 - Returns direct URLs for immediate access (e.g., http://localhost:8080/diagram.png)
 - Saves all outputs to timestamped directories in `exports/`
+
+## 🎨 Interactive Diagram Viewer
+
+The ArchiMate MCP Server includes a powerful **web-based interactive viewer** (`designer.html`) for managing and exploring your diagram history with advanced features.
+
+### Starting the Viewer
+
+The HTTP server automatically starts when generating diagrams. You can also start it manually:
+
+```bash
+# Start the standalone HTTP server
+uv run python /tmp/start_viewer_server.py
+
+# Or use the built-in server from the MCP module
+uv run python -c "from archi_mcp.server import start_http_server; start_http_server()"
+```
+
+Access the viewer at: **http://localhost:8080** or **http://localhost:8080/designer.html**
+
+### Key Features
+
+#### 📜 **Diagram History & Management**
+- **Complete History Browser**: View all generated diagrams with timestamps, titles, and statistics
+- **Advanced Filtering**: Filter by title search, date range, element count, relationship count, and ArchiMate layers
+- **Bulk Operations**: Select multiple diagrams and delete them in one action
+- **Latest Diagram Protection**: The most recent diagram cannot be deleted to prevent data loss
+- **Pagination Info**: Shows total diagram count and current view (e.g., "Showing 1-50 of 143")
+
+#### 🖼️ **Interactive Viewing Mode**
+- **Full-Screen Diagram View**: Click any diagram title to enter immersive viewing mode
+- **Zoom Controls**:
+  - `+` / `-` buttons for zoom in/out
+  - `⟲` button to reset zoom to 100%
+  - Mouse wheel zoom support
+  - Pan by dragging the diagram
+- **Chronological Navigation**: Use `◀` and `▶` buttons (left panel) to browse through diagrams by date
+  - Previous/Next navigation through complete diagram timeline
+  - Auto-disables at first/last diagram
+  - Visible only in view mode (hidden in history)
+- **Close Button (`✕`)**: Return to history browser at any time
+
+#### 🔄 **Standalone Regeneration** (Browse Mode)
+- **Regenerate Without MCP**: Click `🔄 Regenerate Diagram` button in view mode
+- **Works Offline**: Regenerates PNG and SVG from existing PlantUML files
+- **No Claude Required**: Uses PlantUML JAR directly without MCP context
+- **Format Detection**: Automatically detects browse vs normal mode
+
+#### 📊 **Live Diagram Controls**
+Real-time diagram customization (visible in sidebar):
+- **Direction**: Switch between vertical (top-bottom) and horizontal (left-right) layouts
+- **Spacing**: Adjust element spacing (compact/normal/wide)
+- **Title**: Edit diagram title
+- **Display Options**:
+  - Show/hide legend
+  - Show/hide title
+  - Group elements by ArchiMate layer
+  - Show/hide element type names
+  - Show/hide relationship labels
+
+#### 📥 **Multi-Format Export**
+Download diagrams in multiple formats with one click:
+- **PNG** - Raster image format (always available)
+- **SVG** - Vector format for scalability (auto-generated if missing)
+- **PlantUML** - Source `.puml` file for editing
+- **XML** - ArchiMate Exchange Format (if available from MCP generation)
+- **Markdown** - Architecture documentation with embedded images (if available)
+- **All (ZIP)** - Download all available formats in one archive
+  - Automatically regenerates missing PNG/SVG before packaging
+  - Shows included formats in status (e.g., "PNG+SVG+PUML")
+  - Intelligent filename truncation for long titles
+
+#### 📈 **Diagram Statistics**
+Each diagram displays comprehensive metadata:
+- **Element Count**: Total number of ArchiMate elements
+- **Relationship Count**: Number of connections between elements
+- **Layer Distribution**: Which ArchiMate layers are used
+- **Creation Timestamp**: Exact generation date and time
+- **File Sizes**: Size information for each export format
+
+### Usage Tips
+
+**Keyboard Shortcuts:**
+- Mouse wheel while over diagram: Zoom in/out
+- Click and drag: Pan around zoomed diagram
+- `ESC` or click `✕`: Exit view mode and return to history
+
+**Best Practices:**
+- Use **search and filters** to quickly find specific diagrams in large histories
+- Enable **layer filtering** to focus on diagrams using specific ArchiMate layers
+- Use **bulk delete** to clean up experimental or outdated diagrams
+- Download **All (ZIP)** for complete diagram packages with all formats
+- Use **regenerate** button to update PNG/SVG if PlantUML source was manually edited
+
+**Performance:**
+- The viewer loads up to 1000 diagrams efficiently
+- Client-side filtering provides instant results without server round-trips
+- Auto-refresh keeps diagram display synchronized with file changes
+
+### Technical Details
+
+**Export Directory Structure:**
+```
+exports/
+├── latest/              # Symlink to most recent diagram
+├── 20251114_012345/     # Timestamped diagram directory
+│   ├── diagram.png
+│   ├── diagram.svg
+│   ├── diagram.puml
+│   ├── archimate_model.archimate  # XML (if generated via MCP)
+│   ├── architecture.md             # Markdown doc (if generated via MCP)
+│   └── metadata.json
+└── history_index.json   # Fast diagram lookup cache
+```
+
+**HTTP Server API:**
+- `GET /` or `/designer.html` - Interactive viewer UI
+- `GET /api/status` - Server health check
+- `GET /api/model` - Current diagram model
+- `GET /api/history` - List all diagrams with filtering support
+- `POST /api/regenerate` - Regenerate with MCP context (normal mode)
+- `POST /api/regenerate_puml` - Regenerate from PlantUML (browse mode)
+- `DELETE /api/delete` - Delete specific diagram by timestamp
+
+**Browser Compatibility:**
+- Modern browsers with ES6+ support
+- Chrome/Edge/Firefox/Safari (latest versions)
+- Responsive design (optimized for desktop viewing)
 
 ## 🏛️ Complete Architecture Demonstration
 

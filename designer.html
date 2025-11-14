@@ -1112,6 +1112,9 @@
             // Initialize zoom controls
             initZoomControls();
 
+            // Show navigation controls on canvas (hidden when browsing history)
+            document.getElementById('nav-controls').style.display = 'flex';
+
             // Add interaction listeners to all input controls
             const controls = document.querySelectorAll('input, select');
             controls.forEach(control => {
@@ -1429,6 +1432,7 @@
 
                 // Fetch all files (use current diagram's timestamp)
                 let addedCount = 0;
+                const addedFiles = [];
                 for (const type of files) {
                     try {
                         const response = await fetch(`exports/${diagramTimestamp}/${serverFilenames[type]}`);
@@ -1436,6 +1440,7 @@
                             const blob = await response.blob();
                             zip.file(serverFilenames[type], blob);
                             addedCount++;
+                            addedFiles.push(type.toUpperCase());
                         }
                     } catch (e) {
                         console.warn(`Failed to add ${type} to ZIP:`, e);
@@ -1445,6 +1450,12 @@
                 if (addedCount === 0) {
                     updateStatus('⚠️ No files available to zip', 'error');
                     return;
+                }
+
+                // Show which file types are included
+                console.log(`ZIP will contain: ${addedFiles.join(', ')}`);
+                if (addedCount < files.length) {
+                    console.warn(`Note: ${files.length - addedCount} file types not available (${files.filter(f => !addedFiles.includes(f.toUpperCase())).join(', ')})`);
                 }
 
                 // Generate ZIP
@@ -1474,7 +1485,10 @@
                     const nameWithoutExt = zipFilename.substring(0, zipFilename.lastIndexOf('.'));
                     displayName = nameWithoutExt.substring(0, 20) + '...' + extension;
                 }
-                updateStatus(`✓ Downloaded ${displayName} (${addedCount} files)`, 'success');
+
+                // Build status message with file types
+                const fileTypes = addedFiles.join('+');
+                updateStatus(`✓ Downloaded ${displayName} (${fileTypes})`, 'success');
             } catch (error) {
                 console.error('ZIP export error:', error);
                 updateStatus('✗ Failed to create ZIP archive', 'error');
@@ -1818,6 +1832,7 @@
         function showHistory() {
             document.getElementById('diagram').style.display = 'none';
             document.getElementById('zoom-controls').style.display = 'none';
+            document.getElementById('nav-controls').style.display = 'none';
             document.getElementById('history-view').style.display = 'block';
             loadHistory();
         }
@@ -1826,6 +1841,7 @@
             document.getElementById('history-view').style.display = 'none';
             document.getElementById('diagram').style.display = 'block';
             document.getElementById('zoom-controls').style.display = 'flex';
+            document.getElementById('nav-controls').style.display = 'flex';
         }
 
         // View diagram from history
