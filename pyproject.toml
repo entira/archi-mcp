@@ -162,7 +162,8 @@ markers = [
     "unit: marks tests as unit tests",
     "api: marks tests as API endpoint tests",
     "diagram: marks tests as diagram functionality tests",
-    "e2e: marks tests as end-to-end frontend tests"
+    "e2e: marks tests as end-to-end frontend tests",
+    "a11y: marks tests as accessibility tests"
 ]
 
 [tool.coverage.run]
