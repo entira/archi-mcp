@@ -1217,6 +1217,14 @@
 
             // Only update controls if user is not actively interacting
             if (updateControls) {
+                // Temporarily remove event listeners to prevent them from triggering during update
+                const controls = document.querySelectorAll('input, select');
+                controls.forEach(control => {
+                    control.removeEventListener('focus', markUserInteraction);
+                    control.removeEventListener('input', markUserInteraction);
+                    control.removeEventListener('change', markUserInteraction);
+                });
+
                 // Load title from model (keep current value if model.title is null/empty)
                 if (model.title && model.title.trim() !== '') {
                     document.getElementById('title').value = model.title;
@@ -1244,6 +1252,13 @@
                     document.getElementById('show_element_types').checked = opts.show_element_types === true;
                     document.getElementById('show_relationship_labels').checked = opts.show_relationship_labels !== false;
                 }
+
+                // Re-add event listeners after updating
+                controls.forEach(control => {
+                    control.addEventListener('focus', markUserInteraction);
+                    control.addEventListener('input', markUserInteraction);
+                    control.addEventListener('change', markUserInteraction);
+                });
             }
 
             const now = new Date().toLocaleTimeString();
@@ -1905,11 +1920,9 @@
                         element_count: inputData.elements?.length || 0,
                         relationship_count: inputData.relationships?.length || 0
                     };
-                    userIsInteracting = false; // Allow control updates
-                    updateStats(currentModel, true); // Force update controls
 
-                    // Reset flag after updating (updateStats triggers change events)
-                    userIsInteracting = false;
+                    // Force update controls (updateStats will handle event listener management)
+                    updateStats(currentModel, true);
                 }
             } catch (error) {
                 console.warn(`Failed to load model for ${timestamp}:`, error);
