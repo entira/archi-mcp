@@ -1874,8 +1874,7 @@
             // Show close button for view mode
             document.getElementById('view-mode-close').style.display = 'flex';
 
-            // Show regenerate button in browse mode
-            document.getElementById('regenerate-btn').style.display = 'block';
+            // Don't show regenerate button in view mode (only on current canvas)
 
             // Reset zoom
             zoomReset();
