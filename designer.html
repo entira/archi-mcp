@@ -415,7 +415,7 @@
         }
 
         /* History View Close Button */
-        #history-view button[onclick="closeHistory()"] {
+        #close-history-btn {
             background: transparent;
             border: 1px solid #3a3a3a;
             border-radius: 4px;
@@ -431,7 +431,7 @@
             transition: all 0.2s ease;
         }
 
-        #history-view button[onclick="closeHistory()"]:hover {
+        #close-history-btn:hover {
             background: rgba(78,201,176,0.1);
             border-color: #4ec9b0;
             color: #4ec9b0;
@@ -995,7 +995,7 @@
             <!-- Header with title and close button -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h2 style="color: #e0e0e0; margin: 0;">📜 Diagram History</h2>
-                <button onclick="closeHistory().catch(console.error)" title="Close history">✕</button>
+                <button id="close-history-btn" onclick="closeHistory().catch(console.error)" title="Close history">✕</button>
             </div>
 
             <!-- Filters -->
@@ -1843,7 +1843,10 @@
             document.getElementById('zoom-controls').style.display = 'flex';
             document.getElementById('nav-controls').style.display = 'flex';
 
-            // Reload current (latest) diagram and model
+            // Reload current (latest) diagram image and model
+            const img = document.getElementById('diagram');
+            img.src = `exports/latest/diagram.png?t=${Date.now()}`;
+
             await loadCurrentModel(true);
             zoomReset();
         }
