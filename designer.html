@@ -1164,12 +1164,32 @@
                 const jsonResponse = await fetch('exports/latest/input.json');
                 if (jsonResponse.ok) {
                     const inputData = await jsonResponse.json();
+
+                    // Normalize layout options (handle both designer and generator formats)
+                    const layout = inputData.layout || {};
+                    const normalizedLayout = {
+                        // Direction: convert generator format to designer format if needed
+                        direction: layout.direction === 'vertical' ? 'top-bottom' :
+                                  layout.direction === 'horizontal' ? 'left-right' :
+                                  layout.direction || 'top-bottom',
+                        // Spacing: convert generator format to designer format if needed
+                        spacing: layout.spacing === 'compact' ? 'compact' :
+                                layout.spacing === 'normal' ? 'comfortable' :
+                                layout.spacing === 'wide' ? 'spacious' :
+                                layout.spacing || 'comfortable',
+                        show_legend: layout.show_legend !== false,
+                        show_title: layout.show_title !== false,
+                        group_by_layer: layout.group_by_layer === true,
+                        show_element_types: layout.show_element_types === true,
+                        show_relationship_labels: layout.show_relationship_labels !== false
+                    };
+
                     // Convert input.json format to model format
                     currentModel = {
                         title: inputData.title || '',
                         elements: inputData.elements || [],
                         relationships: inputData.relationships || [],
-                        options: inputData.layout || {},
+                        options: normalizedLayout,
                         element_count: inputData.elements?.length || 0,
                         relationship_count: inputData.relationships?.length || 0
                     };
@@ -1856,12 +1876,32 @@
                 const jsonResponse = await fetch(`exports/${timestamp}/input.json`);
                 if (jsonResponse.ok) {
                     const inputData = await jsonResponse.json();
+
+                    // Normalize layout options (handle both designer and generator formats)
+                    const layout = inputData.layout || {};
+                    const normalizedLayout = {
+                        // Direction: convert generator format to designer format if needed
+                        direction: layout.direction === 'vertical' ? 'top-bottom' :
+                                  layout.direction === 'horizontal' ? 'left-right' :
+                                  layout.direction || 'top-bottom',
+                        // Spacing: convert generator format to designer format if needed
+                        spacing: layout.spacing === 'compact' ? 'compact' :
+                                layout.spacing === 'normal' ? 'comfortable' :
+                                layout.spacing === 'wide' ? 'spacious' :
+                                layout.spacing || 'comfortable',
+                        show_legend: layout.show_legend !== false,
+                        show_title: layout.show_title !== false,
+                        group_by_layer: layout.group_by_layer === true,
+                        show_element_types: layout.show_element_types === true,
+                        show_relationship_labels: layout.show_relationship_labels !== false
+                    };
+
                     // Convert input.json format to model format
                     currentModel = {
                         title: inputData.title || '',
                         elements: inputData.elements || [],
                         relationships: inputData.relationships || [],
-                        options: inputData.layout || {},
+                        options: normalizedLayout,
                         element_count: inputData.elements?.length || 0,
                         relationship_count: inputData.relationships?.length || 0
                     };
