@@ -458,6 +458,20 @@
         }
 
         /* Zoom Controls */
+        .nav-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: none; /* Hidden by default, shown only in view mode */
+            flex-direction: row;
+            gap: 8px;
+            background: rgba(30, 30, 30, 0.9);
+            border: 1px solid #3a3a3a;
+            border-radius: 6px;
+            padding: 8px;
+            z-index: 100;
+        }
+
         .zoom-controls {
             position: absolute;
             bottom: 20px;
@@ -894,8 +908,10 @@
             </label>
         </div>
 
-        <!-- Regenerate is disabled in standalone mode - requires MCP context -->
-        <!-- <button onclick="regenerate()">🔄 Regenerate Diagram</button> -->
+        <!-- Regenerate button - visible in browse mode, hidden by default -->
+        <button id="regenerate-btn" onclick="regenerate()" style="display: none; width: 100%; padding: 12px; margin-bottom: 12px; background: #2a2a2a; border: 1px solid #ce9178; border-radius: 6px; color: #ce9178; cursor: pointer; font-size: 14px;">
+            🔄 Regenerate Diagram
+        </button>
 
         <div class="export-links">
             <a class="export-link" onclick="exportFile('png')">
@@ -954,7 +970,13 @@
     </div>
 
     <div id="diagram-container">
-        <!-- Zoom Controls -->
+        <!-- Navigation Controls (left side) -->
+        <div class="nav-controls" id="nav-controls">
+            <button class="zoom-btn" onclick="navigatePrevDiagram()" title="Previous diagram" id="nav-prev">◀</button>
+            <button class="zoom-btn" onclick="navigateNextDiagram()" title="Next diagram" id="nav-next">▶</button>
+        </div>
+
+        <!-- Zoom Controls (right side) -->
         <div class="zoom-controls" id="zoom-controls">
             <button class="zoom-btn" onclick="zoomIn()" title="Zoom in">+</button>
             <div class="zoom-level" id="zoom-level">100%</div>
@@ -1034,6 +1056,9 @@
             <table id="history-table" style="width: 100%; border-collapse: collapse; background: #252525; border-radius: 6px;">
                 <thead>
                     <tr style="border-bottom: 2px solid #3a3a3a;">
+                        <th style="padding: 12px; text-align: center; color: #808080;">
+                            <input type="checkbox" id="select-all-history" onchange="toggleAllHistory()" style="cursor: pointer;">
+                        </th>
                         <th style="padding: 12px; text-align: left; color: #808080; cursor: pointer;" onclick="sortHistoryBy('title')">Title ↕</th>
                         <th style="padding: 12px; text-align: left; color: #808080; cursor: pointer;" onclick="sortHistoryBy('date')">Date ↕</th>
                         <th style="padding: 12px; text-align: center; color: #808080; cursor: pointer;" onclick="sortHistoryBy('elements')">Elements ↕</th>
@@ -1051,9 +1076,6 @@
                 <div>
                     <button onclick="bulkDeleteHistory()" id="bulk-delete-btn" disabled style="padding: 10px 20px; background: #d44; border: none; border-radius: 4px; color: white; cursor: pointer; margin-right: 10px;">
                         Delete Selected (0)
-                    </button>
-                    <button onclick="cleanupOldDiagrams()" style="padding: 10px 20px; background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0; cursor: pointer;">
-                        🗑️ Cleanup Old (>30 days)
                     </button>
                 </div>
                 <span id="pagination-info" style="color: #808080;">Showing 0-0 of 0</span>
@@ -1084,7 +1106,8 @@
         // Initialize
         async function init() {
             await checkServerStatus();
-            await loadCurrentModel();
+            // Force update controls on initial page load
+            await loadCurrentModel(true);
 
             // Initialize zoom controls
             initZoomControls();
@@ -1113,13 +1136,82 @@
             }
         }
 
-        // Load current model state
-        async function loadCurrentModel() {
+        // Parse PlantUML file to extract diagram settings
+        async function parsePlantUML(timestamp = 'latest') {
             try {
+                const response = await fetch(`exports/${timestamp}/diagram.puml`);
+                const puml = await response.text();
+
+                // Parse title
+                const titleMatch = puml.match(/^title\s+(.+)$/m);
+                const title = titleMatch ? titleMatch[1].trim() : '';
+
+                // Parse direction
+                let direction = 'vertical'; // default
+                if (puml.includes('left to right direction')) {
+                    direction = 'horizontal';
+                } else if (puml.includes('top to bottom direction')) {
+                    direction = 'vertical';
+                }
+
+                // Parse spacing from skinparam
+                const ranksepMatch = puml.match(/skinparam ranksep (\d+)/);
+                const ranksep = ranksepMatch ? parseInt(ranksepMatch[1]) : 40;
+                let spacing = 'normal';
+                if (ranksep <= 20) spacing = 'compact';
+                else if (ranksep >= 80) spacing = 'wide';
+
+                // Parse group_by_layer (check for package usage)
+                const group_by_layer = puml.includes('package "');
+
+                // Parse show_legend
+                const show_legend = puml.includes('legend ');
+
+                // Count elements and relationships
+                const elementMatches = puml.match(/\w+_\w+\(/g);
+                const element_count = elementMatches ? elementMatches.length : 0;
+
+                const relMatches = puml.match(/Rel_\w+\(/g);
+                const relationship_count = relMatches ? relMatches.length : 0;
+
+                return {
+                    title,
+                    elements: [], // Don't parse full elements, just count
+                    relationships: [],
+                    options: {
+                        direction,
+                        spacing,
+                        show_legend,
+                        show_title: !!title,
+                        group_by_layer,
+                        show_element_types: false, // Can't determine from PUML
+                        show_relationship_labels: true // Default assumption
+                    },
+                    element_count,
+                    relationship_count
+                };
+            } catch (error) {
+                console.error('Failed to parse PlantUML:', error);
+                return null;
+            }
+        }
+
+        // Load current model state
+        async function loadCurrentModel(forceUpdate = false) {
+            try {
+                // Try to parse latest PlantUML file directly
+                const pumlModel = await parsePlantUML('latest');
+                if (pumlModel) {
+                    currentModel = pumlModel;
+                    // Force update controls on initial load or when explicitly requested
+                    updateStats(currentModel, forceUpdate || !userIsInteracting);
+                    return;
+                }
+
+                // Fallback to API model if PlantUML parsing fails
                 const response = await fetch(`${API_BASE}/model`);
                 currentModel = await response.json();
-                // Only update UI controls if user is not actively interacting
-                updateStats(currentModel, !userIsInteracting);
+                updateStats(currentModel, forceUpdate || !userIsInteracting);
             } catch (error) {
                 console.error('Failed to load model:', error);
             }
@@ -1130,8 +1222,12 @@
             if (!model) return;
 
             // Always update statistics (non-interactive)
-            document.getElementById('stat-elements').textContent = model.elements?.length || 0;
-            document.getElementById('stat-relationships').textContent = model.relationships?.length || 0;
+            // Use element_count/relationship_count if available (from PlantUML parsing)
+            const elementCount = model.element_count !== undefined ? model.element_count : (model.elements?.length || 0);
+            const relationshipCount = model.relationship_count !== undefined ? model.relationship_count : (model.relationships?.length || 0);
+
+            document.getElementById('stat-elements').textContent = elementCount;
+            document.getElementById('stat-relationships').textContent = relationshipCount;
 
             // Only update controls if user is not actively interacting
             if (updateControls) {
@@ -1172,51 +1268,93 @@
         async function regenerate() {
             updateStatus('Regenerating diagram...', 'loading');
 
-            const options = {
-                direction: document.getElementById('direction').value,
-                spacing: document.getElementById('spacing').value,
-                title: document.getElementById('title').value || undefined,
-                show_legend: document.getElementById('show_legend').checked,
-                show_title: document.getElementById('show_title').checked,
-                group_by_layer: document.getElementById('group_by_layer').checked,
-                show_element_types: document.getElementById('show_element_types').checked,
-                show_relationship_labels: document.getElementById('show_relationship_labels').checked
-            };
+            // Detect if we're in browse mode (viewing historical diagram)
+            const img = document.getElementById('diagram');
+            const currentSrc = img.src;
+            const match = currentSrc.match(/exports\/([^\/]+)\/diagram\.png/);
 
-            try {
-                const response = await fetch(`${API_BASE}/regenerate`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(options)
-                });
+            // Check if viewing a specific timestamp (not 'latest')
+            const inBrowseMode = match && match[1] !== 'latest';
 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            if (inBrowseMode) {
+                // Browse mode - regenerate from PlantUML file without MCP
+                const timestamp = match[1];
+
+                try {
+                    const response = await fetch(`${API_BASE}/regenerate_puml`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ timestamp: timestamp })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        updateStatus('✓ Diagram regenerated from PlantUML!', 'success');
+                        // Refresh the image to show regenerated version
+                        refreshDiagram();
+                    } else {
+                        updateStatus(`✗ Error: ${result.error}`, 'error');
+                    }
+                } catch (error) {
+                    console.error('Regenerate error:', error);
+                    updateStatus(`✗ Failed to regenerate: ${error.message}`, 'error');
                 }
+            } else {
+                // Normal mode - regenerate with MCP context
+                const options = {
+                    direction: document.getElementById('direction').value,
+                    spacing: document.getElementById('spacing').value,
+                    title: document.getElementById('title').value || undefined,
+                    show_legend: document.getElementById('show_legend').checked,
+                    show_title: document.getElementById('show_title').checked,
+                    group_by_layer: document.getElementById('group_by_layer').checked,
+                    show_element_types: document.getElementById('show_element_types').checked,
+                    show_relationship_labels: document.getElementById('show_relationship_labels').checked
+                };
 
-                const result = await response.json();
+                try {
+                    const response = await fetch(`${API_BASE}/regenerate`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(options)
+                    });
 
-                if (result.success) {
-                    updateStatus('✓ Diagram regenerated successfully!', 'success');
-                    // Clear interaction flag so next refresh loads new values
-                    userIsInteracting = false;
-                    await loadCurrentModel();
-                    refreshDiagram();
-                } else {
-                    updateStatus(`✗ Error: ${result.error}`, 'error');
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        updateStatus('✓ Diagram regenerated successfully!', 'success');
+                        // Clear interaction flag so next refresh loads new values
+                        userIsInteracting = false;
+                        await loadCurrentModel();
+                        refreshDiagram();
+                    } else {
+                        updateStatus(`✗ Error: ${result.error}`, 'error');
+                    }
+                } catch (error) {
+                    console.error('Regenerate error:', error);
+                    updateStatus(`✗ Failed to regenerate: ${error.message}`, 'error');
                 }
-            } catch (error) {
-                console.error('Regenerate error:', error);
-                updateStatus(`✗ Failed to regenerate: ${error.message}`, 'error');
             }
         }
 
         // Export all files as ZIP
         async function exportAllAsZip() {
-            updateStatus('Creating ZIP archive...', 'loading');
+            updateStatus('Preparing ZIP archive...', 'loading');
 
             try {
                 // Load JSZip library dynamically
@@ -1226,6 +1364,13 @@
                     document.head.appendChild(script);
                     await new Promise(resolve => script.onload = resolve);
                 }
+
+                // Detect current diagram timestamp from image src
+                const img = document.getElementById('diagram');
+                const currentSrc = img.src;
+                const match = currentSrc.match(/exports\/([^\/]+)\/diagram\.png/);
+                const diagramTimestamp = match ? match[1] : 'latest';
+                const inBrowseMode = diagramTimestamp !== 'latest';
 
                 const zip = new JSZip();
                 const files = ['png', 'svg', 'puml', 'xml', 'md'];
@@ -1237,17 +1382,69 @@
                     'md': 'architecture.md'
                 };
 
-                // Fetch all files
+                // First, check which files are missing and regenerate if needed
+                const missingFiles = [];
+                for (const type of files) {
+                    const response = await fetch(`exports/${diagramTimestamp}/${serverFilenames[type]}`, { method: 'HEAD' });
+                    if (!response.ok && (type === 'png' || type === 'svg')) {
+                        missingFiles.push(type);
+                    }
+                }
+
+                // Regenerate missing PNG/SVG files
+                if (missingFiles.length > 0) {
+                    updateStatus(`Regenerating missing formats (${missingFiles.join(', ')})...`, 'loading');
+
+                    if (inBrowseMode) {
+                        // Browse mode - regenerate from PlantUML
+                        await fetch(`${API_BASE}/regenerate_puml`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ timestamp: diagramTimestamp })
+                        });
+                    } else {
+                        // Normal mode - regenerate with MCP
+                        const options = {
+                            direction: document.getElementById('direction').value,
+                            spacing: document.getElementById('spacing').value,
+                            title: document.getElementById('title').value || undefined,
+                            show_legend: document.getElementById('show_legend').checked,
+                            show_title: document.getElementById('show_title').checked,
+                            group_by_layer: document.getElementById('group_by_layer').checked,
+                            show_element_types: document.getElementById('show_element_types').checked,
+                            show_relationship_labels: document.getElementById('show_relationship_labels').checked
+                        };
+                        await fetch(`${API_BASE}/regenerate`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(options)
+                        });
+                    }
+
+                    // Wait for files to be written
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+
+                updateStatus('Creating ZIP archive...', 'loading');
+
+                // Fetch all files (use current diagram's timestamp)
+                let addedCount = 0;
                 for (const type of files) {
                     try {
-                        const response = await fetch(`exports/latest/${serverFilenames[type]}`);
+                        const response = await fetch(`exports/${diagramTimestamp}/${serverFilenames[type]}`);
                         if (response.ok) {
                             const blob = await response.blob();
                             zip.file(serverFilenames[type], blob);
+                            addedCount++;
                         }
                     } catch (e) {
                         console.warn(`Failed to add ${type} to ZIP:`, e);
                     }
+                }
+
+                if (addedCount === 0) {
+                    updateStatus('⚠️ No files available to zip', 'error');
+                    return;
                 }
 
                 // Generate ZIP
@@ -1270,7 +1467,14 @@
                 window.URL.revokeObjectURL(downloadUrl);
                 document.body.removeChild(a);
 
-                updateStatus(`✓ Downloaded ${zipFilename}`, 'success');
+                // Truncate filename if too long - show beginning and extension
+                let displayName = zipFilename;
+                if (zipFilename.length > 25) {
+                    const extension = zipFilename.substring(zipFilename.lastIndexOf('.'));
+                    const nameWithoutExt = zipFilename.substring(0, zipFilename.lastIndexOf('.'));
+                    displayName = nameWithoutExt.substring(0, 20) + '...' + extension;
+                }
+                updateStatus(`✓ Downloaded ${displayName} (${addedCount} files)`, 'success');
             } catch (error) {
                 console.error('ZIP export error:', error);
                 updateStatus('✗ Failed to create ZIP archive', 'error');
@@ -1326,8 +1530,14 @@
 
             updateStatus(`Checking ${type.toUpperCase()} availability...`, 'loading');
 
-            // Check if file exists
-            const url = `exports/latest/${serverFilename}`;
+            // Detect current diagram timestamp from image src
+            const img = document.getElementById('diagram');
+            const currentSrc = img.src;
+            const match = currentSrc.match(/exports\/([^\/]+)\/diagram\.png/);
+            const diagramTimestamp = match ? match[1] : 'latest';
+
+            // Check if file exists (use current diagram's timestamp)
+            const url = `exports/${diagramTimestamp}/${serverFilename}`;
             let response = await fetch(url);
 
             if (!response.ok) {
@@ -1335,27 +1545,42 @@
                 updateStatus(`${type.toUpperCase()} not found, generating...`, 'loading');
 
                 try {
-                    // Get current options from UI
-                    const options = {
-                        direction: document.getElementById('direction').value,
-                        spacing: document.getElementById('spacing').value,
-                        title: document.getElementById('title').value || undefined,
-                        show_legend: document.getElementById('show_legend').checked,
-                        show_title: document.getElementById('show_title').checked,
-                        group_by_layer: document.getElementById('group_by_layer').checked,
-                        show_element_types: document.getElementById('show_element_types').checked,
-                        show_relationship_labels: document.getElementById('show_relationship_labels').checked
-                    };
+                    // Check if we're in browse mode (viewing historical diagram)
+                    const inBrowseMode = diagramTimestamp !== 'latest';
 
-                    // Trigger regeneration
-                    const regenResponse = await fetch(`${API_BASE}/regenerate`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(options)
-                    });
+                    if (inBrowseMode) {
+                        // Browse mode - regenerate from PlantUML file
+                        const regenResponse = await fetch(`${API_BASE}/regenerate_puml`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ timestamp: diagramTimestamp })
+                        });
 
-                    if (!regenResponse.ok) {
-                        throw new Error('Regeneration failed');
+                        if (!regenResponse.ok) {
+                            throw new Error('Regeneration from PlantUML failed');
+                        }
+                    } else {
+                        // Normal mode - regenerate with MCP context
+                        const options = {
+                            direction: document.getElementById('direction').value,
+                            spacing: document.getElementById('spacing').value,
+                            title: document.getElementById('title').value || undefined,
+                            show_legend: document.getElementById('show_legend').checked,
+                            show_title: document.getElementById('show_title').checked,
+                            group_by_layer: document.getElementById('group_by_layer').checked,
+                            show_element_types: document.getElementById('show_element_types').checked,
+                            show_relationship_labels: document.getElementById('show_relationship_labels').checked
+                        };
+
+                        const regenResponse = await fetch(`${API_BASE}/regenerate`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(options)
+                        });
+
+                        if (!regenResponse.ok) {
+                            throw new Error('Regeneration failed');
+                        }
                     }
 
                     // Wait for file system to sync
@@ -1386,7 +1611,14 @@
                 window.URL.revokeObjectURL(downloadUrl);
                 document.body.removeChild(a);
 
-                updateStatus(`✓ Downloaded ${downloadFilename}`, 'success');
+                // Truncate filename if too long - show beginning and extension
+                let displayName = downloadFilename;
+                if (downloadFilename.length > 30) {
+                    const extension = downloadFilename.substring(downloadFilename.lastIndexOf('.'));
+                    const nameWithoutExt = downloadFilename.substring(0, downloadFilename.lastIndexOf('.'));
+                    displayName = nameWithoutExt.substring(0, 22) + '...' + extension;
+                }
+                updateStatus(`✓ Downloaded ${displayName}`, 'success');
 
                 // Refresh diagram display if it was regenerated
                 refreshDiagram();
@@ -1404,7 +1636,21 @@
         }
 
         async function refreshDiagram() {
-            // Refresh diagram image
+            // Don't refresh if history is open or viewing a historical diagram
+            const historyView = document.getElementById('history-view');
+            const viewModeClose = document.getElementById('view-mode-close');
+
+            // Skip refresh if history overlay is visible
+            if (historyView && historyView.style.display !== 'none') {
+                return;
+            }
+
+            // Skip refresh if viewing a historical diagram (view mode active)
+            if (viewModeClose && window.getComputedStyle(viewModeClose).display !== 'none') {
+                return;
+            }
+
+            // Normal refresh logic - only for main canvas view
             const img = document.getElementById('diagram');
             const timestamp = new Date().getTime();
             img.src = `exports/latest/diagram.png?t=${timestamp}`;
@@ -1484,6 +1730,75 @@
             updateZoom();
         }
 
+        // Navigation between diagrams
+        let currentDiagramIndex = -1;
+        let diagramTimestamps = [];
+
+        async function navigatePrevDiagram() {
+            if (diagramTimestamps.length === 0) {
+                await loadDiagramTimestamps();
+            }
+
+            if (currentDiagramIndex > 0) {
+                currentDiagramIndex--;
+                const timestamp = diagramTimestamps[currentDiagramIndex];
+                await viewDiagram(timestamp);
+                updateNavigationButtons();
+            }
+        }
+
+        async function navigateNextDiagram() {
+            if (diagramTimestamps.length === 0) {
+                await loadDiagramTimestamps();
+            }
+
+            if (currentDiagramIndex < diagramTimestamps.length - 1) {
+                currentDiagramIndex++;
+                const timestamp = diagramTimestamps[currentDiagramIndex];
+                await viewDiagram(timestamp);
+                updateNavigationButtons();
+            }
+        }
+
+        async function loadDiagramTimestamps() {
+            try {
+                const response = await fetch(`${API_BASE}/history?limit=1000&offset=0`);
+                const data = await response.json();
+                // Sort by timestamp descending (newest first)
+                diagramTimestamps = data.items
+                    .map(item => item.timestamp)
+                    .sort((a, b) => b.localeCompare(a));
+
+                // Find current diagram index
+                const img = document.getElementById('diagram');
+                const currentSrc = img.src;
+                const match = currentSrc.match(/exports\/([^\/]+)\/diagram\.png/);
+                if (match) {
+                    const currentTimestamp = match[1];
+                    currentDiagramIndex = diagramTimestamps.indexOf(currentTimestamp);
+                }
+
+                updateNavigationButtons();
+            } catch (error) {
+                console.error('Failed to load diagram timestamps:', error);
+            }
+        }
+
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('nav-prev');
+            const nextBtn = document.getElementById('nav-next');
+
+            if (prevBtn && nextBtn) {
+                prevBtn.disabled = currentDiagramIndex <= 0;
+                nextBtn.disabled = currentDiagramIndex >= diagramTimestamps.length - 1;
+
+                prevBtn.style.opacity = prevBtn.disabled ? '0.3' : '1';
+                nextBtn.style.opacity = nextBtn.disabled ? '0.3' : '1';
+                prevBtn.style.cursor = prevBtn.disabled ? 'not-allowed' : 'pointer';
+                nextBtn.style.cursor = nextBtn.disabled ? 'not-allowed' : 'pointer';
+            }
+        }
+
         // Mouse wheel zoom
         function initZoomControls() {
             const diagram = document.getElementById('diagram');
@@ -1514,16 +1829,30 @@
         }
 
         // View diagram from history
-        function viewDiagram(timestamp) {
+        async function viewDiagram(timestamp) {
             // Show diagram in canvas with zoom enabled
             const img = document.getElementById('diagram');
             img.src = `exports/${timestamp}/diagram.png?t=${Date.now()}`;
+
+            // Load settings from this diagram's PlantUML
+            const pumlModel = await parsePlantUML(timestamp);
+            if (pumlModel) {
+                currentModel = pumlModel;
+                userIsInteracting = false; // Allow control updates
+                updateStats(currentModel, true); // Force update controls
+            }
 
             // Hide history, show diagram
             closeHistory();
 
             // Show close button for view mode
             document.getElementById('view-mode-close').style.display = 'flex';
+
+            // Show regenerate button in browse mode
+            document.getElementById('regenerate-btn').style.display = 'block';
+
+            // Show navigation controls in view mode
+            document.getElementById('nav-controls').style.display = 'flex';
 
             // Reset zoom
             zoomReset();
@@ -1534,6 +1863,12 @@
             // Hide close button
             document.getElementById('view-mode-close').style.display = 'none';
 
+            // Hide regenerate button
+            document.getElementById('regenerate-btn').style.display = 'none';
+
+            // Hide navigation controls
+            document.getElementById('nav-controls').style.display = 'none';
+
             // Show history again
             showHistory();
         }
@@ -1543,10 +1878,10 @@
             try {
                 updateHistoryStatus('Loading history...');
 
-                // Build query parameters
+                // Build query parameters - load ALL diagrams (no pagination)
                 const params = new URLSearchParams();
-                params.append('limit', historyLimit);
-                params.append('offset', append ? historyOffset : 0);
+                params.append('limit', 1000); // Load all diagrams
+                params.append('offset', 0);
 
                 // Apply filters
                 const searchEl = document.getElementById('history-search');
@@ -1575,18 +1910,12 @@
                 const response = await fetch(`${API_BASE}/history?${params}`);
                 const data = await response.json();
 
-                if (!append) {
-                    historyData = data.items;
-                    historyOffset = 0;
-                } else {
-                    historyData = [...historyData, ...data.items];
-                }
-
-                historyOffset = data.offset + data.items.length;
+                // Load all diagrams at once (no pagination)
+                historyData = data.items;
 
                 // Update pagination info
                 document.getElementById('pagination-info').textContent =
-                    `Showing ${Math.min(1, data.total)}-${Math.min(historyOffset, data.total)} of ${data.total}`;
+                    `Showing 1-${data.items.length} of ${data.total}`;
 
                 // Render items
                 renderHistoryItems();
@@ -1602,7 +1931,7 @@
             const container = document.getElementById('history-table-body');
 
             if (historyData.length === 0) {
-                container.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center; color: #808080;">No diagrams found</td></tr>';
+                container.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center; color: #808080;">No diagrams found</td></tr>';
                 return;
             }
 
@@ -1658,7 +1987,7 @@
             }
 
             if (filtered.length === 0) {
-                container.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center; color: #808080;">No diagrams match your filters</td></tr>';
+                container.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center; color: #808080;">No diagrams match your filters</td></tr>';
                 return;
             }
 
@@ -1698,9 +2027,16 @@
             container.innerHTML = sorted.map(item => {
                 const isLatest = item.is_latest;
                 const rowStyle = isLatest ? 'background: rgba(78,201,176,0.15);' : '';
+                const isChecked = selectedHistoryItems.has(item.timestamp);
 
                 return `
                     <tr style="border-bottom: 1px solid #3a3a3a; ${rowStyle}" data-timestamp="${item.timestamp}">
+                        <td style="padding: 12px; text-align: center;">
+                            <input type="checkbox" class="history-item-checkbox" value="${item.timestamp}"
+                                   ${isLatest ? 'disabled' : ''} ${isChecked ? 'checked' : ''}
+                                   onchange="toggleHistoryItemSelection('${item.timestamp}')"
+                                   style="cursor: ${isLatest ? 'not-allowed' : 'pointer'};">
+                        </td>
                         <td style="padding: 12px; color: #e0e0e0;">
                             <a href="javascript:void(0)" onclick="viewDiagram('${item.timestamp}')" style="color: #4ec9b0; text-decoration: none; cursor: pointer;">
                                 ${isLatest ? '⚡ ' : ''}${item.title || 'Untitled Diagram'}
@@ -1720,7 +2056,10 @@
                                 '<button disabled style="padding: 6px 12px; margin: 0 4px; background: #444; border: none; border-radius: 4px; color: #888; cursor: not-allowed;">Current</button>' :
                                 `<button onclick="forkDiagram('${item.timestamp}')" style="padding: 6px 12px; margin: 0 4px; background: #2a2a2a; border: 1px solid #4ec9b0; border-radius: 4px; color: #4ec9b0; cursor: pointer;">Fork</button>`
                             }
-                            <button onclick="deleteDiagram('${item.timestamp}')" ${isLatest ? 'disabled' : ''} style="padding: 6px 12px; margin: 0 4px; background: ${isLatest ? '#444' : '#d44'}; border: none; border-radius: 4px; color: ${isLatest ? '#888' : 'white'}; cursor: ${isLatest ? 'not-allowed' : 'pointer'};">Delete</button>
+                            <button onclick="deleteDiagram('${item.timestamp}')" ${isLatest ? 'disabled' : ''}
+                                    style="padding: 6px 12px; margin: 0 4px; background: ${isLatest ? '#444' : '#d44'}; border: none; border-radius: 4px; color: ${isLatest ? '#888' : 'white'}; cursor: ${isLatest ? 'not-allowed' : 'pointer'}; font-size: 16px;">
+                                🗑️
+                            </button>
                         </td>
                     </tr>
                 `;
@@ -1737,6 +2076,9 @@
                     paginationInfo.textContent = `Showing 1-${totalAll} of ${totalAll}`;
                 }
             }
+
+            // Update select-all checkbox state
+            updateSelectAllCheckbox();
         }
 
         // Format date
@@ -1781,6 +2123,59 @@
             }
             renderHistoryItems();
             updateBulkDeleteButton();
+        }
+
+        // Toggle single item selection
+        function toggleHistoryItemSelection(timestamp) {
+            if (selectedHistoryItems.has(timestamp)) {
+                selectedHistoryItems.delete(timestamp);
+            } else {
+                selectedHistoryItems.add(timestamp);
+            }
+            updateBulkDeleteButton();
+            updateSelectAllCheckbox();
+        }
+
+        // Toggle all items selection
+        function toggleAllHistory() {
+            const checkbox = document.getElementById('select-all-history');
+            const checkboxes = document.querySelectorAll('.history-item-checkbox:not(:disabled)');
+
+            if (checkbox.checked) {
+                // Select all non-disabled items
+                checkboxes.forEach(cb => {
+                    selectedHistoryItems.add(cb.value);
+                    cb.checked = true;
+                });
+            } else {
+                // Deselect all
+                selectedHistoryItems.clear();
+                checkboxes.forEach(cb => cb.checked = false);
+            }
+
+            updateBulkDeleteButton();
+        }
+
+        // Update select-all checkbox state based on individual selections
+        function updateSelectAllCheckbox() {
+            const checkbox = document.getElementById('select-all-history');
+            const checkboxes = document.querySelectorAll('.history-item-checkbox:not(:disabled)');
+            const enabledCount = checkboxes.length;
+            const selectedCount = selectedHistoryItems.size;
+
+            if (enabledCount === 0) {
+                checkbox.checked = false;
+                checkbox.indeterminate = false;
+            } else if (selectedCount === 0) {
+                checkbox.checked = false;
+                checkbox.indeterminate = false;
+            } else if (selectedCount === enabledCount) {
+                checkbox.checked = true;
+                checkbox.indeterminate = false;
+            } else {
+                checkbox.checked = false;
+                checkbox.indeterminate = true;
+            }
         }
 
         // Update bulk delete button
@@ -1862,8 +2257,8 @@
                     // Force refresh - bypass user interaction check
                     userIsInteracting = false;
 
-                    // Reload current model (will update controls)
-                    await loadCurrentModel();
+                    // Reload current model with force update (will update controls)
+                    await loadCurrentModel(true);
 
                     // Refresh diagram
                     const img = document.getElementById('diagram');
@@ -1885,14 +2280,11 @@
 
         // Delete diagram
         async function deleteDiagram(timestamp) {
-            if (!confirm('Delete this diagram? This cannot be undone.')) {
-                return;
-            }
-
+            // No confirmation popup - direct delete
             try {
                 updateHistoryStatus('Deleting diagram...');
 
-                const response = await fetch(`${API_BASE}/history/${timestamp}`, {
+                const response = await fetch(`${API_BASE}/delete?timestamp=${timestamp}`, {
                     method: 'DELETE'
                 });
 
@@ -1903,13 +2295,16 @@
                     historyData = historyData.filter(item => item.timestamp !== timestamp);
                     selectedHistoryItems.delete(timestamp);
 
-                    // Re-render
+                    // Always show history after delete
+                    showHistory();
+
+                    // Re-render with updated data
                     renderHistoryItems();
                     updateBulkDeleteButton();
 
                     updateHistoryStatus('✓ Diagram deleted');
                 } else {
-                    alert(`Failed to delete: ${result.error}`);
+                    updateHistoryStatus(`✗ Failed to delete: ${result.error}`);
                 }
 
             } catch (error) {
@@ -1927,12 +2322,13 @@
                 return;
             }
 
+            // Show status message
             updateHistoryStatus(`Deleting ${count} diagrams...`);
 
             let deleted = 0;
             for (const timestamp of selectedHistoryItems) {
                 try {
-                    const response = await fetch(`${API_BASE}/history/${timestamp}`, {
+                    const response = await fetch(`${API_BASE}/delete?timestamp=${timestamp}`, {
                         method: 'DELETE'
                     });
 
@@ -1945,51 +2341,22 @@
                 }
             }
 
+            // Clear selections
             selectedHistoryItems.clear();
+
+            // AFTER all deletes complete, show history and update UI
+            showHistory();
             renderHistoryItems();
             updateBulkDeleteButton();
-
             updateHistoryStatus(`✓ Deleted ${deleted}/${count} diagrams`);
         }
 
-        // Cleanup old diagrams
-        async function cleanupOldDiagrams() {
-            if (!confirm('Delete all diagrams older than 30 days? This cannot be undone.')) {
-                return;
-            }
-
-            try {
-                updateHistoryStatus('Cleaning up old diagrams...');
-
-                const response = await fetch(`${API_BASE}/history/cleanup`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        older_than_days: 30,
-                        keep_latest: 50
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    alert(`Deleted ${result.deleted_count} old diagrams`);
-                    loadHistory(false);
-                } else {
-                    alert(`Cleanup failed: ${result.error}`);
-                }
-
-            } catch (error) {
-                console.error('Cleanup error:', error);
-                alert(`Cleanup failed: ${error.message}`);
-            }
-        }
 
         // Update history status
         function updateHistoryStatus(message) {
             const container = document.getElementById('history-table-body');
             if (container) {
-                container.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: #808080;">${message}</td></tr>`;
+                container.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: #808080;">${message}</td></tr>`;
             }
         }
 
