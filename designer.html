@@ -2062,7 +2062,7 @@
 
             try {
                 // Delete via API (no confirmation)
-                const response = await fetch(`${API_BASE}/delete/${timestamp}`, {
+                const response = await fetch(`${API_BASE}/history/${timestamp}`, {
                     method: 'DELETE'
                 });
 
