@@ -2279,7 +2279,7 @@
                         </td>
                         <td style="padding: 12px; text-align: center;">
                             ${isLatest ?
-                                '<button disabled style="padding: 6px 12px; margin: 0 4px; background: #444; border: none; border-radius: 4px; color: #888; cursor: not-allowed;">Current</button>' :
+                                '<button disabled style="padding: 6px 12px; margin: 0 4px; background: #444; border: none; border-radius: 4px; color: #888; cursor: not-allowed;">Latest</button>' :
                                 `<button onclick="forkDiagram('${item.timestamp}')" style="padding: 6px 12px; margin: 0 4px; background: #2a2a2a; border: 1px solid #4ec9b0; border-radius: 4px; color: #4ec9b0; cursor: pointer;">Fork</button>`
                             }
                             <button onclick="deleteDiagram('${item.timestamp}')" ${isLatest ? 'disabled' : ''}
