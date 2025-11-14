@@ -1020,7 +1020,7 @@
 
         <div class="control-group">
             <label for="direction">Layout Direction</label>
-            <select id="direction">
+            <select id="direction" data-testid="layout-direction">
                 <option value="top-bottom">Top to Bottom ↓</option>
                 <option value="left-right">Left to Right →</option>
                 <option value="bottom-top">Bottom to Top ↑</option>
@@ -1030,7 +1030,7 @@
 
         <div class="control-group">
             <label for="spacing">Spacing (Element Distance)</label>
-            <select id="spacing">
+            <select id="spacing" data-testid="layout-spacing">
                 <option value="compact">Compact (tight)</option>
                 <option value="comfortable" selected>Comfortable (normal)</option>
                 <option value="spacious">Spacious (wide)</option>
@@ -1039,35 +1039,35 @@
 
         <div class="control-group">
             <label>
-                <input type="checkbox" id="show_legend" checked>
+                <input type="checkbox" id="show_legend" data-testid="show-legend-checkbox" checked>
                 Show Legend
             </label>
         </div>
 
         <div class="control-group">
             <label>
-                <input type="checkbox" id="show_title" checked>
+                <input type="checkbox" id="show_title" data-testid="show-title-checkbox" checked>
                 Show Title
             </label>
         </div>
 
         <div class="control-group">
             <label>
-                <input type="checkbox" id="group_by_layer">
+                <input type="checkbox" id="group_by_layer" data-testid="group-by-layer-checkbox">
                 Group By Layer
             </label>
         </div>
 
         <div class="control-group">
             <label>
-                <input type="checkbox" id="show_element_types">
+                <input type="checkbox" id="show_element_types" data-testid="show-element-types-checkbox">
                 Show Element Types
             </label>
         </div>
 
         <div class="control-group">
             <label>
-                <input type="checkbox" id="show_relationship_labels" checked>
+                <input type="checkbox" id="show_relationship_labels" data-testid="show-relationship-labels-checkbox" checked>
                 Show Relationship Labels
             </label>
         </div>
@@ -1078,24 +1078,24 @@
         </div>
 
         <!-- Regenerate button - visibility controlled by JavaScript -->
-        <button id="regenerate-btn" onclick="regenerate()" style="width: 100%; padding: 12px; margin-bottom: 12px; background: #2a2a2a; border: 1px solid #ce9178; border-radius: 6px; color: #ce9178; cursor: pointer; font-size: 14px;">
+        <button id="regenerate-btn" data-testid="regenerate-btn" onclick="regenerate()" style="width: 100%; padding: 12px; margin-bottom: 12px; background: #2a2a2a; border: 1px solid #ce9178; border-radius: 6px; color: #ce9178; cursor: pointer; font-size: 14px;">
             💾 Save Diagram
         </button>
 
         <div class="export-links">
-            <a class="export-link" onclick="exportFile('png')">
+            <a class="export-link" data-testid="export-png" onclick="exportFile('png')">
                 <svg fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
                 PNG
             </a>
-            <a class="export-link" onclick="exportFile('svg')">
+            <a class="export-link" data-testid="export-svg" onclick="exportFile('svg')">
                 <svg fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
                 SVG
             </a>
-            <a class="export-link" onclick="exportFile('puml')">
+            <a class="export-link" data-testid="export-puml" onclick="exportFile('puml')">
                 <svg fill="currentColor" viewBox="0 0 16 16"><path d="M5 4a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm-.5 2.5A.5.5 0 0 1 5 6h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zM5 8a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm0 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1H5z"/><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm10-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/></svg>
                 PlantUML
             </a>
-            <a class="export-link" onclick="exportFile('xml')">
+            <a class="export-link" data-testid="export-xml" onclick="exportFile('xml')">
                 <svg fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 7a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zM5 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5z"/><path d="M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5L9.5 0zm0 1v2A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/></svg>
                 XML
             </a>
@@ -1117,7 +1117,7 @@
         <!-- End Editor Tab -->
 
         <!-- History Button -->
-        <button onclick="showHistory()" class="history-btn" style="margin-top: 20px; width: 100%; padding: 12px; background: #2a2a2a; border: 1px solid #4ec9b0; border-radius: 6px; color: #4ec9b0; cursor: pointer; font-size: 14px;">
+        <button onclick="showHistory()" class="history-btn" data-testid="history-btn" style="margin-top: 20px; width: 100%; padding: 12px; background: #2a2a2a; border: 1px solid #4ec9b0; border-radius: 6px; color: #4ec9b0; cursor: pointer; font-size: 14px;">
             📜 View Diagram History
         </button>
 
@@ -1145,17 +1145,17 @@
     <div id="diagram-container">
         <!-- Navigation Controls (left side) -->
         <div class="nav-controls" id="nav-controls">
-            <button class="zoom-btn" onclick="navigatePrevDiagram()" title="Previous diagram" id="nav-prev">◀</button>
-            <button class="zoom-btn" onclick="navigateNextDiagram()" title="Next diagram" id="nav-next">▶</button>
-            <button class="zoom-btn" onclick="deleteCurrentDiagram()" title="Delete this diagram" id="nav-delete" style="color: #f48771;">🗑</button>
+            <button class="zoom-btn" data-testid="nav-prev" onclick="navigatePrevDiagram()" title="Previous diagram" id="nav-prev">◀</button>
+            <button class="zoom-btn" data-testid="nav-next" onclick="navigateNextDiagram()" title="Next diagram" id="nav-next">▶</button>
+            <button class="zoom-btn" data-testid="nav-delete" onclick="deleteCurrentDiagram()" title="Delete this diagram" id="nav-delete" style="color: #f48771;">🗑</button>
         </div>
 
         <!-- Zoom Controls (right side) -->
         <div class="zoom-controls" id="zoom-controls">
-            <button class="zoom-btn" onclick="zoomIn()" title="Zoom in">+</button>
+            <button class="zoom-btn" data-testid="zoom-in" onclick="zoomIn()" title="Zoom in">+</button>
             <div class="zoom-level" id="zoom-level">100%</div>
-            <button class="zoom-btn" onclick="zoomOut()" title="Zoom out">-</button>
-            <button class="zoom-btn" onclick="zoomReset()" title="Reset zoom" style="font-size: 12px;">⟲</button>
+            <button class="zoom-btn" data-testid="zoom-out" onclick="zoomOut()" title="Zoom out">-</button>
+            <button class="zoom-btn" data-testid="zoom-reset" onclick="zoomReset()" title="Reset zoom" style="font-size: 12px;">⟲</button>
         </div>
 
         <!-- Diagram View -->
@@ -1166,16 +1166,16 @@
             <!-- Header with title and close button -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h2 style="color: #e0e0e0; margin: 0;">📜 Diagram History</h2>
-                <button id="close-history-btn" onclick="closeHistory().catch(console.error)" title="Close history">✕</button>
+                <button id="close-history-btn" data-testid="close-history-btn" onclick="closeHistory().catch(console.error)" title="Close history">✕</button>
             </div>
 
             <!-- Filters -->
             <div style="background: #252525; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
-                <input type="text" id="history-search" placeholder="🔍 Search by title..." style="width: 100%; padding: 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0; margin-bottom: 10px;">
+                <input type="text" id="history-search" data-testid="history-search" placeholder="🔍 Search by title..." style="width: 100%; padding: 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0; margin-bottom: 10px;">
 
                 <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                    <input type="date" id="history-from-date" placeholder="From date" style="flex: 1; padding: 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0;">
-                    <input type="date" id="history-to-date" placeholder="To date" style="flex: 1; padding: 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0;">
+                    <input type="date" id="history-from-date" data-testid="history-from-date" placeholder="From date" style="flex: 1; padding: 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0;">
+                    <input type="date" id="history-to-date" data-testid="history-to-date" placeholder="To date" style="flex: 1; padding: 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0;">
                 </div>
 
                 <div style="display: flex; gap: 10px; margin-bottom: 10px;">
@@ -1265,11 +1265,11 @@
                 <h3>📐 Diagram</h3>
                 <div class="control-group">
                     <label for="diagram-title">Title:</label>
-                    <input type="text" id="diagram-title" placeholder="Diagram title..." autocomplete="off" />
+                    <input type="text" id="diagram-title" data-testid="diagram-title" placeholder="Diagram title..." autocomplete="off" />
                 </div>
                 <div class="control-group">
                     <label for="diagram-description">Description:</label>
-                    <textarea id="diagram-description" rows="2" placeholder="Diagram description..." autocomplete="off"></textarea>
+                    <textarea id="diagram-description" data-testid="diagram-description" rows="2" placeholder="Diagram description..." autocomplete="off"></textarea>
                 </div>
             </div>
 
@@ -1278,7 +1278,7 @@
             <!-- Element Selector -->
             <div class="control-group">
                 <label for="element-select">Select Element:</label>
-                <select id="element-select" onchange="loadElementForEdit()">
+                <select id="element-select" data-testid="element-select" onchange="loadElementForEdit()">
                     <option value="">-- Choose Element --</option>
                 </select>
             </div>
@@ -1288,12 +1288,12 @@
                 <h3>🔷 Element</h3>
                 <div class="control-group">
                     <label for="element-name">Name:</label>
-                    <input type="text" id="element-name" autocomplete="off" />
+                    <input type="text" id="element-name" data-testid="element-name" autocomplete="off" />
                 </div>
 
                 <div class="control-group">
                     <label for="element-description">Description:</label>
-                    <textarea id="element-description" rows="2" autocomplete="off"></textarea>
+                    <textarea id="element-description" data-testid="element-description" rows="2" autocomplete="off"></textarea>
                 </div>
 
                 <div class="stat-item">
@@ -1309,7 +1309,7 @@
             </div>
 
             <!-- Apply Button -->
-            <button id="rename-apply-btn" onclick="applyRename()"
+            <button id="rename-apply-btn" data-testid="save-changes-btn" onclick="applyRename()"
                     style="width: 100%; margin-top: 20px; padding: 12px; background: #4ec9b0; border: none; border-radius: 6px; color: #1e1e1e; cursor: pointer; font-size: 14px; font-weight: 500;">
                 💾 Save
             </button>
