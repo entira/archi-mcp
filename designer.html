@@ -1907,6 +1907,9 @@
                     };
                     userIsInteracting = false; // Allow control updates
                     updateStats(currentModel, true); // Force update controls
+
+                    // Reset flag after updating (updateStats triggers change events)
+                    userIsInteracting = false;
                 }
             } catch (error) {
                 console.warn(`Failed to load model for ${timestamp}:`, error);
