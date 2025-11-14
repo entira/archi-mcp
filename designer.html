@@ -894,7 +894,8 @@
             </label>
         </div>
 
-        <button onclick="regenerate()">🔄 Regenerate Diagram</button>
+        <!-- Regenerate is disabled in standalone mode - requires MCP context -->
+        <!-- <button onclick="regenerate()">🔄 Regenerate Diagram</button> -->
 
         <div class="export-links">
             <a class="export-link" onclick="exportFile('png')">
@@ -992,8 +993,37 @@
                 </div>
 
                 <div style="margin-bottom: 10px;">
-                    <input type="text" id="history-layers" placeholder="Filter by layers (e.g., Business, Application, Technology)" style="width: 100%; padding: 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0;">
-                    <small style="color: #808080; margin-top: 4px; display: block;">Comma-separated layer names</small>
+                    <label style="color: #c0c0c0; display: block; margin-bottom: 8px; font-size: 13px;">Filter by layers (select multiple):</label>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                        <label style="color: #c0c0c0; display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" class="layer-filter" value="Strategy" style="margin-right: 6px; cursor: pointer;">
+                            Strategy
+                        </label>
+                        <label style="color: #c0c0c0; display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" class="layer-filter" value="Business" style="margin-right: 6px; cursor: pointer;">
+                            Business
+                        </label>
+                        <label style="color: #c0c0c0; display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" class="layer-filter" value="Application" style="margin-right: 6px; cursor: pointer;">
+                            Application
+                        </label>
+                        <label style="color: #c0c0c0; display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" class="layer-filter" value="Technology" style="margin-right: 6px; cursor: pointer;">
+                            Technology
+                        </label>
+                        <label style="color: #c0c0c0; display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" class="layer-filter" value="Physical" style="margin-right: 6px; cursor: pointer;">
+                            Physical
+                        </label>
+                        <label style="color: #c0c0c0; display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" class="layer-filter" value="Motivation" style="margin-right: 6px; cursor: pointer;">
+                            Motivation
+                        </label>
+                        <label style="color: #c0c0c0; display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" class="layer-filter" value="Implementation" style="margin-right: 6px; cursor: pointer;">
+                            Implementation & Migration
+                        </label>
+                    </div>
                 </div>
 
                 <button onclick="applyHistoryFilters()" style="padding: 10px 20px; background: #4ec9b0; border: none; border-radius: 4px; color: #1a1a1a; cursor: pointer; margin-right: 10px;">Apply Filters</button>
@@ -1540,8 +1570,7 @@
                 const maxRelationshipsEl = document.getElementById('history-max-relationships');
                 if (maxRelationshipsEl && maxRelationshipsEl.value) params.append('max_relationships', maxRelationshipsEl.value);
 
-                const layersEl = document.getElementById('history-layers');
-                if (layersEl && layersEl.value) params.append('layers', layersEl.value);
+                // Note: Layer filtering will be done client-side after fetching all data
 
                 const response = await fetch(`${API_BASE}/history?${params}`);
                 const data = await response.json();
@@ -1577,8 +1606,64 @@
                 return;
             }
 
+            // Apply client-side filtering
+            let filtered = [...historyData];
+
+            // Filter by search text
+            const searchEl = document.getElementById('history-search');
+            if (searchEl && searchEl.value) {
+                const searchText = searchEl.value.toLowerCase();
+                filtered = filtered.filter(item =>
+                    (item.title || '').toLowerCase().includes(searchText) ||
+                    (item.description || '').toLowerCase().includes(searchText)
+                );
+            }
+
+            // Filter by element count range
+            const minElementsEl = document.getElementById('history-min-elements');
+            if (minElementsEl && minElementsEl.value) {
+                const minElements = parseInt(minElementsEl.value);
+                filtered = filtered.filter(item => item.element_count >= minElements);
+            }
+
+            const maxElementsEl = document.getElementById('history-max-elements');
+            if (maxElementsEl && maxElementsEl.value) {
+                const maxElements = parseInt(maxElementsEl.value);
+                filtered = filtered.filter(item => item.element_count <= maxElements);
+            }
+
+            // Filter by relationship count range
+            const minRelationshipsEl = document.getElementById('history-min-relationships');
+            if (minRelationshipsEl && minRelationshipsEl.value) {
+                const minRels = parseInt(minRelationshipsEl.value);
+                filtered = filtered.filter(item => item.relationship_count >= minRels);
+            }
+
+            const maxRelationshipsEl = document.getElementById('history-max-relationships');
+            if (maxRelationshipsEl && maxRelationshipsEl.value) {
+                const maxRels = parseInt(maxRelationshipsEl.value);
+                filtered = filtered.filter(item => item.relationship_count <= maxRels);
+            }
+
+            // Filter by layers (checkboxes)
+            const selectedLayers = Array.from(document.querySelectorAll('.layer-filter:checked'))
+                .map(cb => cb.value);
+
+            if (selectedLayers.length > 0) {
+                filtered = filtered.filter(item => {
+                    if (!item.layers || item.layers.length === 0) return false;
+                    // Check if ANY selected layer is in the diagram's layers
+                    return selectedLayers.some(layer => item.layers.includes(layer));
+                });
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center; color: #808080;">No diagrams match your filters</td></tr>';
+                return;
+            }
+
             // Apply sorting
-            const sorted = [...historyData].sort((a, b) => {
+            const sorted = [...filtered].sort((a, b) => {
                 let aVal, bVal;
 
                 switch (historySortColumn) {
@@ -1734,8 +1819,8 @@
             const maxRelationshipsEl = document.getElementById('history-max-relationships');
             if (maxRelationshipsEl) maxRelationshipsEl.value = '';
 
-            const layersEl = document.getElementById('history-layers');
-            if (layersEl) layersEl.value = '';
+            // Uncheck all layer checkboxes
+            document.querySelectorAll('.layer-filter').forEach(cb => cb.checked = false);
 
             applyHistoryFilters();
         }
