@@ -1205,7 +1205,11 @@
 
         // Update statistics display and load current options
         function updateStats(model, updateControls = true) {
-            if (!model) return;
+            console.log(`[updateStats] Called with updateControls=${updateControls}`);
+            if (!model) {
+                console.log(`[updateStats] No model, returning`);
+                return;
+            }
 
             // Always update statistics (non-interactive)
             // Use element_count/relationship_count if available (from PlantUML parsing)
@@ -1217,8 +1221,11 @@
 
             // Only update controls if user is not actively interacting
             if (updateControls) {
+                console.log(`[updateStats] Updating controls with options:`, model.options);
+
                 // Temporarily remove event listeners to prevent them from triggering during update
                 const controls = document.querySelectorAll('input, select');
+                console.log(`[updateStats] Removing event listeners from ${controls.length} controls`);
                 controls.forEach(control => {
                     control.removeEventListener('focus', markUserInteraction);
                     control.removeEventListener('input', markUserInteraction);
@@ -1236,13 +1243,21 @@
                 // Load current layout options from model
                 if (model.options) {
                     const opts = model.options;
+                    console.log(`[updateStats] Setting direction to: ${opts.direction}`);
+                    console.log(`[updateStats] Setting spacing to: ${opts.spacing}`);
 
                     // Direction and spacing are already in viewer format in the state
                     if (opts.direction) {
-                        document.getElementById('direction').value = opts.direction;
+                        const directionElem = document.getElementById('direction');
+                        console.log(`[updateStats] Direction element before: ${directionElem.value}`);
+                        directionElem.value = opts.direction;
+                        console.log(`[updateStats] Direction element after: ${directionElem.value}`);
                     }
                     if (opts.spacing) {
-                        document.getElementById('spacing').value = opts.spacing;
+                        const spacingElem = document.getElementById('spacing');
+                        console.log(`[updateStats] Spacing element before: ${spacingElem.value}`);
+                        spacingElem.value = opts.spacing;
+                        console.log(`[updateStats] Spacing element after: ${spacingElem.value}`);
                     }
 
                     // Set checkboxes
@@ -1254,11 +1269,15 @@
                 }
 
                 // Re-add event listeners after updating
+                console.log(`[updateStats] Re-adding event listeners to ${controls.length} controls`);
                 controls.forEach(control => {
                     control.addEventListener('focus', markUserInteraction);
                     control.addEventListener('input', markUserInteraction);
                     control.addEventListener('change', markUserInteraction);
                 });
+                console.log(`[updateStats] Event listeners re-added`);
+            } else {
+                console.log(`[updateStats] Skipping control updates (updateControls=false)`);
             }
 
             const now = new Date().toLocaleTimeString();
@@ -1882,15 +1901,18 @@
 
         // View diagram from history
         async function viewDiagram(timestamp) {
+            console.log(`[viewDiagram] Starting for timestamp: ${timestamp}`);
+
             // Show diagram in canvas with zoom enabled
             const img = document.getElementById('diagram');
             img.src = `exports/${timestamp}/diagram.png?t=${Date.now()}`;
 
-            // Load settings from this diagram's input.json
+            // Load settings from this diagram's input.json (if it exists)
             try {
                 const jsonResponse = await fetch(`exports/${timestamp}/input.json`);
                 if (jsonResponse.ok) {
                     const inputData = await jsonResponse.json();
+                    console.log(`[viewDiagram] Loaded input.json:`, inputData.layout);
 
                     // Normalize layout options (handle both designer and generator formats)
                     const layout = inputData.layout || {};
@@ -1911,6 +1933,8 @@
                         show_relationship_labels: layout.show_relationship_labels !== false
                     };
 
+                    console.log(`[viewDiagram] Normalized layout:`, normalizedLayout);
+
                     // Convert input.json format to model format
                     currentModel = {
                         title: inputData.title || '',
@@ -1921,11 +1945,52 @@
                         relationship_count: inputData.relationships?.length || 0
                     };
 
+                    console.log(`[viewDiagram] Calling updateStats with updateControls=true`);
                     // Force update controls (updateStats will handle event listener management)
                     updateStats(currentModel, true);
+                    console.log(`[viewDiagram] updateStats completed`);
+                } else {
+                    // input.json doesn't exist (old diagram) - use default layout
+                    console.log(`[viewDiagram] input.json not found (404), using default layout for old diagram`);
+                    currentModel = {
+                        title: '',
+                        elements: [],
+                        relationships: [],
+                        options: {
+                            direction: 'top-bottom',
+                            spacing: 'comfortable',
+                            show_legend: true,
+                            show_title: true,
+                            group_by_layer: false,
+                            show_element_types: false,
+                            show_relationship_labels: true
+                        },
+                        element_count: 0,
+                        relationship_count: 0
+                    };
+                    // Don't update controls for old diagrams - keep current sidebar values
+                    updateStats(currentModel, false);
                 }
             } catch (error) {
                 console.warn(`Failed to load model for ${timestamp}:`, error);
+                // On error, use default layout and don't update controls
+                currentModel = {
+                    title: '',
+                    elements: [],
+                    relationships: [],
+                    options: {
+                        direction: 'top-bottom',
+                        spacing: 'comfortable',
+                        show_legend: true,
+                        show_title: true,
+                        group_by_layer: false,
+                        show_element_types: false,
+                        show_relationship_labels: true
+                    },
+                    element_count: 0,
+                    relationship_count: 0
+                };
+                updateStats(currentModel, false);
             }
 
             // Hide history, show diagram (without reloading latest - we want to show the selected one)
