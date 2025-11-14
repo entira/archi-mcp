@@ -1865,17 +1865,17 @@
                 updateStats(currentModel, true); // Force update controls
             }
 
-            // Hide history, show diagram
-            closeHistory();
+            // Hide history, show diagram (without reloading latest - we want to show the selected one)
+            document.getElementById('history-view').style.display = 'none';
+            document.getElementById('diagram').style.display = 'block';
+            document.getElementById('zoom-controls').style.display = 'flex';
+            document.getElementById('nav-controls').style.display = 'flex';
 
             // Show close button for view mode
             document.getElementById('view-mode-close').style.display = 'flex';
 
             // Show regenerate button in browse mode
             document.getElementById('regenerate-btn').style.display = 'block';
-
-            // Show navigation controls in view mode
-            document.getElementById('nav-controls').style.display = 'flex';
 
             // Reset zoom
             zoomReset();
