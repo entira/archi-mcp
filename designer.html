@@ -2017,8 +2017,10 @@
             // Show close button for view mode
             document.getElementById('view-mode-close').style.display = 'flex';
 
-            // Hide regenerate button in view mode (only show on current canvas)
-            document.getElementById('regenerate-btn').style.display = 'none';
+            // Show/hide regenerate button based on whether we're viewing latest
+            // Check if this is the latest diagram by comparing with first timestamp
+            const isLatest = diagramTimestamps.length > 0 && timestamp === diagramTimestamps[0];
+            document.getElementById('regenerate-btn').style.display = isLatest ? 'block' : 'none';
 
             // Reset zoom
             zoomReset();
