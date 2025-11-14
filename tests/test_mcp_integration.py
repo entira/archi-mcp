@@ -4,6 +4,19 @@ import json
 import subprocess
 import pytest
 from pathlib import Path
+import os
+
+# Check if PlantUML jar is available
+PLANTUML_JAR_AVAILABLE = (
+    Path("plantuml.jar").exists() or
+    Path("/usr/local/bin/plantuml.jar").exists() or
+    Path("/opt/homebrew/bin/plantuml.jar").exists()
+)
+
+skip_if_no_plantuml = pytest.mark.skipif(
+    not PLANTUML_JAR_AVAILABLE,
+    reason="PlantUML jar not available - skipping PNG generation tests"
+)
 
 def test_mcp_server_initialization():
     """Test MCP server starts and responds to initialize."""
@@ -200,6 +213,7 @@ class TestMCPProtocolCompliance:
         ])
 
 @pytest.mark.integration
+@skip_if_no_plantuml
 def test_end_to_end_diagram_creation():
     """Integration test for complete diagram creation workflow using simplified API."""
     from archi_mcp.server import (
@@ -246,6 +260,7 @@ def test_end_to_end_diagram_creation():
     assert result1 is not None
     assert isinstance(result1, str)
 
+@skip_if_no_plantuml
 def test_performance_basic():
     """Basic performance test for tool execution."""
     import time

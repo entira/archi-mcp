@@ -159,7 +159,10 @@ python_functions = ["test_*"]
 markers = [
     "integration: marks tests as integration tests",
     "slow: marks tests as slow",
-    "unit: marks tests as unit tests"
+    "unit: marks tests as unit tests",
+    "api: marks tests as API endpoint tests",
+    "diagram: marks tests as diagram functionality tests",
+    "e2e: marks tests as end-to-end frontend tests"
 ]
 
 [tool.coverage.run]
