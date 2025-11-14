@@ -172,14 +172,11 @@ def validate_custom_relationship_name(custom_name: str, formal_relationship_type
     """
     if not custom_name or not custom_name.strip():
         return False, "Custom relationship name cannot be empty"
-    
-    # Check length - max 4 words or 30 characters (relaxed for better expressiveness)
-    words = custom_name.strip().split()
-    if len(words) > 4:
-        return False, f"Custom relationship name must be maximum 4 words. Current: '{custom_name}' ({len(words)} words). Try: '{' '.join(words[:4])}'"
-    
-    if len(custom_name) > 30:
-        return False, f"Custom relationship name must be maximum 30 characters. Current: '{custom_name}' ({len(custom_name)} chars)"
+
+    # Check length - max 50 characters for readability (removed word limit as too restrictive)
+    # Real-world relationship labels can be longer, especially in Slovak/Czech
+    if len(custom_name) > 50:
+        return False, f"Custom relationship name must be maximum 50 characters. Current: '{custom_name}' ({len(custom_name)} chars)"
     
     # Define valid synonyms for each formal relationship type
     relationship_synonyms = {
