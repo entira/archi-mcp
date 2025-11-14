@@ -437,25 +437,6 @@
             color: #4ec9b0;
         }
 
-        /* View Mode Close Button */
-        #view-mode-close {
-            background: transparent;
-            border: 1px solid #3a3a3a;
-            border-radius: 4px;
-            color: #808080;
-            cursor: pointer;
-            padding: 6px 8px;
-            font-size: 18px;
-            width: 32px;
-            height: 32px;
-            transition: all 0.2s ease;
-        }
-
-        #view-mode-close:hover {
-            background: rgba(78,201,176,0.1);
-            border-color: #4ec9b0;
-            color: #4ec9b0;
-        }
 
         /* Zoom Controls */
         .nav-controls {
@@ -1177,9 +1158,6 @@
             <button class="zoom-btn" onclick="zoomReset()" title="Reset zoom" style="font-size: 12px;">⟲</button>
         </div>
 
-        <!-- Close button for viewing historical diagrams -->
-        <button id="view-mode-close" onclick="exitViewMode()" title="Back to current diagram" style="display: none; position: absolute; top: 20px; right: 20px; align-items: center; justify-content: center; z-index: 100;">✕</button>
-
         <!-- Diagram View -->
         <img id="diagram" src="exports/AI/diagram.png" alt="ArchiMate Diagram">
 
@@ -1371,6 +1349,9 @@
 
             // Initialize zoom controls
             initZoomControls();
+
+            // Initialize navigation button states after loading diagram timestamps
+            await loadDiagramTimestamps();
 
             // Show navigation controls for browsing diagrams
             document.getElementById('nav-controls').style.display = 'flex';
@@ -2035,17 +2016,11 @@
                 return;
             }
 
-            // Don't refresh if history is open or viewing a historical diagram
+            // Don't refresh if history is open
             const historyView = document.getElementById('history-view');
-            const viewModeClose = document.getElementById('view-mode-close');
 
             // Skip refresh if history overlay is visible
             if (historyView && historyView.style.display !== 'none') {
-                return;
-            }
-
-            // Skip refresh if viewing a historical diagram (view mode active)
-            if (viewModeClose && window.getComputedStyle(viewModeClose).display !== 'none') {
                 return;
             }
 
@@ -2195,12 +2170,7 @@
                 if (match) {
                     let currentTimestamp = match[1];
 
-                    // If viewing "latest", resolve to actual timestamp
-                    if (currentTimestamp === 'AI') {
-                        // Latest is the first (newest) in sorted array
-                        currentTimestamp = diagramTimestamps[0];
-                    }
-
+                    // AI directory is included in history as "AI", so search for it directly
                     currentDiagramIndex = diagramTimestamps.indexOf(currentTimestamp);
                     if (currentDiagramIndex === -1) {
                         // Not found, default to first (latest)
@@ -2397,9 +2367,6 @@
             document.getElementById('zoom-controls').style.display = 'flex';
             document.getElementById('nav-controls').style.display = 'flex';
 
-            // Show close button for view mode
-            document.getElementById('view-mode-close').style.display = 'flex';
-
             // Always show regenerate button (works for both latest and historical diagrams)
             document.getElementById('regenerate-btn').style.display = 'block';
 
@@ -2408,27 +2375,6 @@
         }
 
         // Exit view mode and return to latest diagram
-        async function exitViewMode() {
-            // Hide close button
-            document.getElementById('view-mode-close').style.display = 'none';
-
-            // Keep navigation controls visible (allow browsing from latest)
-            document.getElementById('nav-controls').style.display = 'flex';
-
-            // Show regenerate button for current diagram
-            document.getElementById('regenerate-btn').style.display = 'block';
-
-            // Load latest diagram
-            const img = document.getElementById('diagram');
-            img.src = `exports/AI/diagram.png?t=${Date.now()}`;
-
-            // Reload current model
-            await loadCurrentModel(true);
-
-            // Reset zoom
-            zoomReset();
-        }
-
         // Delete current diagram (when viewing historical diagram)
         async function deleteCurrentDiagram() {
             // Get current diagram timestamp
