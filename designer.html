@@ -1451,17 +1451,25 @@
                 // Fetch all files (use current diagram's timestamp)
                 let addedCount = 0;
                 const addedFiles = [];
+                const skippedFiles = [];
                 for (const type of files) {
                     try {
-                        const response = await fetch(`exports/${diagramTimestamp}/${serverFilenames[type]}`);
+                        const url = `exports/${diagramTimestamp}/${serverFilenames[type]}`;
+                        console.log(`[Download All] Fetching ${type}: ${url}`);
+                        const response = await fetch(url);
                         if (response.ok) {
                             const blob = await response.blob();
                             zip.file(serverFilenames[type], blob);
                             addedCount++;
                             addedFiles.push(type.toUpperCase());
+                            console.log(`[Download All] ✅ Added ${type} (${blob.size} bytes)`);
+                        } else {
+                            console.log(`[Download All] ⏭️ Skipped ${type} (${response.status})`);
+                            skippedFiles.push(`${type.toUpperCase()} (${response.status})`);
                         }
                     } catch (e) {
-                        console.warn(`Failed to add ${type} to ZIP:`, e);
+                        console.warn(`[Download All] ❌ Failed to add ${type}:`, e);
+                        skippedFiles.push(`${type.toUpperCase()} (error)`);
                     }
                 }
 
@@ -1471,9 +1479,9 @@
                 }
 
                 // Show which file types are included
-                console.log(`ZIP will contain: ${addedFiles.join(', ')}`);
-                if (addedCount < files.length) {
-                    console.warn(`Note: ${files.length - addedCount} file types not available (${files.filter(f => !addedFiles.includes(f.toUpperCase())).join(', ')})`);
+                console.log(`[Download All] ZIP will contain: ${addedFiles.join(', ')}`);
+                if (skippedFiles.length > 0) {
+                    console.warn(`[Download All] Skipped files: ${skippedFiles.join(', ')}`);
                 }
 
                 // Generate ZIP
