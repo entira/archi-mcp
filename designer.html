@@ -1119,6 +1119,9 @@
             // Show navigation controls on canvas (hidden when browsing history)
             document.getElementById('nav-controls').style.display = 'flex';
 
+            // Show regenerate button for current diagram (hidden when browsing history)
+            document.getElementById('regenerate-btn').style.display = 'block';
+
             // Add interaction listeners to all input controls
             const controls = document.querySelectorAll('input, select');
             controls.forEach(control => {
@@ -1899,6 +1902,9 @@
             document.getElementById('zoom-controls').style.display = 'flex';
             document.getElementById('nav-controls').style.display = 'flex';
 
+            // Show regenerate button for current diagram
+            document.getElementById('regenerate-btn').style.display = 'block';
+
             // Reload current (latest) diagram image and model
             const img = document.getElementById('diagram');
             img.src = `exports/latest/diagram.png?t=${Date.now()}`;
@@ -2010,7 +2016,8 @@
             // Show close button for view mode
             document.getElementById('view-mode-close').style.display = 'flex';
 
-            // Don't show regenerate button in view mode (only on current canvas)
+            // Hide regenerate button in view mode (only show on current canvas)
+            document.getElementById('regenerate-btn').style.display = 'none';
 
             // Reset zoom
             zoomReset();
