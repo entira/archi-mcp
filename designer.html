@@ -978,6 +978,7 @@
         <div class="nav-controls" id="nav-controls">
             <button class="zoom-btn" onclick="navigatePrevDiagram()" title="Previous diagram" id="nav-prev">◀</button>
             <button class="zoom-btn" onclick="navigateNextDiagram()" title="Next diagram" id="nav-next">▶</button>
+            <button class="zoom-btn" onclick="deleteCurrentDiagram()" title="Delete this diagram" id="nav-delete" style="color: #f48771;">🗑</button>
         </div>
 
         <!-- Zoom Controls (right side) -->
@@ -2023,19 +2024,79 @@
             zoomReset();
         }
 
-        // Exit view mode and return to history
-        function exitViewMode() {
+        // Exit view mode and return to latest diagram
+        async function exitViewMode() {
             // Hide close button
             document.getElementById('view-mode-close').style.display = 'none';
-
-            // Hide regenerate button
-            document.getElementById('regenerate-btn').style.display = 'none';
 
             // Hide navigation controls
             document.getElementById('nav-controls').style.display = 'none';
 
-            // Show history again
-            showHistory();
+            // Show regenerate button for current diagram
+            document.getElementById('regenerate-btn').style.display = 'block';
+
+            // Load latest diagram
+            const img = document.getElementById('diagram');
+            img.src = `exports/latest/diagram.png?t=${Date.now()}`;
+
+            // Reload current model
+            await loadCurrentModel(true);
+
+            // Reset zoom
+            zoomReset();
+        }
+
+        // Delete current diagram (when viewing historical diagram)
+        async function deleteCurrentDiagram() {
+            // Get current diagram timestamp
+            const img = document.getElementById('diagram');
+            const currentSrc = img.src;
+            const match = currentSrc.match(/exports\/([^\/]+)\/diagram\.png/);
+
+            if (!match || match[1] === 'latest') {
+                updateStatus('❌ Cannot delete current diagram', 'error');
+                return;
+            }
+
+            const timestamp = match[1];
+
+            try {
+                // Delete via API (no confirmation)
+                const response = await fetch(`${API_BASE}/delete/${timestamp}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    updateStatus('✓ Diagram deleted', 'success');
+
+                    // Remove from timestamps array
+                    const index = diagramTimestamps.indexOf(timestamp);
+                    if (index > -1) {
+                        diagramTimestamps.splice(index, 1);
+                    }
+
+                    // Navigate to next diagram, or previous if at end, or return to latest if only one left
+                    if (diagramTimestamps.length === 0) {
+                        // No more diagrams, return to latest
+                        await exitViewMode();
+                    } else if (currentDiagramIndex >= diagramTimestamps.length) {
+                        // Was at end, go to new last diagram
+                        currentDiagramIndex = diagramTimestamps.length - 1;
+                        await viewDiagram(diagramTimestamps[currentDiagramIndex]);
+                        updateNavigationButtons();
+                    } else {
+                        // Navigate to diagram that is now at current index
+                        await viewDiagram(diagramTimestamps[currentDiagramIndex]);
+                        updateNavigationButtons();
+                    }
+                } else {
+                    const error = await response.text();
+                    updateStatus(`❌ Failed to delete: ${error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                updateStatus(`❌ Error: ${error.message}`, 'error');
+            }
         }
 
         // Load history from API
