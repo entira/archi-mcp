@@ -188,6 +188,8 @@ exclude_lines = [
 
 [dependency-groups]
 dev = [
+    "playwright>=1.56.0",
     "pytest-asyncio>=1.0.0",
     "pytest-cov>=6.2.1",
+    "pytest-playwright>=0.7.1",
 ]
