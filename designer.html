@@ -1143,82 +1143,41 @@
             }
         }
 
-        // Parse PlantUML file to extract diagram settings
-        async function parsePlantUML(timestamp = 'latest') {
-            try {
-                const response = await fetch(`exports/${timestamp}/diagram.puml`);
-                const puml = await response.text();
-
-                // Parse title
-                const titleMatch = puml.match(/^title\s+(.+)$/m);
-                const title = titleMatch ? titleMatch[1].trim() : '';
-
-                // Parse direction
-                let direction = 'vertical'; // default
-                if (puml.includes('left to right direction')) {
-                    direction = 'horizontal';
-                } else if (puml.includes('top to bottom direction')) {
-                    direction = 'vertical';
-                }
-
-                // Parse spacing from skinparam
-                const ranksepMatch = puml.match(/skinparam ranksep (\d+)/);
-                const ranksep = ranksepMatch ? parseInt(ranksepMatch[1]) : 40;
-                let spacing = 'normal';
-                if (ranksep <= 20) spacing = 'compact';
-                else if (ranksep >= 80) spacing = 'wide';
-
-                // Parse group_by_layer (check for package usage)
-                const group_by_layer = puml.includes('package "');
-
-                // Parse show_legend
-                const show_legend = puml.includes('legend ');
-
-                // Count elements and relationships
-                const elementMatches = puml.match(/\w+_\w+\(/g);
-                const element_count = elementMatches ? elementMatches.length : 0;
-
-                const relMatches = puml.match(/Rel_\w+\(/g);
-                const relationship_count = relMatches ? relMatches.length : 0;
-
-                return {
-                    title,
-                    elements: [], // Don't parse full elements, just count
-                    relationships: [],
-                    options: {
-                        direction,
-                        spacing,
-                        show_legend,
-                        show_title: !!title,
-                        group_by_layer,
-                        show_element_types: false, // Can't determine from PUML
-                        show_relationship_labels: true // Default assumption
-                    },
-                    element_count,
-                    relationship_count
-                };
-            } catch (error) {
-                console.error('Failed to parse PlantUML:', error);
-                return null;
-            }
-        }
+        // Removed parsePlantUML() - now using input.json instead
 
         // Load current model state
         async function loadCurrentModel(forceUpdate = false) {
             try {
-                // Try to parse latest PlantUML file directly
-                const pumlModel = await parsePlantUML('latest');
-                if (pumlModel) {
-                    currentModel = pumlModel;
-                    // Force update controls on initial load or when explicitly requested
+                // Try to fetch from MCP server API first (has current state)
+                try {
+                    const response = await fetch(`${API_BASE}/model`);
+                    if (response.ok) {
+                        currentModel = await response.json();
+                        updateStats(currentModel, forceUpdate || !userIsInteracting);
+                        return;
+                    }
+                } catch (apiError) {
+                    // API not available, fall through to JSON file
+                }
+
+                // Fallback to input.json file (always available after generation)
+                const jsonResponse = await fetch('exports/latest/input.json');
+                if (jsonResponse.ok) {
+                    const inputData = await jsonResponse.json();
+                    // Convert input.json format to model format
+                    currentModel = {
+                        title: inputData.title || '',
+                        elements: inputData.elements || [],
+                        relationships: inputData.relationships || [],
+                        options: inputData.layout || {},
+                        element_count: inputData.elements?.length || 0,
+                        relationship_count: inputData.relationships?.length || 0
+                    };
                     updateStats(currentModel, forceUpdate || !userIsInteracting);
                     return;
                 }
 
-                // Fallback to API model if PlantUML parsing fails
-                const response = await fetch(`${API_BASE}/model`);
-                currentModel = await response.json();
-                updateStats(currentModel, forceUpdate || !userIsInteracting);
+                console.warn('No model data available (neither API nor input.json)');
             } catch (error) {
                 console.error('Failed to load model:', error);
             }
