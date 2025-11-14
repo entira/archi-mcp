@@ -1671,13 +1671,30 @@
                 return;
             }
 
+            // Check if diagram has changed by fetching metadata
+            let diagramChanged = false;
+            try {
+                const response = await fetch('exports/latest/metadata.json');
+                const metadata = await response.json();
+                const newTimestamp = metadata.generated_at;
+
+                // Compare with previously loaded timestamp
+                if (!window.lastLoadedTimestamp || window.lastLoadedTimestamp !== newTimestamp) {
+                    diagramChanged = true;
+                    window.lastLoadedTimestamp = newTimestamp;
+                }
+            } catch (error) {
+                // If metadata fetch fails, assume diagram may have changed
+                diagramChanged = true;
+            }
+
             // Normal refresh logic - only for main canvas view
             const img = document.getElementById('diagram');
             const timestamp = new Date().getTime();
             img.src = `exports/latest/diagram.png?t=${timestamp}`;
 
-            // Also refresh model state and UI controls
-            await loadCurrentModel();
+            // Force update if diagram changed (new diagram from Claude)
+            await loadCurrentModel(diagramChanged);
         }
 
         // Update status message
