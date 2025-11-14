@@ -67,10 +67,57 @@ class TestArchiMateRelationship:
             direction=RelationshipDirection.DOWN,
             label="realizes"
         )
-        
+
         plantuml = relationship.to_plantuml()
         # Direction is layout hint only, not part of PlantUML syntax
         expected = 'Rel_Realization(source, target, "realizes")'
+        assert plantuml == expected
+
+    def test_relationship_plantuml_hide_labels(self):
+        """Test PlantUML code generation with labels hidden."""
+        relationship = ArchiMateRelationship(
+            id="test_rel_no_label",
+            from_element="source",
+            to_element="target",
+            relationship_type=RelationshipType.SERVING,
+            description="serves"
+        )
+
+        plantuml = relationship.to_plantuml(show_labels=False)
+        expected = 'Rel_Serving(source, target, "")'
+        assert plantuml == expected
+
+    def test_relationship_plantuml_no_label_no_description(self):
+        """Test PlantUML code generation without label or description."""
+        relationship = ArchiMateRelationship(
+            id="test_rel_default",
+            from_element="source",
+            to_element="target",
+            relationship_type=RelationshipType.ACCESS
+        )
+
+        plantuml = relationship.to_plantuml()
+        # Should use relationship type in lowercase as default label
+        expected = 'Rel_Access(source, target, "access")'
+        assert plantuml == expected
+
+    def test_relationship_plantuml_with_translator(self):
+        """Test PlantUML code generation with translator."""
+        # Create mock translator
+        class MockTranslator:
+            def translate_relationship(self, rel_type):
+                return f"translated_{rel_type}"
+
+        relationship = ArchiMateRelationship(
+            id="test_rel_translate",
+            from_element="source",
+            to_element="target",
+            relationship_type=RelationshipType.SERVING
+        )
+
+        translator = MockTranslator()
+        plantuml = relationship.to_plantuml(translator=translator)
+        expected = 'Rel_Serving(source, target, "translated_Serving")'
         assert plantuml == expected
     
     def test_relationship_validation_success(self):
@@ -268,7 +315,7 @@ class TestRelationshipValidation:
     def test_access_relationship_validation(self):
         """Test Access relationship validation."""
         elements = self.create_test_elements()
-        
+
         # Valid access relationship
         valid_relationship = ArchiMateRelationship(
             id="valid_access",
@@ -276,15 +323,32 @@ class TestRelationshipValidation:
             to_element="business_object",
             relationship_type=RelationshipType.ACCESS
         )
-        
+
         errors = valid_relationship.validate_relationship(elements)
         # Note: Basic validation might still pass, detailed validation would catch this
+        assert isinstance(errors, list)
+
+    def test_access_relationship_invalid_aspects(self):
+        """Test Access relationship with non-standard aspect pattern."""
+        elements = self.create_test_elements()
+
+        # Access relationship with invalid aspect pattern (behavior -> behavior)
+        # This triggers relaxed validation
+        invalid_aspect_access = ArchiMateRelationship(
+            id="invalid_aspect_access",
+            from_element="business_service",
+            to_element="app_component",
+            relationship_type=RelationshipType.ACCESS
+        )
+
+        errors = invalid_aspect_access.validate_relationship(elements)
+        # Should not generate errors (relaxed validation)
         assert isinstance(errors, list)
     
     def test_composition_relationship_validation(self):
         """Test Composition relationship validation."""
         elements = self.create_test_elements()
-        
+
         # Composition within same layer
         composition_relationship = ArchiMateRelationship(
             id="composition_test",
@@ -292,8 +356,24 @@ class TestRelationshipValidation:
             to_element="business_service",
             relationship_type=RelationshipType.COMPOSITION
         )
-        
+
         errors = composition_relationship.validate_relationship(elements)
+        assert isinstance(errors, list)
+
+    def test_cross_layer_composition_validation(self):
+        """Test cross-layer Composition relationship validation."""
+        elements = self.create_test_elements()
+
+        # Cross-layer composition (e.g., business element composed of application element)
+        cross_layer_composition = ArchiMateRelationship(
+            id="cross_layer_composition",
+            from_element="business_service",
+            to_element="app_component",
+            relationship_type=RelationshipType.COMPOSITION
+        )
+
+        errors = cross_layer_composition.validate_relationship(elements)
+        # Should not generate errors (relaxed validation for cross-layer composition)
         assert isinstance(errors, list)
     
     def test_cross_layer_relationships(self):

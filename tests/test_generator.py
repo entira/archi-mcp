@@ -366,3 +366,116 @@ class TestDiagramLayout:
         assert layout.show_title is False
         assert layout.group_by_layer is True
         assert layout.spacing == "compact"
+
+    def test_generate_plantuml_with_description(self):
+        """Test PlantUML generation with description."""
+        generator = ArchiMateGenerator()
+
+        # Create element directly
+        element = ArchiMateElement(
+            id="test1",
+            name="Test Element",
+            element_type="Business_Service",
+            layer=ArchiMateLayer.BUSINESS,
+            aspect=ArchiMateAspect.BEHAVIOR
+        )
+        generator.add_element(element)
+
+        plantuml = generator.generate_plantuml(title="Test Diagram", description="Test Description")
+
+        assert "@startuml" in plantuml
+        assert "title Test Diagram" in plantuml
+        assert "' Description: Test Description" in plantuml
+        assert "@enduml" in plantuml
+
+    def test_generate_plantuml_vertical_direction(self):
+        """Test PlantUML generation with vertical layout direction."""
+        generator = ArchiMateGenerator()
+
+        # Create element directly
+        element = ArchiMateElement(
+            id="test1",
+            name="Test Element",
+            element_type="Business_Service",
+            layer=ArchiMateLayer.BUSINESS,
+            aspect=ArchiMateAspect.BEHAVIOR
+        )
+        generator.add_element(element)
+
+        layout = DiagramLayout(direction="vertical")
+        generator.set_layout(layout)
+
+        plantuml = generator.generate_plantuml()
+
+        assert "top to bottom direction" in plantuml
+
+    def test_generate_plantuml_single_layer_with_grouping(self):
+        """Test PlantUML generation with single layer and group_by_layer enabled."""
+        generator = ArchiMateGenerator()
+
+        # Add only business layer elements
+        elem1 = ArchiMateElement(
+            id="actor1",
+            name="Business Actor",
+            element_type="Business_Actor",
+            layer=ArchiMateLayer.BUSINESS,
+            aspect=ArchiMateAspect.ACTIVE_STRUCTURE
+        )
+        elem2 = ArchiMateElement(
+            id="service1",
+            name="Business Service",
+            element_type="Business_Service",
+            layer=ArchiMateLayer.BUSINESS,
+            aspect=ArchiMateAspect.BEHAVIOR
+        )
+
+        generator.add_element(elem1)
+        generator.add_element(elem2)
+
+        layout = DiagramLayout(group_by_layer=True)
+        generator.set_layout(layout)
+
+        plantuml = generator.generate_plantuml()
+
+        # Single layer should not use package grouping, just comments
+        assert "' Business" in plantuml or "' Obchodná" in plantuml
+        # Should not have package syntax for single layer
+        assert plantuml.count("package") == 0
+
+    def test_validate_diagram_with_relationship_errors(self):
+        """Test diagram validation with relationship errors."""
+        generator = ArchiMateGenerator()
+
+        # Add elements
+        elem1 = ArchiMateElement(
+            id="elem1",
+            name="Element 1",
+            element_type="Business_Service",
+            layer=ArchiMateLayer.BUSINESS,
+            aspect=ArchiMateAspect.BEHAVIOR
+        )
+        elem2 = ArchiMateElement(
+            id="elem2",
+            name="Element 2",
+            element_type="Application_Component",
+            layer=ArchiMateLayer.APPLICATION,
+            aspect=ArchiMateAspect.ACTIVE_STRUCTURE
+        )
+
+        generator.add_element(elem1)
+        generator.add_element(elem2)
+
+        # Add relationship with invalid target (that doesn't exist)
+        # We need to manually add to relationships list to bypass validation in add_relationship
+        invalid_relationship = ArchiMateRelationship(
+            id="invalid_rel",
+            from_element="elem1",
+            to_element="nonexistent",
+            relationship_type=RelationshipType.SERVING
+        )
+        generator.relationships.append(invalid_relationship)
+
+        errors = generator.validate_diagram()
+
+        assert len(errors) > 0
+        assert any("nonexistent" in error for error in errors)

@@ -330,7 +330,7 @@ class TestArchiMateValidator:
     def test_relationship_compatibility_assignment(self):
         """Test assignment relationship compatibility."""
         validator = ArchiMateValidator()
-        
+
         # Create elements for assignment relationship test
         active_element = ArchiMateElement(
             id="active",
@@ -339,7 +339,7 @@ class TestArchiMateValidator:
             layer=ArchiMateLayer.BUSINESS,
             aspect=ArchiMateAspect.ACTIVE_STRUCTURE
         )
-        
+
         behavior_element = ArchiMateElement(
             id="behavior",
             name="Behavior Element",
@@ -347,17 +347,172 @@ class TestArchiMateValidator:
             layer=ArchiMateLayer.BUSINESS,
             aspect=ArchiMateAspect.BEHAVIOR
         )
-        
+
         relationship = ArchiMateRelationship(
             id="assignment_test",
             from_element="active",
             to_element="behavior",
             relationship_type=RelationshipType.ASSIGNMENT
         )
-        
+
         errors = validator._check_relationship_compatibility(
             active_element, behavior_element, relationship
         )
-        
+
         # Should be valid assignment relationship
         assert isinstance(errors, list)
+
+    def test_invalid_access_relationship_strict_mode(self):
+        """Test invalid ACCESS relationship in strict mode."""
+        strict_validator = ArchiMateValidator(strict=True)
+
+        # Create invalid ACCESS relationship (behavior -> behavior)
+        elements = {
+            "service1": ArchiMateElement(
+                id="service1",
+                name="Service 1",
+                element_type="Business_Service",
+                layer=ArchiMateLayer.BUSINESS,
+                aspect=ArchiMateAspect.BEHAVIOR
+            ),
+            "service2": ArchiMateElement(
+                id="service2",
+                name="Service 2",
+                element_type="Application_Service",
+                layer=ArchiMateLayer.APPLICATION,
+                aspect=ArchiMateAspect.BEHAVIOR
+            )
+        }
+
+        relationships = [
+            ArchiMateRelationship(
+                id="invalid_access",
+                from_element="service1",
+                to_element="service2",
+                relationship_type=RelationshipType.ACCESS
+            )
+        ]
+
+        errors = strict_validator.validate_model(elements, relationships)
+        assert len(errors) > 0
+        assert any("Active Structure to Passive Structure" in error for error in errors)
+
+    def test_invalid_assignment_relationship_strict_mode(self):
+        """Test invalid ASSIGNMENT relationship in strict mode."""
+        strict_validator = ArchiMateValidator(strict=True)
+
+        # Create invalid ASSIGNMENT relationship (passive -> active)
+        elements = {
+            "object": ArchiMateElement(
+                id="object",
+                name="Object",
+                element_type="Business_Object",
+                layer=ArchiMateLayer.BUSINESS,
+                aspect=ArchiMateAspect.PASSIVE_STRUCTURE
+            ),
+            "actor": ArchiMateElement(
+                id="actor",
+                name="Actor",
+                element_type="Business_Actor",
+                layer=ArchiMateLayer.BUSINESS,
+                aspect=ArchiMateAspect.ACTIVE_STRUCTURE
+            )
+        }
+
+        relationships = [
+            ArchiMateRelationship(
+                id="invalid_assignment",
+                from_element="object",
+                to_element="actor",
+                relationship_type=RelationshipType.ASSIGNMENT
+            )
+        ]
+
+        errors = strict_validator.validate_model(elements, relationships)
+        assert len(errors) > 0
+        assert any("Active Structure to Behavior" in error for error in errors)
+
+    def test_invalid_serving_relationship_strict_mode(self):
+        """Test invalid SERVING relationship in strict mode (passive->active in same layer)."""
+        strict_validator = ArchiMateValidator(strict=True)
+
+        # Create invalid SERVING relationship (passive -> active in same layer)
+        elements = {
+            "object": ArchiMateElement(
+                id="object",
+                name="Object",
+                element_type="Business_Object",
+                layer=ArchiMateLayer.BUSINESS,
+                aspect=ArchiMateAspect.PASSIVE_STRUCTURE
+            ),
+            "actor": ArchiMateElement(
+                id="actor",
+                name="Actor",
+                element_type="Business_Actor",
+                layer=ArchiMateLayer.BUSINESS,
+                aspect=ArchiMateAspect.ACTIVE_STRUCTURE
+            )
+        }
+
+        relationships = [
+            ArchiMateRelationship(
+                id="invalid_serving",
+                from_element="object",
+                to_element="actor",
+                relationship_type=RelationshipType.SERVING
+            )
+        ]
+
+        errors = strict_validator.validate_model(elements, relationships)
+        assert len(errors) > 0
+        assert any("Passive to Active Structure" in error for error in errors)
+
+    def test_get_valid_relationships_realization(self):
+        """Test getting valid relationships with REALIZATION (app/tech to business)."""
+        validator = ArchiMateValidator()
+
+        # Application component to business service
+        app_component = ArchiMateElement(
+            id="app",
+            name="Application Component",
+            element_type="Application_Component",
+            layer=ArchiMateLayer.APPLICATION,
+            aspect=ArchiMateAspect.ACTIVE_STRUCTURE
+        )
+
+        business_service = ArchiMateElement(
+            id="business",
+            name="Business Service",
+            element_type="Business_Service",
+            layer=ArchiMateLayer.BUSINESS,
+            aspect=ArchiMateAspect.BEHAVIOR
+        )
+
+        valid_rels = validator.get_valid_relationships(app_component, business_service)
+
+        assert RelationshipType.REALIZATION in valid_rels
+
+    def test_get_valid_relationships_access(self):
+        """Test getting valid relationships with ACCESS (active to passive)."""
+        validator = ArchiMateValidator()
+
+        # Active structure to passive structure
+        active_elem = ArchiMateElement(
+            id="active",
+            name="Actor",
+            element_type="Business_Actor",
+            layer=ArchiMateLayer.BUSINESS,
+            aspect=ArchiMateAspect.ACTIVE_STRUCTURE
+        )
+
+        passive_elem = ArchiMateElement(
+            id="passive",
+            name="Object",
+            element_type="Business_Object",
+            layer=ArchiMateLayer.BUSINESS,
+            aspect=ArchiMateAspect.PASSIVE_STRUCTURE
+        )
+
+        valid_rels = validator.get_valid_relationships(active_elem, passive_elem)
+
+        assert RelationshipType.ACCESS in valid_rels
