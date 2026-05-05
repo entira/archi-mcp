@@ -41,62 +41,69 @@ from .archimate import (
 from .archimate.elements.base import ArchiMateLayer, ArchiMateAspect
 from .i18n import ArchiMateTranslator, AVAILABLE_LANGUAGES
 
-def detect_language_from_content(diagram) -> str:
-    """Automatically detect language from diagram content.
-    
-    Args:
-        diagram: DiagramInput with elements and relationships
-        
-    Returns:
-        Language code (e.g., "sk", "en")
-    """
-    # Slovak language indicators
-    slovak_indicators = [
-        # Common Slovak words
+LANGUAGE_INDICATORS = {
+    "sk": [
         'zákazník', 'podpora', 'služba', 'proces', 'objekt', 'komponent',
         'podnikový', 'zákaznícky', 'proaktívna', 'inteligentý', 'znalostná',
         'konverzačná', 'vylepšený', 'starostlivosť', 'riešenie', 'problémov',
         'schopnosť', 'platforma', 'báza', 'profil', 'analýza', 'nálady',
         'spokojnosť', 'sledovanie', 'emócií', 'monitoruje', 'aktualizuje',
         'pristupuje', 'spúšťa', 'umožňuje', 'napájaný', 'asistovaný',
-        # Slovak diacritics patterns
         'ň', 'ť', 'ž', 'č', 'š', 'ľ', 'ý', 'á', 'í', 'é', 'ó', 'ú', 'ô'
-    ]
-    
+    ],
+    "cs": [
+        'zákazník', 'podpora', 'služba', 'proces', 'objekt', 'komponenta',
+        'podnikový', 'zákaznícký', 'proaktívní', 'inteligentní', 'znalostní',
+        'konverzační', 'vylepšený', 'starostlivost', 'řešení', 'problémů',
+        'schopnost', 'platforma', 'báze', 'profil', 'analýza', 'nálady',
+        'spokojnost', 'sledování', 'emocí', 'monitoruje', 'aktualizuje',
+        'přistupuje', 'spouští', 'umožňuje', 'napájený', 'asistovaný',
+        'á', 'č', 'ď', 'é', 'ě', 'í', 'ň', 'ó', 'ř', 'š', 'ť', 'ú', 'ů', 'ž'
+    ],
+}
+
+LANGUAGE_DETECTION_THRESHOLD = 3
+
+def detect_language_from_content(diagram) -> str:
+    """Automatically detect language from diagram content.
+
+    Args:
+        diagram: DiagramInput with elements and relationships
+
+    Returns:
+        Language code (e.g., "sk", "cs", "en")
+    """
     # Collect all text content
     all_text = []
-    
-    # Add element names and descriptions
+
     for element in diagram.elements:
         if element.name:
             all_text.append(element.name.lower())
         if element.description:
             all_text.append(element.description.lower())
-    
-    # Add relationship labels and descriptions
+
     for rel in diagram.relationships:
         if rel.label:
             all_text.append(rel.label.lower())
         if rel.description:
             all_text.append(rel.description.lower())
-    
-    # Add title and description
+
     if diagram.title:
         all_text.append(diagram.title.lower())
     if diagram.description:
         all_text.append(diagram.description.lower())
-    
-    # Join all text
+
     content = ' '.join(all_text)
-    
-    # Count Slovak indicators
-    slovak_score = sum(1 for indicator in slovak_indicators if indicator in content)
-    
-    # If significant Slovak content detected, return Slovak
-    if slovak_score >= 3:  # Threshold for Slovak detection
-        return "sk"
-    
-    # Default to English
+
+    scores = {
+        lang: sum(1 for indicator in indicators if indicator in content)
+        for lang, indicators in LANGUAGE_INDICATORS.items()
+    }
+
+    best_lang = max(scores, key=lambda lang: scores[lang])
+    if scores[best_lang] >= LANGUAGE_DETECTION_THRESHOLD:
+        return best_lang
+
     return "en"
 
 def override_relationship_labels_with_translations(diagram, translator: ArchiMateTranslator) -> None:

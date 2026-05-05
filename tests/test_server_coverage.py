@@ -92,6 +92,56 @@ class TestLanguageDetection:
         language = detect_language_from_content(diagram)
         assert language == "sk"
 
+    def test_detect_language_from_content_czech(self):
+        """Test Czech language detection with various indicators."""
+        from archi_mcp.server import DiagramInput, ElementInput, RelationshipInput, detect_language_from_content
+
+        diagram = DiagramInput(
+            title="Zákaznická podpora služba",
+            description="Proaktívní starostlivost o zákazníky",
+            elements=[
+                ElementInput(
+                    id="customer",
+                    name="Zákazník",
+                    element_type="Business_Actor",
+                    layer="Business",
+                    description="Podnikový zákaznícký objekt"
+                )
+            ],
+            relationships=[
+                RelationshipInput(
+                    id="rel1",
+                    from_element="customer",
+                    to_element="service",
+                    relationship_type="Access",
+                    label="přistupuje"
+                )
+            ]
+        )
+
+        language = detect_language_from_content(diagram)
+        assert language == "cs"
+
+    def test_detect_language_minimal_czech(self):
+        """Test Czech detection with Czech-specific indicators."""
+        from archi_mcp.server import DiagramInput, ElementInput, detect_language_from_content
+
+        diagram = DiagramInput(
+            elements=[
+                ElementInput(
+                    id="test",
+                    name="řešení sledování",
+                    element_type="Business_Actor",
+                    layer="Business",
+                    description="schopnost komponenta báze"
+                )
+            ],
+            relationships=[]
+        )
+
+        language = detect_language_from_content(diagram)
+        assert language == "cs"
+
 
 class TestCustomRelationshipValidation:
     """Test custom relationship name validation logic."""
